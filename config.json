@@ -1,0 +1,60 @@
+{
+	"name": "REDCap UI Tweaker",
+	"namespace": "Nottingham\\REDCapUITweaker",
+	"description": "Make adjustments to the REDCap user interface.",
+	"permissions": [
+		"redcap_every_page_top",
+		"redcap_data_entry_form",
+		"redcap_module_system_enable"
+	],
+	"authors": [
+		{
+			"name": "Richard Dooley",
+			"email": "richard.dooley@nottingham.ac.uk",
+			"institution": "University of Nottingham"
+		}
+	],
+	"framework-version" : 3,
+	"compatibility": {
+		"redcap-version-min": "9.6.5"
+	},
+	"system-settings" : [
+		{
+			"key" : "field-types-order",
+			"name" : "Order / placement of field types",
+			"required" : false,
+			"type" : "text"
+		},
+		{
+			"key" : "field-default-required",
+			"name" : "Set required status on new fields",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "1", "name" : "Yes" },
+				{ "value" : "0", "name" : "No" }
+			]
+		},
+		{
+			"key" : "submit-option-tweak",
+			"name" : "Submit options",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "0", "name" : "Default" },
+				{ "value" : "1", "name" : "Remove 'Save and Go To Next Record'" },
+				{ "value" : "2", "name" : "'New Instance', 'Next Form' and 'Stay' only" }
+			]
+		}
+	],
+	"project-settings" : [
+		{
+			"key" : "hide-unverified-option",
+			"name" : "Hide 'Unverified' option on data entry forms",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "require-change-reason-complete",
+			"name" : "Require a reason for change for forms marked 'complete' only",
+			"type" : "checkbox"
+		}
+	]
+}
