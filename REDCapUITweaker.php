@@ -175,6 +175,35 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		} // end if instrument designer
 
 
+		// If any data entry page, and alternate status icons enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' &&
+			 $this->getSystemSetting( 'alternate-status-icons' ) )
+		{
+
+?>
+<script type="text/javascript">
+(function()
+{
+  var vFuncNewIcons = function()
+  {
+    $('img[src$="circle_gray.png"]').attr('src','<?php echo $this->getIconUrl( 'gray' ); ?>')
+    $('img[src$="circle_red.png"]').attr('src','<?php echo $this->getIconUrl( 'red '); ?>')
+    $('img[src$="circle_red_stack.png"]').attr('src','<?php echo $this->getIconUrl( 'reds' ); ?>')
+    $('img[src$="circle_blue_stack.png"]').attr('src','<?php echo $this->getIconUrl( 'blues' ); ?>')
+  }
+  $(function(){
+    $('img[src$="circle_red_stack.png"], img[src$="circle_blue_stack.png"]').on('click',
+      function(){setTimeout(vFuncNewIcons,500);setTimeout(vFuncNewIcons,1000)})
+  })
+  $(vFuncNewIcons)
+})()
+</script>
+<?php
+
+		} // end if data entry page
+
+
 	}
 
 
@@ -262,7 +291,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' )
 		{
 			// Identify the 'Save & Add New Instance', 'Save & Go To Next Form' and 'Save & Stay'
-			// options, and 
+			// options, and place in that order on the button and dropdown.
 
 ?>
     var vBtnDropDown = $('[id="submit-btn-dropdown"]')
@@ -321,6 +350,36 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 </script>
 <?php
 
+	}
+
+
+
+	// Return the URL for the specified alternate icon image.
+
+	function getIconUrl( $icon )
+	{
+		return preg_replace( '/&pid=[1-9][0-9]*/', '',
+		                     $this->getUrl( "status_icon.php?icon=$icon" ) );
+	}
+
+
+
+	// Check that the module is enabled system-wide.
+
+	function validateSettings( $settings )
+	{
+		if ( $this->getProjectID() === null )
+		{
+			if ( ! $settings['enabled'] )
+			{
+				return 'This module must be enabled in all projects.';
+			}
+			if ( $settings['discoverable-in-project'] || $settings['user-activate-permission'] )
+			{
+				return 'This module does not need to be discoverable.';
+			}
+		}
+		return null;
 	}
 
 
