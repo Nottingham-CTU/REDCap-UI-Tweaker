@@ -43,6 +43,11 @@
 				{ "value" : "1", "name" : "Remove 'Save and Go To Next Record'" },
 				{ "value" : "2", "name" : "'New Instance', 'Next Form' and 'Stay' only" }
 			]
+		},
+		{
+			"key" : "alternate-status-icons",
+			"name" : "Use alternate status icons",
+			"type" : "checkbox"
 		}
 	],
 	"project-settings" : [

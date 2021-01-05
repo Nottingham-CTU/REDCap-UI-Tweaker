@@ -62,6 +62,10 @@ recently (if any). This setting allows manipulating this list of options in one 
 Note that some of the options might not be displayed on a particular data entry form if they are not
 relevant.
 
+### Use alternate status icons
+Replaces some of the record status icons so they can be more easily distinguished by people with
+colour vision deficiency.
+
 
 ## Project-level configuration options
 
