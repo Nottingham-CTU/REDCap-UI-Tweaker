@@ -342,6 +342,63 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If the form navigation fix is enabled, amend the dataEntrySubmit function to perform a
+		// save and stay before performing the selected action. A session variable is set (by AJAX
+		// request) which triggers the selected action once the page reloads following the save
+		// and stay.
+
+		if ( $this->getProjectSetting( 'fix-form-navigation' ) === true )
+		{
+			if ( isset( $_SESSION['module_uitweak_fixformnav'] ) &&
+			     $_SESSION['module_uitweak_fixformnav'] == 'submit-btn-savenextform' &&
+			     $_SESSION['module_uitweak_fixformnav_ts'] > time() - 5 )
+			{
+
+?>
+    dataEntrySubmit( 'submit-btn-savenextform' )
+<?php
+
+			}
+			else
+			{
+
+?>
+    var vOldDataEntrySubmit = dataEntrySubmit
+    dataEntrySubmit = function( vSubmitObj )
+    {
+      var vSubmitType = ''
+      if ( typeof vSubmitObj == 'string' || vSubmitObj instanceof String )
+      {
+        vSubmitType = vSubmitObj
+      }
+      else
+      {
+        vSubmitType = $(vSubmitObj).attr('name')
+      }
+      if ( vSubmitType == 'submit-btn-savenextform')
+      {
+        $.ajax( { url : '<?php echo $this->getUrl( 'ajax_set_formnav.php' ); ?>',
+                  method : 'POST',
+                  data : { nav : 'submit-btn-savenextform' },
+                  headers : { 'X-RC-UITweak-Req' : '1' },
+                  dataType : 'json',
+                  complete : function() { vOldDataEntrySubmit( 'submit-btn-savecontinue' ) }
+                } )
+      }
+      else
+      {
+        return vOldDataEntrySubmit( vSubmitObj )
+      }
+    }
+<?php
+
+			}
+
+			unset( $_SESSION['module_uitweak_fixformnav'],
+			       $_SESSION['module_uitweak_fixformnav_ts'] );
+		}
+
+
 		// Perform the selected submit option tweak. Either remove the 'Save & Go To Next Record'
 		// option, or switch to only New Instance, Next Form and Stay options.
 		// Note: '[id=' selectors are used instead of '#' selectors for element IDs, as REDCap is
@@ -410,13 +467,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
           }
         } )
         vBtnInstance.id = vBtnList[0].id
-        vBtnInstance.name = vBtnList[0].name
+        vBtnInstance.name = ( vBtnList[0].name == '' ? vBtnList[0].id : vBtnList[0].name )
         vBtnInstance.onclick = vBtnList[0].onclick
         vBtnInstance.innerHTML = vBtnList[0].innerHTML
         for ( vCount2 = 1; vCount2 < vBtnList.length; vCount2++ )
         {
           vBtnOptions[ vCount2 - 1 ].id = vBtnList[vCount2].id
-          vBtnOptions[ vCount2 - 1 ].name = vBtnList[vCount2].name
+          vBtnOptions[ vCount2 - 1 ].name =
+                    ( vBtnList[vCount2].name == '' ? vBtnList[vCount2].id : vBtnList[vCount2].name )
           vBtnOptions[ vCount2 - 1 ].onclick = vBtnList[vCount2].onclick
           vBtnOptions[ vCount2 - 1 ].innerHTML = vBtnList[vCount2].innerHTML
         }

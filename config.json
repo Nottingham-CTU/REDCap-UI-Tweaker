@@ -73,6 +73,12 @@
 			"name" : "Redirect from the Project Home page to this URL",
 			"type" : "text",
 			"super-users-only" : true
+		},
+		{
+			"key" : "fix-form-navigation",
+			"name" : "Form navigation fix",
+			"type" : "checkbox",
+			"super-users-only" : true
 		}
 	]
 }

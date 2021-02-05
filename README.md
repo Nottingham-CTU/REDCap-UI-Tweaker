@@ -96,3 +96,11 @@ relative to the REDCap version directory.
 If the URL contains `pid=*`, the `*` will be replaced with the current project ID.
 
 This setting is only available to administrators.
+
+### Form navigation fix
+When submitting a form and navigating away from the form (e.g. *Save & Go To Next Form*), a
+*Save & Stay* will be performed first if this option is enabled. This can be used to work around
+issues in REDCap or other modules if data needs to be saved first for the form navigation to work
+correctly.
+
+This setting is only available to administrators.
