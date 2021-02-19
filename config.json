@@ -4,6 +4,7 @@
 	"description": "Make adjustments to the REDCap user interface.",
 	"permissions": [
 		"redcap_every_page_before_render",
+		"redcap_project_home_page",
 		"redcap_every_page_top",
 		"redcap_data_entry_form",
 		"redcap_module_system_enable"

@@ -64,7 +64,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		if ( $projectHomeRedirect != '' &&
 		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
-		     ( ! isset( $_GET['route'] ) || ! isset( $_GET['__redirect'] ) ) )
+		     ! isset( $_GET['route'] ) && ! isset( $_GET['__redirect'] ) )
 		{
 			if ( ! preg_match( '!^https?://!', $projectHomeRedirect ) )
 			{
@@ -79,6 +79,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+	}
+
+
+
+	// Project home page hook. This is called after page loads so is unsuitable for the home page
+	// redirect, but is used to prevent content being displayed in case the redirect has not been
+	// triggered.
+
+	function redcap_project_home_page()
+	{
+		if ( $this->getProjectSetting( 'project-home-redirect' ) != '' )
+		{
+			$this->exitAfterHook();
+		}
 	}
 
 
