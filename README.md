@@ -93,7 +93,8 @@ If set, this will cause the *Project Home* page to redirect to the specified URL
 URL (starting with `http://` or `https://`) or a relative URL can be used. Relative URLs are
 relative to the REDCap version directory.
 
-If the URL contains `pid=*`, the `*` will be replaced with the current project ID.
+If the URL is a relative URL and it contains `pid=*`, the `*` will be replaced with the current
+project ID. This does not apply to absolute URLs.
 
 This setting is only available to administrators.
 
