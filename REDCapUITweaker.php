@@ -20,13 +20,111 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-	// Perform actions on every page, or on pages without specific hooks.
 
-	function redcap_every_page_top( $project_id )
+	// Perform actions on every page (before page starts loading).
+
+	function redcap_every_page_before_render( $project_id = null )
 	{
-		if ( !$project_id )
+
+		// If the option to redirect users with one project to that project is enabled, perform the
+		// redirect from the my projects page the first time that page is loaded in that session.
+
+		if ( $project_id === null && !isset( $_SESSION['module_uitweaker_single_proj_redirect'] ) &&
+		     $this->getSystemSetting( 'single-project-redirect' ) &&
+		     in_array( $_GET['action'], [ '', 'myprojects' ] ) &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
+		{
+			$projIDs = $this->query( 'SELECT group_concat(p.project_id SEPARATOR \',\') ' .
+			                         'FROM redcap_user_rights u ' .
+			                         'JOIN redcap_projects p ON u.project_id = p.project_id ' .
+			                         'WHERE u.username = ? AND p.date_deleted IS NULL',
+			                         USERID )->fetch_row()[0];
+			if ( strlen( $projIDs ) > 0 && strpos( $projIDs, ',' ) === false )
+			{
+				header( 'Location: ' . APP_PATH_WEBROOT_FULL . 'redcap_v' . REDCAP_VERSION .
+				        '/index.php?pid=' . $projIDs );
+				$_SESSION['module_uitweaker_single_proj_redirect'] = true;
+				$this->exitAfterHook();
+			}
+		}
+
+
+		// Exit the function here if a system-level page.
+
+		if ( $project_id === null )
 		{
 			return;
+		}
+
+
+		// If the project home page is to redirect to another URL, and this is the project home
+		// page, then perform the redirect.
+
+		$projectHomeRedirect = $this->getProjectSetting( 'project-home-redirect' );
+
+		if ( $projectHomeRedirect != '' &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
+		     ! isset( $_GET['route'] ) && ! isset( $_GET['__redirect'] ) )
+		{
+			if ( ! preg_match( '!^https?://!', $projectHomeRedirect ) )
+			{
+				$projectHomeRedirect = str_replace( 'pid=*', 'pid=' . $project_id,
+				                                    $projectHomeRedirect );
+				$projectHomeRedirect = APP_PATH_WEBROOT_FULL . 'redcap_v' . REDCAP_VERSION .
+				                       ( substr( $projectHomeRedirect, 0, 1 ) == '/' ? '' : '/' ) .
+				                       $projectHomeRedirect;
+			}
+			header( 'Location: ' . $projectHomeRedirect );
+			$this->exitAfterHook();
+		}
+
+
+	}
+
+
+
+	// Project home page hook. This is called after page loads so is unsuitable for the home page
+	// redirect, but is used to prevent content being displayed in case the redirect has not been
+	// triggered.
+
+	function redcap_project_home_page()
+	{
+		if ( $this->getProjectSetting( 'project-home-redirect' ) != '' )
+		{
+			$this->exitAfterHook();
+		}
+	}
+
+
+
+
+	// Perform actions on every page, or on pages without specific hooks
+	// (after page starts loading).
+
+	function redcap_every_page_top( $project_id = null )
+	{
+		if ( $project_id === null )
+		{
+			return;
+		}
+
+
+		// If the external modules page.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 35 ) ==
+		                                                     'ExternalModules/manager/project.php' )
+		{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('tr[data-module="<?php echo preg_replace( '/_v[^_]*$/', '', $this->getModuleDirectoryName() );
+?>"] button.external-modules-disable-button').css('display','none')
+  })
+</script>
+<?php
+
 		}
 
 
@@ -208,6 +306,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+
 	// Perform actions on data entry forms.
 
 	function redcap_data_entry_form( $project_id, $record, $instrument )
@@ -254,6 +353,63 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
     }
 <?php
 
+		}
+
+
+		// If the form navigation fix is enabled, amend the dataEntrySubmit function to perform a
+		// save and stay before performing the selected action. A session variable is set (by AJAX
+		// request) which triggers the selected action once the page reloads following the save
+		// and stay.
+
+		if ( $this->getProjectSetting( 'fix-form-navigation' ) === true )
+		{
+			if ( isset( $_SESSION['module_uitweak_fixformnav'] ) &&
+			     $_SESSION['module_uitweak_fixformnav'] == 'submit-btn-savenextform' &&
+			     $_SESSION['module_uitweak_fixformnav_ts'] > time() - 5 )
+			{
+
+?>
+    dataEntrySubmit( 'submit-btn-savenextform' )
+<?php
+
+			}
+			else
+			{
+
+?>
+    var vOldDataEntrySubmit = dataEntrySubmit
+    dataEntrySubmit = function( vSubmitObj )
+    {
+      var vSubmitType = ''
+      if ( typeof vSubmitObj == 'string' || vSubmitObj instanceof String )
+      {
+        vSubmitType = vSubmitObj
+      }
+      else
+      {
+        vSubmitType = $(vSubmitObj).attr('name')
+      }
+      if ( vSubmitType == 'submit-btn-savenextform')
+      {
+        $.ajax( { url : '<?php echo $this->getUrl( 'ajax_set_formnav.php' ); ?>',
+                  method : 'POST',
+                  data : { nav : 'submit-btn-savenextform' },
+                  headers : { 'X-RC-UITweak-Req' : '1' },
+                  dataType : 'json',
+                  complete : function() { vOldDataEntrySubmit( 'submit-btn-savecontinue' ) }
+                } )
+      }
+      else
+      {
+        return vOldDataEntrySubmit( vSubmitObj )
+      }
+    }
+<?php
+
+			}
+
+			unset( $_SESSION['module_uitweak_fixformnav'],
+			       $_SESSION['module_uitweak_fixformnav_ts'] );
 		}
 
 
@@ -325,13 +481,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
           }
         } )
         vBtnInstance.id = vBtnList[0].id
-        vBtnInstance.name = vBtnList[0].name
+        vBtnInstance.name = ( vBtnList[0].name == '' ? vBtnList[0].id : vBtnList[0].name )
         vBtnInstance.onclick = vBtnList[0].onclick
         vBtnInstance.innerHTML = vBtnList[0].innerHTML
         for ( vCount2 = 1; vCount2 < vBtnList.length; vCount2++ )
         {
           vBtnOptions[ vCount2 - 1 ].id = vBtnList[vCount2].id
-          vBtnOptions[ vCount2 - 1 ].name = vBtnList[vCount2].name
+          vBtnOptions[ vCount2 - 1 ].name =
+                    ( vBtnList[vCount2].name == '' ? vBtnList[vCount2].id : vBtnList[vCount2].name )
           vBtnOptions[ vCount2 - 1 ].onclick = vBtnList[vCount2].onclick
           vBtnOptions[ vCount2 - 1 ].innerHTML = vBtnList[vCount2].innerHTML
         }
@@ -354,6 +511,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+
 	// Return the URL for the specified alternate icon image.
 
 	function getIconUrl( $icon )
@@ -364,11 +522,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+
 	// Check that the module is enabled system-wide.
 
 	function validateSettings( $settings )
 	{
-		if ( $this->getProjectID() === null )
+		$project_id = $this->getProjectID();
+
+		// System-level settings.
+		if ( $project_id === null )
 		{
 			if ( ! $settings['enabled'] )
 			{
@@ -378,6 +540,19 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			{
 				return 'This module does not need to be discoverable.';
 			}
+			return null;
+		}
+
+		// Project-level settings.
+
+		// If settings are valid, check if change reasons are required for changes to complete forms
+		// and if so enable the REDCap setting to require change reasons. The module setting will
+		// override the REDCap setting anyway, but this ensures change reasons are displayed
+		// e.g. on the Logging page.
+		if ( $settings['require-change-reason-complete'] )
+		{
+			$this->query( 'UPDATE redcap_projects SET require_change_reason = ? ' .
+			              'WHERE project_id = ?', [ 1, $project_id ] );
 		}
 		return null;
 	}

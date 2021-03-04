@@ -66,6 +66,12 @@ relevant.
 Replaces some of the record status icons so they can be more easily distinguished by people with
 colour vision deficiency.
 
+### Redirect users with one project to that project
+If this option is enabled, users with only one project will be redirected to that project the first
+time they load the *REDCap Home* page or the *My Projects* page following login. If the
+*My Projects* page is the first page shown after login, the user is immediately redirected to their
+project.
+
 
 ## Project-level configuration options
 
@@ -81,3 +87,21 @@ marked as complete again.
 
 This setting, if enabled, will override the REDCap setting in Project Setup -> Additional
 Customizations.
+
+### Redirect from the Project Home page to this URL
+If set, this will cause the *Project Home* page to redirect to the specified URL. Either an absolute
+URL (starting with `http://` or `https://`) or a relative URL can be used. Relative URLs are
+relative to the REDCap version directory.
+
+If the URL is a relative URL and it contains `pid=*`, the `*` will be replaced with the current
+project ID. This does not apply to absolute URLs.
+
+This setting is only available to administrators.
+
+### Form navigation fix
+When submitting a form and navigating away from the form (e.g. *Save & Go To Next Form*), a
+*Save & Stay* will be performed first if this option is enabled. This can be used to work around
+issues in REDCap or other modules if data needs to be saved first for the form navigation to work
+correctly.
+
+This setting is only available to administrators.
