@@ -164,6 +164,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
           $('#field_req1')[0].checked = false
           $('#field_req')[0].value = '0'
         }
+        else if ( $('#field_type')[0].value == 'text' )
+        {
+          if ( new RegExp('@CALC(DATE|TEXT)').test($('#field_annotation')[0].value) )
+          {
+            $('#field_req0')[0].checked = true
+            $('#field_req1')[0].checked = false
+            $('#field_req')[0].value = '0'
+          }
+          else
+          {
+            $('#field_req0')[0].checked = false
+            $('#field_req1')[0].checked = true
+            $('#field_req')[0].value = '1'
+          }
+        }
       }
       var vMEditID = $('#old_grid_name')
       if ( vMEditID.length > 0 )
@@ -377,31 +392,40 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			{
 
 ?>
-    var vOldDataEntrySubmit = dataEntrySubmit
-    dataEntrySubmit = function( vSubmitObj )
+    if ( $('.form_menu_selected').prev().attr('title') == 'Incomplete' )
     {
-      var vSubmitType = ''
-      if ( typeof vSubmitObj == 'string' || vSubmitObj instanceof String )
+      var vOldDataEntrySubmit = dataEntrySubmit
+      dataEntrySubmit = function( vSubmitObj )
       {
-        vSubmitType = vSubmitObj
-      }
-      else
-      {
-        vSubmitType = $(vSubmitObj).attr('name')
-      }
-      if ( vSubmitType == 'submit-btn-savenextform')
-      {
-        $.ajax( { url : '<?php echo $this->getUrl( 'ajax_set_formnav.php' ); ?>',
-                  method : 'POST',
-                  data : { nav : 'submit-btn-savenextform' },
-                  headers : { 'X-RC-UITweak-Req' : '1' },
-                  dataType : 'json',
-                  complete : function() { vOldDataEntrySubmit( 'submit-btn-savecontinue' ) }
-                } )
-      }
-      else
-      {
-        return vOldDataEntrySubmit( vSubmitObj )
+        var vSubmitType = ''
+        if ( typeof vSubmitObj == 'string' || vSubmitObj instanceof String )
+        {
+          vSubmitType = vSubmitObj
+        }
+        else
+        {
+          vSubmitType = $(vSubmitObj).attr('name')
+        }
+        if ( vSubmitType == 'submit-btn-savecontinue' &&
+             $('[name="save-and-redirect"]').length == 1 )
+        {
+          vSubmitType = 'submit-btn-savenextform'
+          $('[name="save-and-redirect"]').remove()
+        }
+        if ( vSubmitType == 'submit-btn-savenextform' )
+        {
+          $.ajax( { url : '<?php echo $this->getUrl( 'ajax_set_formnav.php' ); ?>',
+                    method : 'POST',
+                    data : { nav : 'submit-btn-savenextform' },
+                    headers : { 'X-RC-UITweak-Req' : '1' },
+                    dataType : 'json',
+                    complete : function() { vOldDataEntrySubmit( 'submit-btn-savecontinue' ) }
+                  } )
+        }
+        else
+        {
+          return vOldDataEntrySubmit( vSubmitObj )
+        }
       }
     }
 <?php
@@ -484,6 +508,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
         vBtnInstance.name = ( vBtnList[0].name == '' ? vBtnList[0].id : vBtnList[0].name )
         vBtnInstance.onclick = vBtnList[0].onclick
         vBtnInstance.innerHTML = vBtnList[0].innerHTML
+        $(vBtnInstance).one('click',function()
+        {
+          $('head').append('<style type="text/css">' +
+                           '.popover.fade.show.bs-popover-top{display:none}</style>')
+        })
         for ( vCount2 = 1; vCount2 < vBtnList.length; vCount2++ )
         {
           vBtnOptions[ vCount2 - 1 ].id = vBtnList[vCount2].id
