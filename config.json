@@ -48,8 +48,18 @@
 			]
 		},
 		{
+			"key" : "submit-option-custom",
+			"name" : "Allow custom submit options",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "alternate-status-icons",
 			"name" : "Use alternate status icons",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "codebook-simplified-view",
+			"name" : "Add a 'simplified view' option to the codebook",
 			"type" : "checkbox"
 		},
 		{
@@ -72,7 +82,17 @@
 		{
 			"key" : "project-home-redirect",
 			"name" : "Redirect from the Project Home page to this URL",
-			"type" : "text",
+			"type" : "text"
+		},
+		{
+			"key" : "custom-logo-name-display",
+			"name" : "If custom logo/name is displayed",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "Show logo and name" },
+				{ "value" : "logo", "name" : "Show logo only" },
+				{ "value" : "name", "name" : "Show institution/org name only" }
+			],
 			"super-users-only" : true
 		},
 		{

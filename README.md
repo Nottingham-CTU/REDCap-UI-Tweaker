@@ -96,7 +96,8 @@ relative to the REDCap version directory.
 If the URL is a relative URL and it contains `pid=*`, the `*` will be replaced with the current
 project ID. This does not apply to absolute URLs.
 
-This setting is only available to administrators.
+Only administrators can set the URL to an absolute URL or a relative URL for a different project
+(where `pid` has a value other than `*`).
 
 ### Form navigation fix
 When submitting a form and navigating away from the form (e.g. *Save & Go To Next Form*), a
