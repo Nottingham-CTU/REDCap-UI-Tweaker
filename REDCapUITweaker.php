@@ -5,7 +5,8 @@ namespace Nottingham\REDCapUITweaker;
 
 class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 {
-	const SUBMIT_TYPES = [ 'continue', 'nextinstance', 'nextform', 'nextrecord', 'exitrecord' ];
+	const SUBMIT_TYPES = [ 'record', 'continue', 'nextinstance',
+	                       'nextform', 'nextrecord', 'exitrecord' ];
 
 
 	// Initialise module when enabled.
@@ -414,9 +415,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 			elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' )
 			{
-				// Limit the submit options to 'Save & Add New Instance', 'Save & Go To Next Form'
-				// and 'Save & Stay'.
-				$this->rearrangeSubmitOptions( 'nextinstance,nextform,continue' );
+				// Limit the submit options to 'Save & Exit Form', 'Save & Add New Instance',
+				// 'Save & Go To Next Form' and 'Save & Stay'.
+				$this->rearrangeSubmitOptions( 'record,nextinstance,nextform,continue' );
 			}
 		}
 
@@ -594,14 +595,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
       $.each( vBtnDropDown, function( vCount, vDropDownInstance )
       {
         var vBtnOptions = $(vDropDownInstance).siblings('.dropdown-menu').find('a')
-        var vBtnInstance = vDropDownInstance.previousElementSibling
+        var vBtn1 = vDropDownInstance.previousElementSibling
+        var vBtn0 = vBtn1.parentElement.previousElementSibling
         var vBtnList = []
         $.each( [ <?php echo $submitButtonString; ?> ], function( vCount2, vBtnID )
         {
-          if ( vBtnInstance.id == vBtnID )
+          if ( vBtn0.id == vBtnID )
           {
-            var vBtnItem = { 'id' : vBtnInstance.id, 'innerHTML' : vBtnInstance.innerHTML,
-                             'onclick' : vBtnInstance.onclick, 'name' : vBtnInstance.name }
+            var vBtnItem = { 'id' : vBtn0.id, 'innerHTML' : vBtn0.innerHTML,
+                             'onclick' : vBtn0.onclick, 'name' : vBtn0.name }
+            vBtnList.push( vBtnItem )
+          }
+          else if ( vBtn1.id == vBtnID )
+          {
+            var vBtnItem = { 'id' : vBtn1.id, 'innerHTML' : vBtn1.innerHTML,
+                             'onclick' : vBtn1.onclick, 'name' : vBtn1.name }
             vBtnList.push( vBtnItem )
           }
           else
@@ -619,32 +627,42 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
         } )
         if ( vBtnList.length == 0 )
         {
-          vBtnInstance.parentElement.style.display = 'none'
+          vBtn0.style.display = 'none'
+          vBtn1.parentElement.style.display = 'none'
           return
         }
-        vBtnInstance.id = vBtnList[0].id
-        vBtnInstance.name = ( vBtnList[0].name == '' ? vBtnList[0].id : vBtnList[0].name )
-        vBtnInstance.onclick = vBtnList[0].onclick
-        vBtnInstance.innerHTML = vBtnList[0].innerHTML
-        $(vBtnInstance).one('click',function()
+        vBtn0.id = vBtnList[0].id
+        vBtn0.name = ( vBtnList[0].name == '' ? vBtnList[0].id : vBtnList[0].name )
+        vBtn0.onclick = vBtnList[0].onclick
+        vBtn0.innerHTML = vBtnList[0].innerHTML
+        if ( vBtnList.length == 1 )
+        {
+          vBtn1.parentElement.style.display = 'none'
+          return
+        }
+        vBtn1.id = vBtnList[1].id
+        vBtn1.name = ( vBtnList[1].name == '' ? vBtnList[1].id : vBtnList[1].name )
+        vBtn1.onclick = vBtnList[1].onclick
+        vBtn1.innerHTML = vBtnList[1].innerHTML
+        $(vBtn1).one('click',function()
         {
           $('head').append('<style type="text/css">' +
                            '.popover.fade.show.bs-popover-top{display:none}</style>')
         })
-        if ( vBtnList.length == 1 )
+        if ( vBtnList.length == 2 )
         {
-          vBtnInstance.style.borderRadius = '0.25rem'
+          vBtn1.style.borderRadius = '0.25rem'
           vDropDownInstance.style.display = 'none'
         }
-        for ( vCount2 = 1; vCount2 < vBtnList.length; vCount2++ )
+        for ( vCount2 = 2; vCount2 < vBtnList.length; vCount2++ )
         {
-          vBtnOptions[ vCount2 - 1 ].id = vBtnList[vCount2].id
-          vBtnOptions[ vCount2 - 1 ].name =
+          vBtnOptions[ vCount2 - 2 ].id = vBtnList[vCount2].id
+          vBtnOptions[ vCount2 - 2 ].name =
                     ( vBtnList[vCount2].name == '' ? vBtnList[vCount2].id : vBtnList[vCount2].name )
-          vBtnOptions[ vCount2 - 1 ].onclick = vBtnList[vCount2].onclick
-          vBtnOptions[ vCount2 - 1 ].innerHTML = vBtnList[vCount2].innerHTML
+          vBtnOptions[ vCount2 - 2 ].onclick = vBtnList[vCount2].onclick
+          vBtnOptions[ vCount2 - 2 ].innerHTML = vBtnList[vCount2].innerHTML
         }
-        for ( vCount2 = vBtnList.length - 1; vCount2 < vBtnOptions.length; vCount2++ )
+        for ( vCount2 = vBtnList.length - 2; vCount2 < vBtnOptions.length; vCount2++ )
         {
           vBtnOptions[ vCount2 ].remove()
         }

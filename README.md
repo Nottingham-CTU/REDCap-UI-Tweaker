@@ -62,9 +62,29 @@ recently (if any). This setting allows manipulating this list of options in one 
 Note that some of the options might not be displayed on a particular data entry form if they are not
 relevant.
 
+### Allow custom submit options
+Allow use of the **@SAVEOPTIONS** action tag to specify the options for submitting a data entry form.
+This is applied on a per-form basis by using the action tag on any of the fields on that form.
+The first @SAVEOPTIONS action tag encountered on the form will be used, excluding fields hidden by
+branching logic when the form loads.
+
+To use this action tag, enter `@SAVEOPTIONS=` followed by a comma separated list of submit options:
+* record &ndash; *Save & Exit Form*
+* continue &ndash; *Save & Stay*
+* nextinstance &ndash; *Save & Add New Instance*
+* nextform &ndash; *Save & Go To Next Form*
+* nextrecord &ndash; *Save & Go To Next Record*
+* exitrecord &ndash; *Save & Exit Record*
+
 ### Use alternate status icons
 Replaces some of the record status icons so they can be more easily distinguished by people with
 colour vision deficiency.
+
+### Add a 'simplified view' option to the codebook
+If enabled, a button will be added to the codebook page to show a simplified view. This will hide
+any buttons and icons from the codebook table, remove the field number column and simplify the
+instrument headings. Once the simplified view is shown, a button to select the table is displayed
+to make it easier to copy the table e.g. for use in documentation.
 
 ### Redirect users with one project to that project
 If this option is enabled, users with only one project will be redirected to that project the first
@@ -98,6 +118,13 @@ project ID. This does not apply to absolute URLs.
 
 Only administrators can set the URL to an absolute URL or a relative URL for a different project
 (where `pid` has a value other than `*`).
+
+### If custom logo/name is displayed
+Within the project settings in the REDCap control center, there is an option to display the custom
+logo and institution name at the top of all project pages. If that option is set to yes, this
+setting allows it to be further adjusted so only the logo or only the institution name is displayed.
+
+This setting is only available to administrators.
 
 ### Form navigation fix
 When submitting a form and navigating away from the form (e.g. *Save & Go To Next Form*), a
