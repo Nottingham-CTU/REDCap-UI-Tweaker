@@ -319,7 +319,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	// Perform actions on data entry forms.
 
-	function redcap_data_entry_form( $project_id, $record, $instrument )
+	function redcap_data_entry_form( $project_id, $record, $instrument,
+	                                 $event_id, $group_id, $repeat_instance )
 	{
 
 
@@ -380,20 +381,43 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
-		// Perform the selected submit option tweak. Either remove the 'Save & Go To Next Record'
-		// option, or switch to only New Instance, Next Form and Stay options.
-
-		if ( $this->getSystemSetting( 'submit-option-tweak' ) == '1' )
+		// Check if custom submit options are enabled and present.
+		$customSubmit = false;
+		if ( $this->getSystemSetting( 'submit-option-custom' ) )
 		{
-			// Identify the 'Save & Go To Next Record' option and remove it. If the option is on the
-			// button rather than in the dropdown, move the first item in the dropdown to the button.
-			$this->removeSubmitOption( 'nextrecord' );
+			$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+			foreach ( $listFields as $infoField )
+			{
+				if ( preg_match( '/@SAVEOPTIONS=((\'[^\']*\')|("[^"]*")|(\S*))/',
+				                 $infoField['field_annotation'], $submitOptions ) &&
+				     ( $infoField['branching_logic'] == '' ||
+				       \REDCap::evaluateLogic( $infoField['branching_logic'], $project_id, $record,
+				                               $event_id, $repeat_instance, $instrument ) ) )
+				{
+					$submitOptions = $submitOptions[1];
+					if ( preg_match( '/(\'[^\']*\')|("[^"]*")/', $submitOptions ) )
+					{
+						$submitOptions = substr( $submitOptions, 1, -1 );
+					}
+					$customSubmit = $this->rearrangeSubmitOptions( $submitOptions );
+				}
+			}
 		}
-		elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' )
+		// If custom submit options are not present, perform the submit option tweak that is
+		// selected in the module system settings (if applicable).
+		if ( ! $customSubmit )
 		{
-			// Identify the 'Save & Add New Instance', 'Save & Go To Next Form' and 'Save & Stay'
-			// options, and place in that order on the button and dropdown.
-			$this->rearrangeSubmitOptions( 'nextinstance,nextform,continue' );
+			if ( $this->getSystemSetting( 'submit-option-tweak' ) == '1' )
+			{
+				// Identify the 'Save & Go To Next Record' option and remove it.
+				$this->removeSubmitOption( 'nextrecord' );
+			}
+			elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' )
+			{
+				// Limit the submit options to 'Save & Add New Instance', 'Save & Go To Next Form'
+				// and 'Save & Stay'.
+				$this->rearrangeSubmitOptions( 'nextinstance,nextform,continue' );
+			}
 		}
 
 
@@ -545,15 +569,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function rearrangeSubmitOptions( $submitOptions )
 	{
-		$submitOptions = explode( ',', $submitOptions );
-		foreach ( $submitOptions as $i => $submitOption )
+		$submitButtonString = '';
+		if ( $submitOptions != '' )
 		{
-			$submitOption = trim( $submitOption );
-			if ( ! in_array( $submitOption, self::SUBMIT_TYPES ) )
+			$submitOptions = explode( ',', $submitOptions );
+			foreach ( $submitOptions as $i => $submitOption )
 			{
-				return false;
+				$submitOption = trim( $submitOption );
+				if ( ! in_array( $submitOption, self::SUBMIT_TYPES ) )
+				{
+					return false;
+				}
+				$submitButtonString .= ( $submitButtonString == '' ? '' : ", " );
+				$submitButtonString .= "'submit-btn-save" . $submitOption . "'";
 			}
-			$submitOptions[$i] = $submitOption;
 		}
 
 ?>
@@ -567,9 +596,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
         var vBtnOptions = $(vDropDownInstance).siblings('.dropdown-menu').find('a')
         var vBtnInstance = vDropDownInstance.previousElementSibling
         var vBtnList = []
-        $.each( [ 'submit-btn-save<?php
-		echo implode( "', 'submit-btn-save", $submitOptions );
-?>' ], function( vCount2, vBtnID )
+        $.each( [ <?php echo $submitButtonString; ?> ], function( vCount2, vBtnID )
         {
           if ( vBtnInstance.id == vBtnID )
           {
@@ -665,7 +692,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-	// Output JavaScript to remove a submit option.
+	// Output JavaScript to remove a submit option from the dropdown list. If the option is on the
+	// button rather than the dropdown, move the first item in the dropdown to the button.
 	// Note: '[id=' selectors are used instead of '#' selectors for element IDs, as REDCap is
 	// using duplicate element IDs (in violation of HTML spec).
 
