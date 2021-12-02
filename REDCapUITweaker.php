@@ -219,84 +219,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 			// Rearrange the list of field types.
+			$this->rearrangeFieldTypes( $this->getSystemSetting( 'field-types-order' ) );
 
-			$fieldTypesAll = $this->getSystemSetting( 'field-types-order' );
-			if ( preg_match( '/^[1-9][0-9]?([,][1-9][0-9]?)*([|][1-9][0-9]?([,][1-9][0-9]?)*)?$/',
-			     $fieldTypesAll ) )
-			{
-				$fieldTypesAll = explode( '|', $fieldTypesAll );
-				$fieldTypesCommon = explode( ',', $fieldTypesAll[0] );
-				$fieldTypesOther = isset( $fieldTypesAll[1] )
-				                   ? explode( ',', $fieldTypesAll[1] ) : '';
-				$fieldTypesUsed = [ '12' => true, '13' => true ];
-
-?>
-<script type="text/javascript">
-  $(function() {
-    setTimeout(function() {
-      var vTypeOptions = $('#field_type option')
-      var vTypeList = $('#field_type')
-      vTypeList.html('')
-      var vCommonTypeList =
-            $( '<optgroup label="Common Field Types"></optgroup>' )
-      var vHeaderTypeList =
-            $( '<optgroup label="Headers and Descriptions"></optgroup>' )
-      var vOtherTypeList =
-            $( '<optgroup label="Other Field Types"></optgroup>' )
-<?php
-
-				foreach ( $fieldTypesCommon as $fieldTypeCode )
-				{
-					$fieldTypesUsed[$fieldTypeCode] = true;
-
-?>
-      if ( typeof( vTypeOptions[<?php echo $fieldTypeCode; ?>] ) != 'undefined' )
-      {
-        vCommonTypeList.append( vTypeOptions[<?php echo $fieldTypeCode; ?>] )
-      }
-<?php
-
-				}
-				foreach ( $fieldTypesOther as $fieldTypeCode )
-				{
-					$fieldTypesUsed[$fieldTypeCode] = true;
-
-?>
-      if ( typeof( vTypeOptions[<?php echo $fieldTypeCode; ?>] ) != 'undefined' )
-      {
-        vOtherTypeList.append( vTypeOptions[<?php echo $fieldTypeCode; ?>] )
-      }
-<?php
-
-				}
-				for ( $fieldTypeCode = 1; $fieldTypeCode < 25; $fieldTypeCode++ )
-				{
-					if ( ! isset( $fieldTypesUsed[$fieldTypeCode] ) )
-					{
-
-?>
-      if ( typeof( vTypeOptions[<?php echo $fieldTypeCode; ?>] ) != 'undefined' )
-      {
-        vOtherTypeList.append( vTypeOptions[<?php echo $fieldTypeCode; ?>] )
-      }
-<?php
-
-					}
-				}
-
-?>
-      vHeaderTypeList.append( vTypeOptions[13] ) // new section
-      vHeaderTypeList.append( vTypeOptions[12] ) // desc. text
-      vTypeList.append( vCommonTypeList )
-      vTypeList.append( vHeaderTypeList )
-      vTypeList.append( vOtherTypeList )
-      vTypeList.prepend( vTypeOptions[0] )
-    }, 800 )
-  })
-</script>
-<?php
-
-			}
+			// Provide the predefined field annotations.
+			$this->provideFieldAnnotations( $this->getSystemSetting( 'predefined-annotations' ) );
 
 
 		} // end if instrument designer
@@ -502,6 +428,117 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Output JavaScript to provide the predefined field annotations.
+
+	function provideFieldAnnotations( $predefinedAnnotations )
+	{
+		if ( $predefinedAnnotations == '' )
+		{
+			return;
+		}
+
+		$listAnnotations = explode( "\n", $predefinedAnnotations );
+		array_walk( $listAnnotations, function( &$v ) { $v = trim( $v ); } );
+		$listAnnotations = array_values( array_filter( $listAnnotations ) );
+
+		if ( empty( $listAnnotations ) )
+		{
+			return;
+		}
+?>
+<script type="text/javascript">
+  $(function() {
+    var vAnnotationField = $('#field_annotation')
+    var vAnnotations = <?php echo json_encode( $listAnnotations ), "\n"; ?>
+    var vSelect = $('<select><option value="">Choose annotation...</option></select>')
+    vSelect.css('font-size','x-small')
+    vAnnotations.forEach( function(i)
+    {
+      var vOption = $('<option></option>')
+      vOption.text(i)
+      vSelect.append(vOption)
+    })
+    vSelect.change( function()
+    {
+      var vValue = vSelect.val()
+      if ( vValue == '' )
+      {
+        return
+      }
+      var vText = vAnnotationField.val()
+      var vPos
+      if ( vText == '' )
+      {
+        vText = vValue
+      }
+      else if ( vText.substring(0,1) == '@' )
+      {
+        vText = vValue + '\n' + vText
+      }
+      else if ( ( vPos = vText.indexOf('\n@') ) != -1 )
+      {
+        vText = vText.substring(0, vPos) + '\n' + vValue + vText.substring(vPos)
+      }
+      else
+      {
+        vText += '\n' + vValue
+      }
+      vAnnotationField.val(vText)
+      vSelect.find('option').first().prop('selected',true)
+    })
+    vAnnotationField.before(vSelect)
+    vAnnotationField.before('<br>')
+    $('#div_field_annotation .btn').click(function()
+    {
+      var vFuncRestore = function()
+      {
+        var vCloseButtons = $('[aria-describedby=action_tag_explain_popup] .ui-button')
+        if ( vCloseButtons.length < 2 )
+        {
+          setTimeout(vFuncRestore, 250)
+          return
+        }
+        setTimeout(function()
+        {
+          vCloseButtons.off('click.textrestore')
+          var vText = vAnnotationField.val()
+          var vPos = vText.indexOf('\n@')
+          if ( vPos == -1 && vText.length > 0 && vText.indexOf('@') == -1 )
+          {
+            vPos = vText.length
+            vText += '\n'
+          }
+          if ( vPos != -1 )
+          {
+            var vAText = vText.substring(0, vPos + 1)
+            vCloseButtons.on('click.textrestore', function()
+            {
+              var vTText = vAnnotationField.val()
+              if ( vTText == '' )
+              {
+                vAnnotationField.val(vAText.substring(0,vAText.length-1))
+              }
+              else
+              {
+                vAnnotationField.val(vAText + vTText)
+              }
+            })
+            vAnnotationField.val(vText.substring(vPos + 1))
+          }
+        }, 1000)
+      }
+      setTimeout(vFuncRestore, 250)
+    })
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to provide the simplified view option on the codebook.
 
 	function provideSimplifiedView()
@@ -554,6 +591,93 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
     vBtnSimplify.css('margin-top','5px')
     vBtnSimplify.click(vFuncSimplify)
     $('.jqbuttonmed[onclick="window.print();"]').after(vBtnSimplify)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to rearrange the list of field types.
+
+	function rearrangeFieldTypes( $fieldTypesOrder )
+	{
+		if ( ! preg_match( '/^[1-9][0-9]?([,][1-9][0-9]?)*([|][1-9][0-9]?([,][1-9][0-9]?)*)?$/',
+		                   $fieldTypesAll ) )
+		{
+			return;
+		}
+
+		$fieldTypesAll = explode( '|', $fieldTypesOrder );
+		$fieldTypesCommon = explode( ',', $fieldTypesAll[0] );
+		$fieldTypesOther = isset( $fieldTypesAll[1] ) ? explode( ',', $fieldTypesAll[1] ) : '';
+		$fieldTypesUsed = [ '12' => true, '13' => true ];
+
+?>
+<script type="text/javascript">
+  $(function() {
+    setTimeout(function() {
+      var vTypeOptions = $('#field_type option')
+      var vTypeList = $('#field_type')
+      vTypeList.html('')
+      var vCommonTypeList =
+            $( '<optgroup label="Common Field Types"></optgroup>' )
+      var vHeaderTypeList =
+            $( '<optgroup label="Headers and Descriptions"></optgroup>' )
+      var vOtherTypeList =
+            $( '<optgroup label="Other Field Types"></optgroup>' )
+<?php
+
+		foreach ( $fieldTypesCommon as $fieldTypeCode )
+		{
+			$fieldTypesUsed[$fieldTypeCode] = true;
+
+?>
+      if ( typeof( vTypeOptions[<?php echo $fieldTypeCode; ?>] ) != 'undefined' )
+      {
+        vCommonTypeList.append( vTypeOptions[<?php echo $fieldTypeCode; ?>] )
+      }
+<?php
+
+		}
+		foreach ( $fieldTypesOther as $fieldTypeCode )
+		{
+			$fieldTypesUsed[$fieldTypeCode] = true;
+
+?>
+      if ( typeof( vTypeOptions[<?php echo $fieldTypeCode; ?>] ) != 'undefined' )
+      {
+        vOtherTypeList.append( vTypeOptions[<?php echo $fieldTypeCode; ?>] )
+      }
+<?php
+
+		}
+		for ( $fieldTypeCode = 1; $fieldTypeCode < 25; $fieldTypeCode++ )
+		{
+			if ( ! isset( $fieldTypesUsed[$fieldTypeCode] ) )
+			{
+
+?>
+      if ( typeof( vTypeOptions[<?php echo $fieldTypeCode; ?>] ) != 'undefined' )
+      {
+        vOtherTypeList.append( vTypeOptions[<?php echo $fieldTypeCode; ?>] )
+      }
+<?php
+
+			}
+		}
+
+?>
+      vHeaderTypeList.append( vTypeOptions[13] ) // new section
+      vHeaderTypeList.append( vTypeOptions[12] ) // desc. text
+      vTypeList.append( vCommonTypeList )
+      vTypeList.append( vHeaderTypeList )
+      vTypeList.append( vOtherTypeList )
+      vTypeList.prepend( vTypeOptions[0] )
+    }, 800 )
   })
 </script>
 <?php

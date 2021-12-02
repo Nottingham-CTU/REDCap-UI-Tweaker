@@ -38,13 +38,18 @@
 			]
 		},
 		{
+			"key" : "predefined-annotations",
+			"name" : "Predefined field annotations (one per line)",
+			"type" : "textarea"
+		},
+		{
 			"key" : "submit-option-tweak",
 			"name" : "Submit options",
 			"type" : "radio",
 			"choices" : [
 				{ "value" : "0", "name" : "Default" },
 				{ "value" : "1", "name" : "Remove 'Save and Go To Next Record'" },
-				{ "value" : "2", "name" : "'New Instance', 'Next Form' and 'Stay' only" }
+				{ "value" : "2", "name" : "'Exit Form', 'New Instance', 'Next Form' and 'Stay' only" }
 			]
 		},
 		{
@@ -66,6 +71,21 @@
 			"key" : "single-project-redirect",
 			"name" : "Redirect users with one project to that project",
 			"type" : "checkbox"
+		},
+		{
+			"key" : "fmt1",
+			"name" : "<script type=\"text/javascript\">$('[field=field-types-order] td').first().css('width','40%')</script>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt2",
+			"name" : "<script type=\"text/javascript\">$('[field=enabled],[field=discoverable-in-project],[field=fmt1]').css('display','none')</script>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt3",
+			"name" : "<script type=\"text/javascript\">$('[field=user-activate-permission],[field=fmt2],[field=fmt3]').css('display','none')</script>",
+			"type" : "descriptive"
 		}
 	],
 	"project-settings" : [

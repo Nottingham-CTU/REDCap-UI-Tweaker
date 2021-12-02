@@ -39,6 +39,10 @@ option will not be visible when creating the field, but will be visible when edi
 can be set to *no* at that time. For matrix fields, the required option will be ticked when each
 field is added, but can be unticked once the field label and name have been set.
 
+### Predefined field annotations
+Enter field annotations here (one per line) for them to be provided in a drop down list on the
+add/edit field form for easy selection.
+
 ### Submit options
 On a REDCap data entry form, there are several options available when submitting.
 The **Save & Exit Form** option is always displayed next to a button/list combo of options which can
@@ -61,6 +65,9 @@ recently (if any). This setting allows manipulating this list of options in one 
 
 Note that some of the options might not be displayed on a particular data entry form if they are not
 relevant.
+
+This setting does not change the *Save & Exit Form* option, but this can be moved or removed using
+the custom submit options (see below).
 
 ### Allow custom submit options
 Allow use of the **@SAVEOPTIONS** action tag to specify the options for submitting a data entry form.
