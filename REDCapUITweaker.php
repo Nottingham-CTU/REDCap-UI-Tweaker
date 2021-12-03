@@ -566,16 +566,37 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
         vFuncSelect()
         return
       }
-      $('.ReportTableWithBorder td[colspan]').attr('colspan','3')
-      $('.ReportTableWithBorder td:nth-child(1):not([colspan])').css('display','none')
+      var vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
+      $('.ReportTableWithBorder td[colspan]').attr('colspan','4')
+      $(vRowsSelector + '>td:nth-child(1)').css('display','none')
       $('.ReportTableWithBorder th:nth-child(1)').css('display','none')
       if ( vIsDesigner )
       {
-        $('.ReportTableWithBorder td:nth-child(2)').css('display','none')
+        $(vRowsSelector + '>td:nth-child(2)').css('display','none')
         $('.ReportTableWithBorder th:nth-child(2)').css('display','none')
       }
+      var vHdrAttribute = $('.ReportTableWithBorder th:nth-child(' +
+                            ( vIsDesigner ? '5' : '4' ) + ')')
+      var vHdrAnnotation = $('<th><?php echo $GLOBALS['lang']['design_527']; ?></th>')
+      vHdrAnnotation.css('background-color',vHdrAttribute.css('background-color'))
+      vHdrAttribute.css('width','')
+      vHdrAttribute.after(vHdrAnnotation)
+      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '5' : '4' ) + ')').each(function()
+      {
+        var vFieldAttr = $(this).html()
+        var vPos = vFieldAttr.indexOf('<br><?php echo $GLOBALS['lang']['design_527']; ?>: ')
+        var vAnnotation = ''
+        if ( vPos != -1 )
+        {
+          vAnnotation = vFieldAttr.substring(vPos + 22).replace(/\n/g, '<br>\n')
+          vFieldAttr = vFieldAttr.substring(0,vPos)
+        }
+        vFieldAttr = vFieldAttr.replace('<br><?php echo $GLOBALS['lang']['design_489']; ?> ','<br>')
+        $(this).html(vFieldAttr)
+        $(this).after($('<td></td>').html(vAnnotation))
+      })
       $('.ReportTableWithBorder td[colspan] .btn').css('display','none')
-      $('.ReportTableWithBorder td table td').css('display','')
+      //$('.ReportTableWithBorder td table td').css('display','')
       $('.ReportTableWithBorder i.fa-chalkboard-teacher').removeClass('fa-chalkboard-teacher')
       $('.ReportTableWithBorder td[colspan]').contents().filter(function(){
         return this.nodeType == 3}).remove()

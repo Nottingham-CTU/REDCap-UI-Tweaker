@@ -89,9 +89,10 @@ colour vision deficiency.
 
 ### Add a 'simplified view' option to the codebook
 If enabled, a button will be added to the codebook page to show a simplified view. This will hide
-any buttons and icons from the codebook table, remove the field number column and simplify the
-instrument headings. Once the simplified view is shown, a button to select the table is displayed
-to make it easier to copy the table e.g. for use in documentation.
+any buttons and icons from the codebook table, remove the field number column, simplify the
+instrument headings and move the field annotations to a separate column. Once the simplified view
+is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
+in documentation.
 
 ### Redirect users with one project to that project
 If this option is enabled, users with only one project will be redirected to that project the first
