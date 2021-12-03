@@ -347,6 +347,25 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 		}
 
+		// Check if the @SQLDESCRIPTIVE action tag is enabled and provide its functionality if so.
+		if ( $this->getSystemSetting( 'sql-descriptive' ) )
+		{
+			$fieldsSQLDesc = [];
+			$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+			foreach ( $listFields as $infoField )
+			{
+				if ( $infoField['field_type'] == 'sql' &&
+				     preg_match( '/@SQLDESCRIPTIVE(\s+|$)/', $infoField['field_annotation'] ) )
+				{
+					$fieldsSQLDesc[] = $infoField['field_name'];
+				}
+			}
+			if ( ! empty( $fieldsSQLDesc ) )
+			{
+				$this->provideSQLDescriptive( $fieldsSQLDesc );
+			}
+		}
+
 
 	}
 
@@ -622,12 +641,54 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Output JavaScript to provide the SQL descriptive field functionality.
+
+	function provideSQLDescriptive( $listFields )
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vListFields = <?php echo json_encode( $listFields ), "\n"; ?>
+    vListFields.forEach( function( vFieldName )
+    {
+      var vData = $('#'+vFieldName+'-tr select option:selected').text()
+      if ( vData.substring(0,4) == 'raw:' )
+      {
+        vData = vData.substring(4)
+      }
+      else if ( vData.substring(0,4) == 'url:' )
+      {
+        try { vData = decodeURIComponent( vData.substring(4) ) } catch { vData = '' }
+      }
+      else if ( vData.substring(0,4) == 'b64:' )
+      {
+        try { vData = atob( vData.substring(4) ) } catch { vData = '' }
+      }
+      $('#'+vFieldName+'-tr .data').css('display','none')
+      $('#'+vFieldName+'-tr .labelrc').empty()
+      $('#'+vFieldName+'-tr .labelrc').removeClass('col-7')
+      $('#'+vFieldName+'-tr .labelrc').addClass('col-12')
+      $('#'+vFieldName+'-tr .labelrc').attr('colspan','2')
+      $('#'+vFieldName+'-tr .labelrc').html( vData )
+    })
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to rearrange the list of field types.
 
 	function rearrangeFieldTypes( $fieldTypesOrder )
 	{
 		if ( ! preg_match( '/^[1-9][0-9]?([,][1-9][0-9]?)*([|][1-9][0-9]?([,][1-9][0-9]?)*)?$/',
-		                   $fieldTypesAll ) )
+		                   $fieldTypesOrder ) )
 		{
 			return;
 		}

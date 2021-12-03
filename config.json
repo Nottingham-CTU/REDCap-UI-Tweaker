@@ -43,6 +43,11 @@
 			"type" : "textarea"
 		},
 		{
+			"key" : "sql-descriptive",
+			"name" : "Enable @SQLDESCRIPTIVE action tag",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "submit-option-tweak",
 			"name" : "Submit options",
 			"type" : "radio",

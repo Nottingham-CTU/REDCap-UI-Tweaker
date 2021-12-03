@@ -43,6 +43,19 @@ field is added, but can be unticked once the field label and name have been set.
 Enter field annotations here (one per line) for them to be provided in a drop down list on the
 add/edit field form for easy selection.
 
+### Enable @SQLDESCRIPTIVE action tag
+Allow use of the **@SQLDESCRIPTIVE** action tag, which will use the option label from the selected
+option in an SQL field as descriptive text and render the field like a descriptive field. This
+allows HTML content to be generated on the page using a database query. You will probably want to
+pair this action tag with @DEFAULT or @PREFILL to select the appropriate option.
+
+As REDCap may strip HTML from option labels, for best results try returning data from the database
+in URL-encoded or base64 format, which can be indicated by prefixing the data as follows:
+* raw: &ndash; no encoding
+* url: &ndash; URL-encoded
+* b64: &ndash; base64 encoded
+* if not prefixed, then assume raw (no encoding)
+
 ### Submit options
 On a REDCap data entry form, there are several options available when submitting.
 The **Save & Exit Form** option is always displayed next to a button/list combo of options which can
