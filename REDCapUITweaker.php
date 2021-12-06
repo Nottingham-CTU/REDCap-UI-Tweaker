@@ -197,6 +197,40 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+
+		// Amend the list of action tags (accessible from the add/edit field window in the
+		// instrument designer) when features which provide extra action tags are enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) == 'Design/online_designer.php' ||
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' )
+		{
+			$listActionTags = [];
+			if ( $this->getSystemSetting( 'submit-option-custom' ) )
+			{
+				$listActionTags['@SAVEOPTIONS'] =
+					'Sets the save options on the form to the options specified (in the specified' .
+					' order). The format must follow the pattern @SAVEOPTIONS=????, in which ' .
+					'the desired value must be a comma separated list of the following options: ' .
+					'record (Save and Exit Form), continue (Save and Stay), nextinstance (Save ' .
+					'and Add New Instance), nextform (Save and Go To Next Form), nextrecord ' .
+					'(Save and Go To Next Record), exitrecord (Save and Exit Record). If this ' .
+					'action tag is used on multiple fields on a form, the value from the first ' .
+					'field not hidden by branching logic when the form loads will be used.';
+			}
+			if ( SUPER_USER && $this->getSystemSetting( 'sql-descriptive' ) )
+			{
+				$listActionTags['@SQLDESCRIPTIVE'] =
+					'On SQL fields, hide the drop-down and use the text in the selected option ' .
+					'as descriptive text. You may want to pair this tag with @DEFAULT or ' .
+					'@PREFILL to select the desired option. To ensure that the data is handled ' .
+					'corectly, you may wish to output it from the database as URL-encoded or ' .
+					'base64, in which case you can prefix it with url: or b64: respectively to ' .
+					'indicate the format.';
+			}
+			$this->provideActionTagExplain( $listActionTags );
+		}
+
+
 	}
 
 
@@ -382,6 +416,81 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
       vOptUnver[0].remove()
     }
   })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to amend the action tags guide.
+
+	function provideActionTagExplain( $listActionTags )
+	{
+		if ( empty( $listActionTags ) )
+		{
+			return;
+		}
+		$listActionTagsJS = [];
+		foreach ( $listActionTags as $t => $d )
+		{
+			$listActionTagsJS[] = [ $t, $d ];
+		}
+		$listActionTagsJS = json_encode( $listActionTagsJS );
+
+?>
+<script type="text/javascript">
+$(function()
+{
+  var vActionTagPopup = actionTagExplainPopup
+  var vMakeRow = function(vTag, vDesc, vTable)
+  {
+    var vRow = $( '<tr>' + vTable.find('tr:first').html() + '</tr>' )
+    var vOldTag = vRow.find('td:eq(1)').html()
+    var vButton = vRow.find('button')
+    vRow.find('td:eq(1)').html(vTag)
+    vRow.find('td:eq(2)').html(vDesc)
+    if ( vButton.length != 0 )
+    {
+      vButton.attr('onclick', vButton.attr('onclick').replace(vOldTag,vTag))
+    }
+    var vRows = vTable.find('tr')
+    var vInserted = false
+    for ( var i = 0; i < vRows.length; i++ )
+    {
+      var vA = vRows.eq(i).find('td:eq(1)').html()
+      if ( vTag < vRows.eq(i).find('td:eq(1)').html() )
+      {
+        vRows.eq(i).before(vRow)
+        vInserted = true
+        break
+      }
+    }
+    if ( ! vInserted )
+    {
+      vRows.last().after(vRow)
+    }
+  }
+  actionTagExplainPopup = function(hideBtns)
+  {
+    vActionTagPopup(hideBtns)
+    var vCheckTagsPopup = setInterval( function()
+    {
+      if ( $('div[aria-describedby="action_tag_explain_popup"]').length == 0 )
+      {
+        return
+      }
+      clearInterval( vCheckTagsPopup )
+      var vActionTagTable = $('#action_tag_explain_popup table');
+      <?php echo $listActionTagsJS; ?>.forEach(function(vItem)
+      {
+        vMakeRow(vItem[0],vItem[1],vActionTagTable)
+      })
+    }, 200 )
+  }
+})
 </script>
 <?php
 
