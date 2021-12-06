@@ -173,61 +173,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 			if ( $this->getSystemSetting( 'field-default-required' ) != '0' )
 			{
-
-?>
-<script type="text/javascript">
-  $(function() {
-    var vEditReqChanged = false
-    var vFuncReqChange = function() { vEditReqChanged = true }
-    setInterval(function() {
-      var vEditID = $('#sq_id')
-      if ( vEditID.length > 0 && vEditID.val() == '' )
-      {
-        if ( $('#field_name').val() == '' && $('#field_label').val() == '' )
-        {
-          vEditReqChanged = false
-          $('#field_req0, #field_req1').off('click.reqdefault')
-          $('#field_req0, #field_req1').on('click.reqdefault', vFuncReqChange)
-        }
-        if ( ! vEditReqChanged )
-        {
-          var vEditFieldType = $('#field_type').val()
-          if ( vEditFieldType == 'descriptive' ||
-               vEditFieldType == 'calc' ||
-               ( vEditFieldType == 'text' &&
-                 ( new RegExp('@CALC(DATE|TEXT)').test($('#field_annotation').val()) ) ) )
-          {
-            $('#field_req0').prop('checked', true).trigger('click')
-          }
-          else
-          {
-            $('#field_req1').prop('checked', true).trigger('click')
-          }
-        }
-      }
-      var vMEditID = $('#old_grid_name')
-      if ( vMEditID.length > 0 )
-      {
-        var vMInputReq = $('.field_req_matrix')
-        var vMInputLab = $('.field_labelmatrix')
-        var vMInputNam = $('.field_name_matrix')
-        if ( vMInputReq.length == vMInputLab.length &&
-             vMInputReq.length == vMInputNam.length )
-        {
-          for ( var i = 0; i < vMInputReq.length; i++ )
-          {
-            if ( ( vMInputLab[ i ].value == '' && vMInputNam[ i ].value == '' ) )
-            {
-              vMInputReq[ i ].checked = true
-            }
-          }
-        }
-      }
-    }, 500 )
-  })
-</script>
-<?php
-
+				$this->provideDefaultRequired();
 			}
 
 
@@ -279,22 +225,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		if ( $this->getProjectSetting( 'require-change-reason-complete' ) === true )
 		{
-
-?>
-<script type="text/javascript">
-  $(function() {
-    if ( $('select[name="<?php echo $instrument; ?>_complete"]')[0].value == '2' )
-    {
-      require_change_reason = 1
-    }
-    else
-    {
-      require_change_reason = 0
-    }
-  })
-</script>
-<?php
-
+			$this->provideChangeReason();
 		}
 
 
@@ -450,6 +381,98 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
     {
       vOptUnver[0].remove()
     }
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to set the requirement for a change reason based on the form's previous
+	// 'complete' status.
+
+	function provideChangeReason()
+	{
+
+?>
+<script type="text/javascript">
+  $(function() {
+    if ( $('select[name="<?php echo $instrument; ?>_complete"]')[0].value == '2' )
+    {
+      require_change_reason = 1
+    }
+    else
+    {
+      require_change_reason = 0
+    }
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to set fields to be required by default.
+
+	function provideDefaultRequired()
+	{
+
+?>
+<script type="text/javascript">
+  $(function() {
+    var vEditReqChanged = false
+    var vFuncReqChange = function() { vEditReqChanged = true }
+    setInterval(function() {
+      var vEditID = $('#sq_id')
+      if ( vEditID.length > 0 && vEditID.val() == '' )
+      {
+        if ( $('#field_name').val() == '' && $('#field_label').val() == '' )
+        {
+          vEditReqChanged = false
+          $('#field_req0, #field_req1').off('click.reqdefault')
+          $('#field_req0, #field_req1').on('click.reqdefault', vFuncReqChange)
+        }
+        if ( ! vEditReqChanged )
+        {
+          var vEditFieldType = $('#field_type').val()
+          if ( vEditFieldType == 'descriptive' ||
+               vEditFieldType == 'calc' ||
+               ( vEditFieldType == 'text' &&
+                 ( new RegExp('@CALC(DATE|TEXT)').test($('#field_annotation').val()) ) ) )
+          {
+            $('#field_req0').prop('checked', true).trigger('click')
+          }
+          else
+          {
+            $('#field_req1').prop('checked', true).trigger('click')
+          }
+        }
+      }
+      var vMEditID = $('#old_grid_name')
+      if ( vMEditID.length > 0 )
+      {
+        var vMInputReq = $('.field_req_matrix')
+        var vMInputLab = $('.field_labelmatrix')
+        var vMInputNam = $('.field_name_matrix')
+        if ( vMInputReq.length == vMInputLab.length &&
+             vMInputReq.length == vMInputNam.length )
+        {
+          for ( var i = 0; i < vMInputReq.length; i++ )
+          {
+            if ( ( vMInputLab[ i ].value == '' && vMInputNam[ i ].value == '' ) )
+            {
+              vMInputReq[ i ].checked = true
+            }
+          }
+        }
+      }
+    }, 500 )
   })
 </script>
 <?php
