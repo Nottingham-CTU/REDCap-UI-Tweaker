@@ -73,6 +73,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "my-projects-alphabetical",
+			"name" : "Show 'My Projects' in alphabetical order",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "single-project-redirect",
 			"name" : "Redirect users with one project to that project",
 			"type" : "checkbox"

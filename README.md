@@ -107,6 +107,11 @@ instrument headings and move the field annotations to a separate column. Once th
 is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
 in documentation.
 
+### Show 'My Projects' in alphabetical order
+If this option is enabled, the list of projects on the 'My Projects' page will be shown in
+alphabetical order by default. Any custom folders the user has defined will be retained, the
+projects will be sorted within the folders.
+
 ### Redirect users with one project to that project
 If this option is enabled, users with only one project will be redirected to that project the first
 time they load the *REDCap Home* page or the *My Projects* page following login. If the

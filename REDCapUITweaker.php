@@ -108,6 +108,19 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function redcap_every_page_top( $project_id = null )
 	{
+
+		// Provide sorting for the my projects page.
+
+		if ( $project_id === null && $this->getSystemSetting( 'my-projects-alphabetical' ) &&
+		     $_GET['action'] == 'myprojects' &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
+		{
+			$this->provideProjectSorting();
+		}
+
+
+		// Exit the function here if a system level page.
+
 		if ( $project_id === null )
 		{
 			return;
@@ -547,6 +560,54 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
         }, 1000)
       }
       setTimeout(vFuncRestore, 250)
+    })
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide alphabetical sorting on the My Projects page.
+
+	function provideProjectSorting()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vGroups = []
+    $('#table-proj_table tr[id^="f_"]').each(function()
+    {
+      var vItem = $(this).find('td').first().clone()
+      vItem.find('span').remove()
+      $(this).attr('data-studyname',vItem.text())
+      var vGroupID = this.id.replace(/[0-9]+$/,'')
+      if ( ! vGroups.includes( vGroupID ) )
+      {
+        vGroups.push( vGroupID )
+      }
+    })
+    vGroups.forEach( function( vGroupID )
+    {
+      var vRows = $('#table-proj_table tr[id^="'+vGroupID+'"]')
+      var vNumRows = vRows.length
+      for ( var i = 1; i < vNumRows; i++ )
+      {
+        vRows = $('#table-proj_table tr[id^="'+vGroupID+'"]')
+        for ( var j = 0; j < i; j++ )
+        {
+          if ( vRows.eq(i).attr('data-studyname') < vRows.eq(j).attr('data-studyname') )
+          {
+            vRows.eq(j).before(vRows.eq(i))
+            break
+          }
+        }
+      }
     })
   })
 </script>
