@@ -140,6 +140,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If the alerts page and custom alert sender is enabled.
+
+		if ( $this->getSystemSetting( 'custom-alert-sender' ) &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
+		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:setup' )
+		{
+			$this->provideCustomAlertSender();
+		}
+
+
 
 		// If the codebook page and the simplified view option is enabled.
 
@@ -517,6 +527,97 @@ $(function()
     {
       require_change_reason = 0
     }
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to allow a custom from address to be selected in alerts.
+
+	function provideCustomAlertSender()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vRegexValidate = /<?php echo $this->getSystemSetting('custom-alert-sender-regex'); ?>/
+    var vDialog = $('<div><input type="text" style="width:100%"><br>' +
+                    '<span style="color:#c00"></span></div>')
+    var vSelectFields = $('select[name="email-from"], select[name="email-failed"]')
+    var vOldVal = null
+    var vActiveSelect = null
+    vDialog.find('input').on('keypress',function(e)
+    {
+      if ( e.which == 13 )
+      {
+        vDialog.parent().find('.ui-dialog-buttonset .ui-button').click()
+        e.preventDefault()
+      }
+    })
+    vDialog.dialog(
+    {
+      autoOpen:false,
+      buttons:{
+        OK: function()
+        {
+          var vInputText = vDialog.find('input').val()
+          if ( ! vRegexValidate.test(vInputText) )
+          {
+            vDialog.find('span').text('The email address you entered is invalid or disallowed.')
+            return
+          }
+          vDialog.find('input').val('')
+          var vNewOption = $('<option></option>')
+          vNewOption.attr('value',vInputText)
+          vNewOption.text(vInputText)
+          vActiveSelect.find('option[value="*"]').before(vNewOption)
+          vActiveSelect.val(vInputText)
+          vDialog.dialog('close')
+        }
+      },
+      modal:true,
+      resizable:false,
+      title:'Enter email address',
+      width:400
+    })
+    vSelectFields.append( '<option value="*">Enter a different email address...</option>' )
+    vSelectFields.on('click',function()
+    {
+      var vField = $(this)
+      vOldVal = vField.val()
+      vField.find('option[value="*"]').appendTo(vField)
+    })
+    vSelectFields.on('change',function()
+    {
+      if ( $(this).val() == '*' )
+      {
+        vActiveSelect = $(this)
+        vActiveSelect.val( vOldVal )
+        vDialog.parent().appendTo('#external-modules-configure-modal .modal-content')
+        vDialog.dialog('open')
+        $('.ui-widget-overlay.ui-front').appendTo('#external-modules-configure-modal .modal-content')
+      }
+    })
+    var vEditEmailAlert = editEmailAlert
+    editEmailAlert = function(vModal, vIndex, vAlertNum)
+    {
+      if ( typeof( vModal['email-failed'] ) != 'undefined' &&
+           $('select[name="email-failed"] option[value="'+vModal['email-failed']+'"]').length == 0 )
+      {
+        var vNewOption = $('<option></option>')
+        vNewOption.attr('value',vModal['email-failed'])
+        vNewOption.text(vModal['email-failed'])
+        $('select[name="email-failed"]').append(vNewOption)
+      }
+      vEditEmailAlert(vModal, vIndex, vAlertNum)
+    }
+
   })
 </script>
 <?php
@@ -1243,6 +1344,12 @@ $(function()
 			if ( $settings['discoverable-in-project'] || $settings['user-activate-permission'] )
 			{
 				return 'This module does not need to be discoverable.';
+			}
+			if ( $settings['custom-alert-sender'] &&
+			     ( $settings['custom-alert-sender-regex'] == '' ||
+			       preg_match( '/'.$settings['custom-alert-sender-regex'].'/', '' ) === false ) )
+			{
+				return 'The regular expression to validate custom from addresses is invalid.';
 			}
 			return null;
 		}

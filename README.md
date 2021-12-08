@@ -96,6 +96,11 @@ To use this action tag, enter `@SAVEOPTIONS=` followed by a comma separated list
 * nextrecord &ndash; *Save & Go To Next Record*
 * exitrecord &ndash; *Save & Exit Record*
 
+### Allow custom from addresses in alerts
+Provides an option when adding an alert to enter an email from address that is not provided in the
+dropdown list. If this option is enabled, use the *regular expression to validate custom from
+addresses* option to restrict the addresses which can be used (e.g. to limit to your own domain).
+
 ### Use alternate status icons
 Replaces some of the record status icons so they can be more easily distinguished by people with
 colour vision deficiency.

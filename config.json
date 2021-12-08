@@ -63,6 +63,18 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "custom-alert-sender",
+			"name" : "Allow custom from addresses in alerts",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "custom-alert-sender-regex",
+			"name" : "Regular expression to validate custom from addresses",
+			"type" : "text",
+			"branchingLogic" : { "field" : "custom-alert-sender", "value" : true },
+			"required" : true
+		},
+		{
 			"key" : "alternate-status-icons",
 			"name" : "Use alternate status icons",
 			"type" : "checkbox"
