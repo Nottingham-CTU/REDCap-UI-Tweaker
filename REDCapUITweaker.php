@@ -140,13 +140,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
-		// If the alerts page and custom alert sender is enabled.
+		// If the alerts page.
 
-		if ( $this->getSystemSetting( 'custom-alert-sender' ) &&
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
 		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:setup' )
 		{
-			$this->provideCustomAlertSender();
+			// Provide custom alert sender if enabled.
+			if ( $this->getSystemSetting( 'custom-alert-sender' ) )
+			{
+				$this->provideCustomAlertSender();
+			}
+			// Provide the simplified view if enabled.
+			if ( $this->getSystemSetting( 'alerts-simplified-view' ) )
+			{
+				$this->provideSimplifiedAlerts();
+			}
 		}
 
 
@@ -157,7 +165,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		                                                   'Design/data_dictionary_codebook.php' &&
 		     $this->getSystemSetting( 'codebook-simplified-view' ) )
 		{
-			$this->provideSimplifiedView();
+			$this->provideSimplifiedCodebook();
 		}
 
 
@@ -852,9 +860,38 @@ $(function()
 
 
 
+	// Output JavaScript to provide the simplified view option on the alerts.
+
+	function provideSimplifiedAlerts()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('alerts_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#center').children().last().before(vDivSimplify)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to provide the simplified view option on the codebook.
 
-	function provideSimplifiedView()
+	function provideSimplifiedCodebook()
 	{
 
 ?>

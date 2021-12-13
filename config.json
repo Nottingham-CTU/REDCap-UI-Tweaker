@@ -80,6 +80,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "alerts-simplified-view",
+			"name" : "Add a 'simplified view' option to the alerts",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "codebook-simplified-view",
 			"name" : "Add a 'simplified view' option to the codebook",
 			"type" : "checkbox"
