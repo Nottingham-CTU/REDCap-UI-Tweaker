@@ -143,7 +143,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// If the alerts page.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
-		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:setup' )
+		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:setup' &&
+		     ! isset( $_GET['log'] ) )
 		{
 			// Provide custom alert sender if enabled.
 			if ( $this->getSystemSetting( 'custom-alert-sender' ) )
