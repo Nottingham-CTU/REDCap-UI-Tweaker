@@ -268,7 +268,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		if ( $this->getProjectSetting( 'hide-unverified-option' ) === true )
 		{
-			$this->hideUnverifiedOption();
+			$this->hideUnverifiedOption( $instrument );
 		}
 
 
@@ -278,7 +278,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		if ( $this->getProjectSetting( 'require-change-reason-complete' ) === true )
 		{
-			$this->provideChangeReason();
+			$this->provideChangeReason( $instrument );
 		}
 
 
@@ -423,16 +423,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	// Output JavaScript to hide the 'unverified' option on data entry forms.
 
-	function hideUnverifiedOption()
+	function hideUnverifiedOption( $instrument )
 	{
 
 ?>
 <script type="text/javascript">
   $(function() {
     var vOptUnver = $('select[name="<?php echo $instrument; ?>_complete"] option[value="1"]')
-    if ( vOptUnver.length == 1 && vOptUnver[0].parentElement.value != '1' )
+    if ( vOptUnver.length == 1 && vOptUnver.parent().val() != '1' )
     {
-      vOptUnver[0].remove()
+      vOptUnver.remove()
     }
   })
 </script>
@@ -522,13 +522,13 @@ $(function()
 	// Output JavaScript to set the requirement for a change reason based on the form's previous
 	// 'complete' status.
 
-	function provideChangeReason()
+	function provideChangeReason( $instrument )
 	{
 
 ?>
 <script type="text/javascript">
   $(function() {
-    if ( $('select[name="<?php echo $instrument; ?>_complete"]')[0].value == '2' )
+    if ( $('select[name="<?php echo $instrument; ?>_complete"]').val() == '2' )
     {
       require_change_reason = 1
     }
