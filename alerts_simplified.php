@@ -7,8 +7,9 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('alerts-simplified-vi
 }
 
 $lookupTriggered = [ 'submit' => $GLOBALS['lang']['alerts_134'],
-                     'submit-logic' => $GLOBALS['lang']['alerts_135'],
-                     'logic' => $GLOBALS['lang']['alerts_136'] ];
+                     'submit-logic' => $GLOBALS['lang']['alerts_135']
+                                       ?? $GLOBALS['lang']['alerts_316'],
+                     'logic' => $GLOBALS['lang']['alerts_136'] ?? $GLOBALS['lang']['alerts_317'] ];
 $lookupFormStatus = [ '1' => $GLOBALS['lang']['alerts_126'] . ' ' . $GLOBALS['lang']['alerts_120'] .
                              ' ' . $GLOBALS['lang']['alerts_138'],
                       '0' => $GLOBALS['lang']['alerts_126'] . ' ' . $GLOBALS['lang']['alerts_120'] .
@@ -118,7 +119,7 @@ foreach ( $listAlerts as $infoAlert )
 	// Output the alert trigger.
 ?>
   <td>
-   <?php echo htmlspecialchars( $lookupTriggered[ $infoAlert['alert_trigger'] ] ), "\n"; ?>
+   <?php echo $lookupTriggered[ $infoAlert['alert_trigger'] ], "\n"; ?>
 <?php
 	if ( $infoAlert['alert_trigger'] != 'logic' )
 	{
@@ -145,7 +146,7 @@ foreach ( $listAlerts as $infoAlert )
 <?php
 	if ( $infoAlert['cron_send_email_on'] == 'now' )
 	{
-		echo '   ', htmlspecialchars( $GLOBALS['lang']['alerts_110'] ), "\n";
+		echo '   ', htmlspecialchars( $GLOBALS['lang']['alerts_110'] ?? $GLOBALS['lang']['global_1540'] ), "\n";
 	}
 	elseif ( $infoAlert['cron_send_email_on'] == 'next_occurrence' )
 	{
@@ -174,7 +175,8 @@ foreach ( $listAlerts as $infoAlert )
 <?php
 	if ( $infoAlert['email_repetitive'] == 1 )
 	{
-		echo '   ', htmlspecialchars( $GLOBALS['lang']['alerts_116'] ), "\n";
+		echo '   ', htmlspecialchars( $GLOBALS['lang']['alerts_116']
+		                              ?? $GLOBALS['lang']['global_1546'] ), "\n";
 	}
 	elseif ( $infoAlert['email_repetitive_change'] == 1 ||
 	         $infoAlert['email_repetitive_change_calcs'] == 1 )
@@ -204,7 +206,7 @@ foreach ( $listAlerts as $infoAlert )
 	// Output the alert sender, recipients and message.
 ?>
   <td>
-   <p>
+   <p style="margin-top:0px">
 <?php
 	if ( $infoAlert['email_from'] != '' )
 	{

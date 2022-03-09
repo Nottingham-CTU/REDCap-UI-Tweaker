@@ -241,10 +241,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				$listActionTags['@SQLDESCRIPTIVE'] =
 					'On SQL fields, hide the drop-down and use the text in the selected option ' .
 					'as descriptive text. You may want to pair this tag with @DEFAULT or ' .
-					'@PREFILL to select the desired option. To ensure that the data is handled ' .
-					'corectly, you may wish to output it from the database as URL-encoded or ' .
-					'base64, in which case you can prefix it with url: or b64: respectively to ' .
-					'indicate the format.';
+					'@SETVALUE/@PREFILL to select the desired option. To ensure that the data is ' .
+					'handled corectly, you may wish to output it from the database as ' .
+					'URL-encoded or base64, in which case you can prefix it with url: or b64: ' .
+					'respectively to indicate the format.';
 			}
 			$this->provideActionTagExplain( $listActionTags );
 		}
@@ -609,6 +609,8 @@ $(function()
         vActiveSelect = $(this)
         vActiveSelect.val( vOldVal )
         vDialog.parent().appendTo('#external-modules-configure-modal .modal-content')
+        vDialog.find('input').val('')
+        vDialog.find('span').text('')
         vDialog.dialog('open')
         $('.ui-widget-overlay.ui-front').appendTo('#external-modules-configure-modal .modal-content')
       }
@@ -850,6 +852,15 @@ $(function()
           }
         }
       }
+      vRows = $('#table-proj_table tr[id^="'+vGroupID+'"]')
+      for ( var i = 0; i < vNumRows; i++ )
+      {
+        vRows.eq(i).removeClass('myprojstripe')
+        if ( i % 2 == 1 )
+        {
+          vRows.eq(i).addClass('myprojstripe')
+        }
+      }
     })
   })
 </script>
@@ -917,7 +928,11 @@ $(function()
         vFuncSelect()
         return
       }
-      var vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
+      var vRowsSelector = '.ReportTableWithBorder tr[data-form]'
+      if ( $(vRowsSelector).length == 0 )
+      {
+        vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
+      }
       $('.ReportTableWithBorder td[colspan]').attr('colspan','4')
       $(vRowsSelector + '>td:nth-child(1)').css('display','none')
       $('.ReportTableWithBorder th:nth-child(1)').css('display','none')
@@ -926,6 +941,8 @@ $(function()
         $(vRowsSelector + '>td:nth-child(2)').css('display','none')
         $('.ReportTableWithBorder th:nth-child(2)').css('display','none')
       }
+      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
+        ')>span[style*="margin"]').css('display','none')
       var vHdrAttribute = $('.ReportTableWithBorder th:nth-child(' +
                             ( vIsDesigner ? '5' : '4' ) + ')')
       var vHdrAnnotation = $('<th><?php echo $GLOBALS['lang']['design_527']; ?></th>')
@@ -934,14 +951,31 @@ $(function()
       vHdrAttribute.after(vHdrAnnotation)
       $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '5' : '4' ) + ')').each(function()
       {
-        var vFieldAttr = $(this).html()
-        var vPos = vFieldAttr.indexOf('<br><?php echo $GLOBALS['lang']['design_527']; ?>: ')
         var vAnnotation = ''
+        var vFieldAttr = $(this).html()
+        var vPos = vFieldAttr.indexOf('<br><span data-rc-lang="design_527">' +
+                                      '<?php echo $GLOBALS['lang']['design_527']; ?></span>: ')
         if ( vPos != -1 )
         {
-          vAnnotation = vFieldAttr.substring(vPos + 22).replace(/\n/g, '<br>\n')
+          vAnnotation = vFieldAttr.substring(vPos + <?php
+		echo strlen($GLOBALS['lang']['design_527']) + 45; ?>).replace(/\n/g, '<br>\n')
+        }
+        else
+        {
+          vPos = vFieldAttr.indexOf('<br><?php echo $GLOBALS['lang']['design_527']; ?>: ')
+          if ( vPos != -1 )
+          {
+            vAnnotation = vFieldAttr.substring(vPos + <?php
+		echo strlen($GLOBALS['lang']['design_527']) + 4; ?>).replace(/\n/g, '<br>\n')
+          }
+        }
+        if ( vPos != -1 )
+        {
           vFieldAttr = vFieldAttr.substring(0,vPos)
         }
+        vFieldAttr = vFieldAttr.replace('<br><span data-rc-lang="design_489">' +
+                                        '<?php echo $GLOBALS['lang']['design_489']; ?></span> ',
+                                        '<br>')
         vFieldAttr = vFieldAttr.replace('<br><?php echo $GLOBALS['lang']['design_489']; ?> ','<br>')
         $(this).html(vFieldAttr)
         $(this).after($('<td></td>').html(vAnnotation))
