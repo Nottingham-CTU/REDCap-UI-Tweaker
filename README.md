@@ -35,8 +35,8 @@ If this setting is blank or invalid, the REDCap default field types list will be
 
 ### Set required status on new fields
 This will set the **required** option on new fields to *yes*. For standard fields, the required
-option will not be visible when creating the field, but will be visible when editing the field and
-can be set to *no* at that time. For matrix fields, the required option will be ticked when each
+option will be set to *yes* for all field types except descriptive and calculated fields for which
+the option will be set to *no*. For matrix fields, the required option will be ticked when each
 field is added, but can be unticked once the field label and name have been set.
 
 ### Predefined field annotations
