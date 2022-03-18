@@ -228,7 +228,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			{
 				$listActionTags['@SAVEOPTIONS'] =
 					'Sets the save options on the form to the options specified (in the specified' .
-					' order). The format must follow the pattern @SAVEOPTIONS=????, in which ' .
+					' order). The format must follow the pattern @SAVEOPTIONS=\'????\', in which ' .
 					'the desired value must be a comma separated list of the following options: ' .
 					'record (Save and Exit Form), continue (Save and Stay), nextinstance (Save ' .
 					'and Add New Instance), nextform (Save and Go To Next Form), nextrecord ' .
@@ -966,7 +966,7 @@ $(function()
           if ( vPos != -1 )
           {
             vAnnotation = vFieldAttr.substring(vPos + <?php
-		echo strlen($GLOBALS['lang']['design_527']) + 4; ?>).replace(/\n/g, '<br>\n')
+		echo strlen($GLOBALS['lang']['design_527']) + 6; ?>).replace(/\n/g, '<br>\n')
           }
         }
         if ( vPos != -1 )
