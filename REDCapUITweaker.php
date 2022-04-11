@@ -8,6 +8,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	const SUBMIT_TYPES = [ 'record', 'continue', 'nextinstance',
 	                       'nextform', 'nextrecord', 'exitrecord' ];
 
+	private $customAlerts;
+
 
 	// Initialise module when enabled.
 	// Set default system settings and enable in all projects.
@@ -254,6 +256,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Perform actions on the user rights page.
+
+	function redcap_user_rights( $project_id )
+	{
+
+		// If the simplified view option is enabled.
+
+		if ( $this->getSystemSetting( 'user-rights-simplified-view' ) )
+		{
+			$this->provideSimplifiedUserRights();
+		}
+
+	}
+
+
+
 
 
 	// Perform actions on data entry forms.
@@ -364,6 +382,53 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+	}
+
+
+
+
+
+	// Allows a different module to supply its own alert details for the alerts simplified view.
+	// $infoAlert should be an array containing the following keys:
+	// 'enabled': true if the alert is enabled, false otherwise
+	// 'title': title of the alert (optional)
+	// 'type': type of the alert (e.g. Email, SMS)
+	// 'form': the instrument to which the alert relates (optional)
+	// 'trigger': details of the alert trigger
+	// 'schedule': details of the alert schedule
+	// 'message': the alert message (include details of sender/recipient as appropriate)
+	// the title, type and form fields should be formatted as plain text, all other fields as HTML
+
+	function addCustomAlert( $infoAlert )
+	{
+		if ( ! is_array( $this->customAlerts ) )
+		{
+			$this->customAlerts = [];
+		}
+		$this->customAlerts[] = $infoAlert;
+	}
+
+
+
+
+
+	// Allows a different module to ask this module if it needs to supply its own alert details.
+
+	function areCustomAlertsExpected()
+	{
+		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
+		       $_GET['page'] == 'alerts_simplified';
+	}
+
+
+
+
+
+	// Get the alerts supplied by other modules.
+
+	function getCustomAlerts()
+	{
+		return is_array( $this->customAlerts ) ? $this->customAlerts : [];
 	}
 
 
@@ -997,6 +1062,35 @@ $(function()
     vBtnSimplify.css('margin-top','5px')
     vBtnSimplify.click(vFuncSimplify)
     $('.jqbuttonmed[onclick="window.print();"]').after(vBtnSimplify)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the simplified view option on the user rights page.
+
+	function provideSimplifiedUserRights()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('user_rights_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#addUsersRolesDiv').after(vDivSimplify)
   })
 </script>
 <?php
