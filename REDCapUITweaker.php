@@ -34,7 +34,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// redirect from the my projects page the first time that page is loaded in that session.
 
 		if ( $project_id === null && !isset( $_SESSION['module_uitweaker_single_proj_redirect'] ) &&
-		     $this->getSystemSetting( 'single-project-redirect' ) &&
+		     defined( 'USERID' ) && $this->getSystemSetting( 'single-project-redirect' ) &&
 		     in_array( $_GET['action'], [ '', 'myprojects' ] ) &&
 		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
 		{
@@ -238,7 +238,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					'action tag is used on multiple fields on a form, the value from the first ' .
 					'field not hidden by branching logic when the form loads will be used.';
 			}
-			if ( SUPER_USER && $this->getSystemSetting( 'sql-descriptive' ) )
+			if ( defined( 'SUPER_USER' ) && SUPER_USER &&
+			     $this->getSystemSetting( 'sql-descriptive' ) )
 			{
 				$listActionTags['@SQLDESCRIPTIVE'] =
 					'On SQL fields, hide the drop-down and use the text in the selected option ' .
@@ -1524,7 +1525,7 @@ $(function()
 
 		// If the user is not an administrator, check that the home page redirect URL, if specified,
 		// is a relative path within the current project.
-		if ( SUPER_USER != 1 )
+		if ( ! defined( 'SUPER_USER' ) || SUPER_USER != 1 )
 		{
 			$oldRedirect = $this->getProjectSetting( 'project-home-redirect' );
 			$newRedirect = $settings['project-home-redirect'];
