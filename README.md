@@ -1,4 +1,4 @@
-# REDCap-UI-Tweaker
+# REDCap UI Tweaker
 This module provides a selection of options to adjust the REDCap user interface.
 
 
@@ -132,12 +132,22 @@ If enabled, a button will be added to the alerts and notifications page to show 
 This will provide an overview of the alerts as a table. Once the simplified view is shown, a button
 to select the table is displayed to make it easier to copy the table e.g. for use in documentation.
 
+Other modules can add information to the alerts simplified view. If you are a module developer, see
+the [alert provider guide](README-AlertProvider.md) for more information.
+
 ### Add a 'simplified view' option to the codebook
 If enabled, a button will be added to the codebook page to show a simplified view. This will hide
 any buttons and icons from the codebook table, remove the field number column, simplify the
 instrument headings and move the field annotations to a separate column. Once the simplified view
 is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
 in documentation.
+
+### Add a 'simplified view' option to the user rights page
+If enabled, a button will be added to the alerts and notifications page to show a simplified view.
+This will provide an overview of the user rights as a table showing the rights granted to each role.
+This includes the basic rights and the data viewing/export rights for each data entry instrument.
+Once the simplified view is shown, a button to select the table is displayed to make it easier to
+copy the table e.g. for use in documentation.
 
 ### Show 'My Projects' in alphabetical order
 If this option is enabled, the list of projects on the 'My Projects' page will be shown in
