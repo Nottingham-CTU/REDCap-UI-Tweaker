@@ -143,7 +143,7 @@ is shown, a button to select the table is displayed to make it easier to copy th
 in documentation.
 
 ### Add a 'simplified view' option to the user rights page
-If enabled, a button will be added to the alerts and notifications page to show a simplified view.
+If enabled, a button will be added to the user rights page to show a simplified view.
 This will provide an overview of the user rights as a table showing the rights granted to each role.
 This includes the basic rights and the data viewing/export rights for each data entry instrument.
 Once the simplified view is shown, a button to select the table is displayed to make it easier to
