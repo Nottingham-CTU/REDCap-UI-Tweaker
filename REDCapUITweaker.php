@@ -994,7 +994,7 @@ $(function()
         vFuncSelect()
         return
       }
-      var vRowsSelector = '.ReportTableWithBorder tr[data-form]'
+      var vRowsSelector = '.ReportTableWithBorder tr[data-field]'
       if ( $(vRowsSelector).length == 0 )
       {
         vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
@@ -1044,7 +1044,7 @@ $(function()
                                         '<br>')
         vFieldAttr = vFieldAttr.replace('<br><?php echo $GLOBALS['lang']['design_489']; ?> ','<br>')
         $(this).html(vFieldAttr)
-        $(this).after($('<td></td>').html(vAnnotation))
+        $(this).after($('<td></td>').css('border-top',$(this).css('border-top')).html(vAnnotation))
       })
       $('.ReportTableWithBorder td[colspan] .btn').css('display','none')
       //$('.ReportTableWithBorder td table td').css('display','')
