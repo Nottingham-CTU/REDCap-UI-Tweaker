@@ -8,6 +8,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	const SUBMIT_TYPES = [ 'record', 'continue', 'nextinstance',
 	                       'nextform', 'nextrecord', 'exitrecord' ];
 
+	private $customAlerts;
+
 
 	// Initialise module when enabled.
 	// Set default system settings and enable in all projects.
@@ -32,7 +34,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// redirect from the my projects page the first time that page is loaded in that session.
 
 		if ( $project_id === null && !isset( $_SESSION['module_uitweaker_single_proj_redirect'] ) &&
-		     $this->getSystemSetting( 'single-project-redirect' ) &&
+		     defined( 'USERID' ) && $this->getSystemSetting( 'single-project-redirect' ) &&
 		     in_array( $_GET['action'], [ '', 'myprojects' ] ) &&
 		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
 		{
@@ -236,7 +238,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					'action tag is used on multiple fields on a form, the value from the first ' .
 					'field not hidden by branching logic when the form loads will be used.';
 			}
-			if ( SUPER_USER && $this->getSystemSetting( 'sql-descriptive' ) )
+			if ( defined( 'SUPER_USER' ) && SUPER_USER &&
+			     $this->getSystemSetting( 'sql-descriptive' ) )
 			{
 				$listActionTags['@SQLDESCRIPTIVE'] =
 					'On SQL fields, hide the drop-down and use the text in the selected option ' .
@@ -249,6 +252,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$this->provideActionTagExplain( $listActionTags );
 		}
 
+
+	}
+
+
+
+	// Perform actions on the user rights page.
+
+	function redcap_user_rights( $project_id )
+	{
+
+		// If the simplified view option is enabled.
+
+		if ( $this->getSystemSetting( 'user-rights-simplified-view' ) )
+		{
+			$this->provideSimplifiedUserRights();
+		}
 
 	}
 
@@ -364,6 +383,53 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+	}
+
+
+
+
+
+	// Allows a different module to supply its own alert details for the alerts simplified view.
+	// $infoAlert should be an array containing the following keys:
+	// 'enabled': true if the alert is enabled, false otherwise
+	// 'title': title of the alert (optional)
+	// 'type': type of the alert (e.g. Email, SMS)
+	// 'form': the instrument to which the alert relates (optional)
+	// 'trigger': details of the alert trigger
+	// 'schedule': details of the alert schedule
+	// 'message': the alert message (include details of sender/recipient as appropriate)
+	// the title, type and form fields should be formatted as plain text, all other fields as HTML
+
+	function addCustomAlert( $infoAlert )
+	{
+		if ( ! is_array( $this->customAlerts ) )
+		{
+			$this->customAlerts = [];
+		}
+		$this->customAlerts[] = $infoAlert;
+	}
+
+
+
+
+
+	// Allows a different module to ask this module if it needs to supply its own alert details.
+
+	function areCustomAlertsExpected()
+	{
+		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
+		       $_GET['page'] == 'alerts_simplified';
+	}
+
+
+
+
+
+	// Get the alerts supplied by other modules.
+
+	function getCustomAlerts()
+	{
+		return is_array( $this->customAlerts ) ? $this->customAlerts : [];
 	}
 
 
@@ -928,7 +994,7 @@ $(function()
         vFuncSelect()
         return
       }
-      var vRowsSelector = '.ReportTableWithBorder tr[data-form]'
+      var vRowsSelector = '.ReportTableWithBorder tr[data-field]'
       if ( $(vRowsSelector).length == 0 )
       {
         vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
@@ -978,7 +1044,7 @@ $(function()
                                         '<br>')
         vFieldAttr = vFieldAttr.replace('<br><?php echo $GLOBALS['lang']['design_489']; ?> ','<br>')
         $(this).html(vFieldAttr)
-        $(this).after($('<td></td>').html(vAnnotation))
+        $(this).after($('<td></td>').css('border-top',$(this).css('border-top')).html(vAnnotation))
       })
       $('.ReportTableWithBorder td[colspan] .btn').css('display','none')
       //$('.ReportTableWithBorder td table td').css('display','')
@@ -997,6 +1063,35 @@ $(function()
     vBtnSimplify.css('margin-top','5px')
     vBtnSimplify.click(vFuncSimplify)
     $('.jqbuttonmed[onclick="window.print();"]').after(vBtnSimplify)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the simplified view option on the user rights page.
+
+	function provideSimplifiedUserRights()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('user_rights_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#addUsersRolesDiv').after(vDivSimplify)
   })
 </script>
 <?php
@@ -1430,7 +1525,7 @@ $(function()
 
 		// If the user is not an administrator, check that the home page redirect URL, if specified,
 		// is a relative path within the current project.
-		if ( SUPER_USER != 1 )
+		if ( ! defined( 'SUPER_USER' ) || SUPER_USER != 1 )
 		{
 			$oldRedirect = $this->getProjectSetting( 'project-home-redirect' );
 			$newRedirect = $settings['project-home-redirect'];
