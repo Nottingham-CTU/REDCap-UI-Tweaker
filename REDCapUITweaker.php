@@ -90,7 +90,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
 		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:saveAlert' &&
 		     isset( $_POST['email-from'] ) &&
-		     preg_match( '/'.$settings['custom-alert-sender-regex'].'/', $_POST['email-from'] ) )
+		     preg_match( '/' . $this->getSystemSetting( 'custom-alert-sender-regex' ) . '/',
+		                 $_POST['email-from'] ) )
 		{
 			$GLOBALS['user_email'] = $_POST['email-from'];
 		}
