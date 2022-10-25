@@ -139,9 +139,9 @@ foreach ( [ true, false ] as $enabledAlerts )
 <?php
 		// Output the alert title, type and form (if triggered on form save).
 ?>
-  <td><?php echo htmlspecialchars( $infoAlert['alert_title'] ); ?></td>
-  <td><?php echo htmlspecialchars( $lookupAlertTypes[ $infoAlert['alert_type'] ] ); ?></td>
-  <td><?php echo htmlspecialchars( $infoAlert['form_menu_description'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoAlert['alert_title'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $lookupAlertTypes[ $infoAlert['alert_type'] ] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoAlert['form_menu_description'] ); ?></td>
 <?php
 		// Output the alert trigger.
 ?>
@@ -151,18 +151,18 @@ foreach ( [ true, false ] as $enabledAlerts )
 		if ( $infoAlert['alert_trigger'] != 'logic' )
 		{
 			echo "   <br>\n   ",
-			     htmlspecialchars( $lookupFormStatus[ $infoAlert['email_incomplete'] ] ), "\n";
+			     $module->escapeHTML( $lookupFormStatus[ $infoAlert['email_incomplete'] ] ), "\n";
 		}
 		if ( $infoAlert['email_repetitive'] != 1 && $infoAlert['email_repetitive_change'] != 1 &&
 		     $infoAlert['email_repetitive_change_calcs'] != 1 )
 		{
 			echo "   <br>\n   ",
-			     htmlspecialchars( ucfirst( $lookupLimit[ $infoAlert['alert_stop_type'] ] ) ), "\n";
+			     $module->escapeHTML( ucfirst( $lookupLimit[ $infoAlert['alert_stop_type'] ] ) ), "\n";
 		}
 		if ( $infoAlert['alert_trigger'] != 'submit' )
 		{
 			echo "   <br>\n   <b>Conditional logic:</b>\n   <br>\n   ",
-			     htmlspecialchars( $infoAlert['alert_condition'] ), "\n";
+			     $module->escapeHTML( $infoAlert['alert_condition'] ), "\n";
 		}
 ?>
   </td>
@@ -173,29 +173,31 @@ foreach ( [ true, false ] as $enabledAlerts )
 <?php
 		if ( $infoAlert['cron_send_email_on'] == 'now' )
 		{
-			echo '   ', htmlspecialchars( $GLOBALS['lang']['alerts_110']
-			                                ?? $GLOBALS['lang']['global_1540'] ), "\n";
+			echo '   ', $module->escapeHTML( $GLOBALS['lang']['alerts_110']
+			                                  ?? $GLOBALS['lang']['global_1540'] ), "\n";
 		}
 		elseif ( $infoAlert['cron_send_email_on'] == 'next_occurrence' )
 		{
 			echo '   ', $GLOBALS['lang']['survey_423'], ' ',
-			     htmlspecialchars( $lookupDaysOfWeek[ $infoAlert['cron_send_email_on_next_day_type'] ] ),
+			     $module->escapeHTML( $lookupDaysOfWeek[ $infoAlert['cron_send_email_on_next_day_type'] ] ),
 			     ' ', $GLOBALS['lang']['global_15'], ' ',
 			     rtrim( rtrim( $infoAlert['cron_send_email_on_next_time'], '0' ), ':' ), "\n";
 		}
 		elseif ( $infoAlert['cron_send_email_on'] == 'time_lag' )
 		{
-			echo '   ', $GLOBALS['lang']['alerts_239'], ' ',
-			     $infoAlert['cron_send_email_on_time_lag_days'], ' ', $GLOBALS['lang']['survey_426'],
-			     ' ', $infoAlert['cron_send_email_on_time_lag_hours'], ' ',
-			     $GLOBALS['lang']['survey_427'], ' ', $infoAlert['cron_send_email_on_time_lag_minutes'],
-			     ' ', $GLOBALS['lang']['survey_428'], ' ',
-			     $lookupBeforeAfter[ $infoAlert['cron_send_email_on_field_after'] ], ' ',
-			     $infoAlert['cron_send_email_on_field'], "\n";
+			echo $module->escapeHTML( '   ' . $GLOBALS['lang']['alerts_239'] . ' ' .
+			                          $infoAlert['cron_send_email_on_time_lag_days'] . ' ' .
+			                          $GLOBALS['lang']['survey_426'] . ' ' .
+			                          $infoAlert['cron_send_email_on_time_lag_hours'] . ' ' .
+			                          $GLOBALS['lang']['survey_427'] . ' ' .
+			                          $infoAlert['cron_send_email_on_time_lag_minutes'] . ' ' .
+			                          $GLOBALS['lang']['survey_428'] . ' ' .
+			                          $lookupBeforeAfter[ $infoAlert['cron_send_email_on_field_after'] ] .
+			                          ' ' . $infoAlert['cron_send_email_on_field'] ) . "\n";
 		}
 		elseif ( $infoAlert['cron_send_email_on'] == 'date' )
 		{
-			echo '   ', htmlspecialchars( $GLOBALS['lang']['survey_429'] ), ' ',
+			echo '   ', $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
 			     rtrim( rtrim( $infoAlert['cron_send_email_on_date'], '0' ), ':' ), "\n";
 		}
 ?>
@@ -203,30 +205,31 @@ foreach ( [ true, false ] as $enabledAlerts )
 <?php
 		if ( $infoAlert['email_repetitive'] == 1 )
 		{
-			echo '   ', htmlspecialchars( $GLOBALS['lang']['alerts_116']
+			echo '   ', $module->escapeHTML( $GLOBALS['lang']['alerts_116']
 			                              ?? $GLOBALS['lang']['global_1546'] ), "\n";
 		}
 		elseif ( $infoAlert['email_repetitive_change'] == 1 ||
 		         $infoAlert['email_repetitive_change_calcs'] == 1 )
 		{
-			echo '   ', htmlspecialchars( $GLOBALS['lang']['alerts_226'] ), "\n";
+			echo '   ', $module->escapeHTML( $GLOBALS['lang']['alerts_226'] ), "\n";
 			echo ( $infoAlert['email_repetitive_change_calcs'] == 0
-			       ? ( '   ' . htmlspecialchars( $GLOBALS['lang']['alerts_231'] ) . "\n" ) : '' );
+			       ? ( '   ' . $module->escapeHTML( $GLOBALS['lang']['alerts_231'] ) . "\n" ) : '' );
 		}
 		elseif ( $infoAlert['cron_repeat_for'] != 0 )
 		{
-			echo '   ', htmlspecialchars( $GLOBALS['lang']['survey_735'] ), ' ',
-			     $infoAlert['cron_repeat_for'], ' ',
-			     htmlspecialchars( $lookupUnits[ $infoAlert['cron_repeat_for_units'] ] ), ' ',
-			     htmlspecialchars( $GLOBALS['lang']['alerts_152'] ), "\n";
+			echo '   ', $module->escapeHTML( $GLOBALS['lang']['survey_735'] ), ' ',
+			     $module->escapeHTML( $infoAlert['cron_repeat_for'] ), ' ',
+			     $module->escapeHTML( $lookupUnits[ $infoAlert['cron_repeat_for_units'] ] ), ' ',
+			     $module->escapeHTML( $GLOBALS['lang']['alerts_152'] ), "\n";
 			echo ( $infoAlert['cron_repeat_for_max'] == '' ? '' :
-			       ( "   <br>\n   " . htmlspecialchars( $GLOBALS['lang']['survey_737'] ) .
-			         ' ' . $infoAlert['cron_repeat_for_max'] . ' ' .
-			         htmlspecialchars( $GLOBALS['lang']['alerts_233'] ) . "\n" ) );
+			       ( "   <br>\n   " .
+			         $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
+			                              $infoAlert['cron_repeat_for_max'] . ' ' .
+			                              $GLOBALS['lang']['alerts_233'] ) . "\n" ) );
 		}
 		else
 		{
-			echo '   ', htmlspecialchars( $GLOBALS['lang']['alerts_61'] ), "\n";
+			echo '   ', $module->escapeHTML( $GLOBALS['lang']['alerts_61'] ), "\n";
 		}
 ?>
   </td>
@@ -239,44 +242,44 @@ foreach ( [ true, false ] as $enabledAlerts )
 		if ( $infoAlert['email_from'] != '' )
 		{
 ?>
-    <b><?php echo htmlspecialchars( $GLOBALS['lang']['global_37'] ); ?></b>
-    <?php echo htmlspecialchars( $infoAlert['email_from_display'] ); ?>
-    &lt;<?php echo htmlspecialchars( $infoAlert['email_from'] ); ?>&gt;
+    <b><?php echo $module->escapeHTML( $GLOBALS['lang']['global_37'] ); ?></b>
+    <?php echo $module->escapeHTML( $infoAlert['email_from_display'] ); ?>
+    &lt;<?php echo $module->escapeHTML( $infoAlert['email_from'] ); ?>&gt;
     <br>
 <?php
 		}
 ?>
-    <b><?php echo htmlspecialchars( $GLOBALS['lang']['global_38'] ); ?></b>
-    <?php echo htmlspecialchars( $infoAlert['email_to'] . $infoAlert['phone_number_to'] ), "\n"; ?>
+    <b><?php echo $module->escapeHTML( $GLOBALS['lang']['global_38'] ); ?></b>
+    <?php echo $module->escapeHTML( $infoAlert['email_to'] . $infoAlert['phone_number_to'] ), "\n"; ?>
 <?php
 		if ( $infoAlert['email_cc'] != '' )
 		{
 ?>
     <br>
-    <b><?php echo htmlspecialchars( $GLOBALS['lang']['alerts_191'] ); ?></b>
-    <?php echo htmlspecialchars( $infoAlert['email_cc'] ), "\n"; ?>
+    <b><?php echo $module->escapeHTML( $GLOBALS['lang']['alerts_191'] ); ?></b>
+    <?php echo $module->escapeHTML( $infoAlert['email_cc'] ), "\n"; ?>
 <?php
 		}
 		if ( $infoAlert['email_bcc'] != '' )
 		{
 ?>
     <br>
-    <b><?php echo htmlspecialchars( $GLOBALS['lang']['alerts_192'] ); ?></b>
-    <?php echo htmlspecialchars( $infoAlert['email_bcc'] ), "\n"; ?>
+    <b><?php echo $module->escapeHTML( $GLOBALS['lang']['alerts_192'] ); ?></b>
+    <?php echo $module->escapeHTML( $infoAlert['email_bcc'] ), "\n"; ?>
 <?php
 		}
 ?>
    </p>
    <p>
-    <?php echo $infoAlert['alert_message'], "\n"; ?>
+    <?php echo filter_tags( $infoAlert['alert_message'] ), "\n"; ?>
    </p>
 <?php
 		if ( $alertAttachments != '' )
 		{
 ?>
    <p>
-    <b><?php echo htmlspecialchars( $GLOBALS['lang']['alerts_128'] ); ?>:</b>
-    <?php echo htmlspecialchars( $alertAttachments ), "\n"; ?>
+    <b><?php echo $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ); ?>:</b>
+    <?php echo $module->escapeHTML( $alertAttachments ), "\n"; ?>
    </p>
 <?php
 		}
@@ -290,9 +293,9 @@ foreach ( [ true, false ] as $enabledAlerts )
 	{
 ?>
  <tr<?php echo $enabledAlerts ? '' : ' style="text-decoration:line-through"'; ?>>
-  <td><?php echo htmlspecialchars( $infoAlert['title'] ); ?></td>
-  <td><?php echo htmlspecialchars( $infoAlert['type'] ); ?></td>
-  <td><?php echo htmlspecialchars( $infoAlert['form'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoAlert['title'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoAlert['type'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoAlert['form'] ); ?></td>
   <td><?php echo $infoAlert['trigger']; ?></td>
   <td><?php echo $infoAlert['schedule']; ?></td>
   <td><?php echo $infoAlert['message']; ?></td>

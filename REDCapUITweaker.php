@@ -46,7 +46,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			if ( strlen( $projIDs ) > 0 && strpos( $projIDs, ',' ) === false )
 			{
 				header( 'Location: ' . APP_PATH_WEBROOT_FULL . 'redcap_v' . REDCAP_VERSION .
-				        '/index.php?pid=' . $projIDs );
+				        '/index.php?pid=' . intval( $projIDs ) );
 				$_SESSION['module_uitweaker_single_proj_redirect'] = true;
 				$this->exitAfterHook();
 			}
@@ -433,6 +433,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	{
 		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
 		       $_GET['page'] == 'alerts_simplified';
+	}
+
+
+
+
+
+	// Escapes text for inclusion in HTML.
+
+	function escapeHTML( $text )
+	{
+		return htmlspecialchars( $text, ENT_QUOTES );
 	}
 
 
