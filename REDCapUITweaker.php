@@ -124,6 +124,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function redcap_every_page_top( $project_id = null )
 	{
+		// Display user login role for this project
+		$this->getUserRole();
 
 		// Provide sorting for the my projects page.
 
@@ -1626,7 +1628,48 @@ $(function()
 		return null;
 	}
 
+	// Get current user role name
+	function getUserRole()
+	{
+		$project_id = $this->getProjectID();
+		$display_role = "";
+		$vscript = "";
 
+		if($project_id != null)
+		{
+			if ( defined('USERID') && USERID != '' )
+			{
+				$userRights = $this->getUser()->getRights();
+
+				if ((isset($userRights)) && (isset($userRights[ 'role_id' ]))) {
+					$display_role = $userRights['role_name'];
+
+					if (strlen($display_role) > 0) {
+						$vscript = "<script type='text/javascript'>
+						$(function(){
+							$('#username-reference').parent().after(
+								'<div style=".'font-size:80%;margin-top:-5px;margin-left:6%;color:rgb(85, 85, 85);'.">'+
+								'<span>Role: </span><b><span id=".'user_rname'.">".$display_role."</span></b></div>'
+							);
+						}) </script>";
+					}
+					echo $vscript;
+				}
+				else
+				{
+					return null;
+				}
+			}
+			else
+			{
+				return null;
+			}
+		}
+		else
+		{
+			return null;
+		}
+	}
 
 }
 
