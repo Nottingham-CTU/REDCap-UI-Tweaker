@@ -181,7 +181,8 @@ foreach ( [ true, false ] as $enabledAlerts )
 			echo '   ', $GLOBALS['lang']['survey_423'], ' ',
 			     $module->escapeHTML( $lookupDaysOfWeek[ $infoAlert['cron_send_email_on_next_day_type'] ] ),
 			     ' ', $GLOBALS['lang']['global_15'], ' ',
-			     rtrim( rtrim( $infoAlert['cron_send_email_on_next_time'], '0' ), ':' ), "\n";
+			     $module->escapeHTML( rtrim( rtrim( $infoAlert['cron_send_email_on_next_time'],
+			                                        '0' ), ':' ) ), "\n";
 		}
 		elseif ( $infoAlert['cron_send_email_on'] == 'time_lag' )
 		{
@@ -198,7 +199,8 @@ foreach ( [ true, false ] as $enabledAlerts )
 		elseif ( $infoAlert['cron_send_email_on'] == 'date' )
 		{
 			echo '   ', $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
-			     rtrim( rtrim( $infoAlert['cron_send_email_on_date'], '0' ), ':' ), "\n";
+			     $module->escapeHTML( rtrim( rtrim( $infoAlert['cron_send_email_on_date'],
+			                                        '0' ), ':' ) ), "\n";
 		}
 ?>
    <br>
