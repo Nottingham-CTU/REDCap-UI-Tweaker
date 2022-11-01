@@ -147,7 +147,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// All pages, if the option to show the role name is enabled.
 		if ( $this->getSystemSetting( 'show-role-name' ) )
 		{
-			$this->getUserRole();
+			$this->provideUserRoleName();
 		}
 
 
@@ -1210,6 +1210,47 @@ $(function()
 
 
 
+	// Output the current user role name
+
+	function provideUserRoleName()
+	{
+		if ( !defined( 'USERID' ) || USERID == '' )
+		{
+			return;
+		}
+
+		$userRights = $this->getUser()->getRights();
+		if ( !isset( $userRights ) ||
+		     !isset( $userRights['role_name'] ) || $userRights['role_name'] == '' )
+		{
+			return;
+		}
+
+		$roleName = $this->escapeHTML( $userRights['role_name'] );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( $('#user-role-name').length > 0 )
+    {
+      return
+    }
+    var vRoleName = $('<div style="' + $('#username-reference').parent().attr('style') + '">Role:' +
+                     ' <span id="user-role-name" style="' + $('#username-reference').attr('style') +
+                      '"><?php echo $roleName; ?></span></div>')
+    vRoleName.css('margin-top','-5px').css('margin-left','17px')
+    $('#username-reference').parent().after( vRoleName )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to rearrange the list of field types.
 
 	function rearrangeFieldTypes( $fieldTypesOrder )
@@ -1633,48 +1674,7 @@ $(function()
 		return null;
 	}
 
-	// Get current user role name
-	function getUserRole()
-	{
-		$project_id = $this->getProjectID();
-		$display_role = "";
-		$vscript = "";
 
-		if($project_id != null)
-		{
-			if ( defined('USERID') && USERID != '' )
-			{
-				$userRights = $this->getUser()->getRights();
-
-				if ((isset($userRights)) && (isset($userRights[ 'role_id' ]))) {
-					$display_role = $userRights['role_name'];
-
-					if (strlen($display_role) > 0) {
-						$vscript = "<script type='text/javascript'>
-						$(function(){
-							$('#username-reference').parent().after(
-								'<div style=".'font-size:80%;margin-top:-5px;margin-left:6%;color:rgb(85, 85, 85);'.">'+
-								'<span>Role: </span><b><span id=".'user_rname'.">".$display_role."</span></b></div>'
-							);
-						}) </script>";
-					}
-					echo $vscript;
-				}
-				else
-				{
-					return null;
-				}
-			}
-			else
-			{
-				return null;
-			}
-		}
-		else
-		{
-			return null;
-		}
-	}
 
 }
 
