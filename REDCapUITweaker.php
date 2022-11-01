@@ -124,8 +124,6 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function redcap_every_page_top( $project_id = null )
 	{
-		// Display user login role for this project
-		$this->getUserRole();
 
 		// Provide sorting for the my projects page.
 
@@ -144,6 +142,13 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			return;
 		}
 
+
+
+		// All pages, if the option to show the role name is enabled.
+		if ( $this->getSystemSetting( 'show-role-name' ) )
+		{
+			$this->getUserRole();
+		}
 
 
 		// All pages, if custom logo/institution name option is used.
