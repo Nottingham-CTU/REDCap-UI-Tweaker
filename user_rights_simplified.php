@@ -96,7 +96,7 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 foreach ( $listRoles as $infoRole )
 {
 ?>
-  <th><?php echo htmlspecialchars( $infoRole['role_name'] ); ?></th>
+  <th><?php echo $module->escapeHTML( $infoRole['role_name'] ); ?></th>
 <?php
 }
 ?>
@@ -389,7 +389,7 @@ foreach ( $listModules as $moduleID => $moduleName )
 foreach ( $listRoles as $infoRole )
 {
 ?>
-  <th><?php echo htmlspecialchars( $infoRole['role_name'] ); ?></th>
+  <th><?php echo $module->escapeHTML( $infoRole['role_name'] ); ?></th>
 <?php
 }
 ?>
