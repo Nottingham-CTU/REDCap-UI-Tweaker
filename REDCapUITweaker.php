@@ -1239,8 +1239,15 @@ $(function()
     var vRoleName = $('<div style="' + $('#username-reference').parent().attr('style') + '">Role:' +
                      ' <span id="user-role-name" style="' + $('#username-reference').attr('style') +
                       '"><?php echo $roleName; ?></span></div>')
-    vRoleName.css('margin-top','-5px').css('margin-left','17px')
-    $('#username-reference').parent().after( vRoleName )
+    vRoleName.css('margin-top','-4px').css('margin-left','17px')
+    if ( $('#impersonate-user-select').length == 0 || $('#impersonate-user-select').val() == '' )
+    {
+      $('#username-reference').parent().after( vRoleName )
+    }
+    else
+    {
+      $('#impersonate-user-select').parent().after( vRoleName )
+    }
   })
 </script>
 <?php
