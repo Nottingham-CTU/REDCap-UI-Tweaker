@@ -233,9 +233,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// If any data entry page, and alternate status icons enabled.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' &&
-			 $this->getSystemSetting( 'alternate-status-icons' ) )
+		     $this->getSystemSetting( 'alternate-status-icons' ) )
 		{
 			$this->replaceStatusIcons();
+		}
+
+
+
+		// If the record status dashboard page, and auto-selection of all status types enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 37 ) ==
+		                                        'DataEntry/record_status_dashboard.php' &&
+		     $this->getSystemSetting( 'all-status-types' ) )
+		{
+			$this->provideInstrumentAllStatusTypes();
 		}
 
 
@@ -903,6 +914,60 @@ $(function()
       }
       setTimeout(vFuncRestore, 250)
     })
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide auto-selection of the 'all status types' instrument status
+	// option.
+
+	function provideInstrumentAllStatusTypes()
+	{
+		if ( !defined( 'USERID' ) || USERID == '' )
+		{
+			return;
+		}
+		$selectAll = '';
+		$listUsers = $this->getSystemSetting( 'all-status-types-userlist' );
+		if ( $listUsers !== null &&
+		     ( array_search( USERID, json_decode( $listUsers, true ) ) ) !== false )
+		{
+			$selectAll = 'vAStatLink.click()';
+		}
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vIStatLink = $('[data-rc-lang="data_entry_226"]').parent()
+    var vLStatLink = $('[data-rc-lang="data_entry_227"]').parent()
+    var vAStatLink = $('[data-rc-lang="data_entry_229"]').parent()
+    if ( vIStatLink.length == 0 )
+    {
+      var vStatLinks = $('.statuslink_selected, .statuslink_unselected')
+      vIStatLink = vStatLinks.eq(0)
+      vLStatLink = vStatLinks.eq(1)
+      vAStatLink = vStatLinks.eq(2)
+    }
+    <?php echo $selectAll, "\n"; ?>
+    var vFuncSetSel = function( event )
+    {
+      $.ajax( { url : '<?php echo $this->getUrl( 'ajax_set_inst_status_display.php' ); ?>',
+                method : 'POST',
+                data : { mode : event.data.mode },
+                headers : { 'X-RC-UITweak-Req' : '1' },
+                dataType : 'json'
+              } )
+    }
+    vIStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    vLStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    vAStatLink.on( 'click', { mode: 'on' }, vFuncSetSel )
   })
 </script>
 <?php
