@@ -1301,10 +1301,13 @@ $(function()
     {
       return
     }
-    var vRoleName = $('<div style="' + $('#username-reference').parent().attr('style') + '">Role:' +
-                     ' <span id="user-role-name" style="' + $('#username-reference').attr('style') +
+    var vUserIcon = $( $('#username-reference').parent().find('i.fa-lock').prop('outerHTML')
+                       ).attr('style','opacity:0').prop('outerHTML')
+    var vRoleName = $('<div style="' + $('#username-reference').parent().attr('style') + '">' +
+                      vUserIcon + 'Role: <span id="user-role-name" style="' +
+                      $('#username-reference').attr('style') +
                       '"><?php echo $roleName; ?></span></div>')
-    vRoleName.css('margin-top','-4px').css('margin-left','17px')
+    vRoleName.css('margin-top','-5px')
     if ( $('#impersonate-user-select').length == 0 || $('#impersonate-user-select').val() == '' )
     {
       $('#username-reference').parent().after( vRoleName )
