@@ -144,6 +144,13 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+		// All pages, if the option to show the role name is enabled.
+		if ( $this->getSystemSetting( 'show-role-name' ) )
+		{
+			$this->provideUserRoleName();
+		}
+
+
 		// All pages, if custom logo/institution name option is used.
 
 		if ( $this->getProjectSetting( 'custom-logo-name-display' ) == 'logo' )
@@ -171,6 +178,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			if ( $this->getSystemSetting( 'alerts-simplified-view' ) )
 			{
 				$this->provideSimplifiedAlerts();
+			}
+			// Provide the alternate alerts submission.
+			if ( $this->getSystemSetting( 'custom-alert-sender' ) )
+			{
+				$this->provideAltAlertsSubmit();
 			}
 		}
 
@@ -226,9 +238,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// If any data entry page, and alternate status icons enabled.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' &&
-			 $this->getSystemSetting( 'alternate-status-icons' ) )
+		     $this->getSystemSetting( 'alternate-status-icons' ) )
 		{
 			$this->replaceStatusIcons();
+		}
+
+
+
+		// If the record status dashboard page, and auto-selection of all status types enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 37 ) ==
+		                                        'DataEntry/record_status_dashboard.php' &&
+		     $this->getSystemSetting( 'all-status-types' ) )
+		{
+			$this->provideInstrumentAllStatusTypes();
 		}
 
 
@@ -610,6 +633,28 @@ $(function()
 
 
 
+	// Output JavaScript to change the form action URLs on the alerts page so that custom alert
+	// senders are accepted.
+
+	function provideAltAlertsSubmit()
+	{
+		$submitURL = addslashes( $this->getUrl('alerts_submit.php') );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('#importAlertForm,#importAlertForm2').attr('action','<?php echo $submitURL; ?>&mode=upload')
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to set the requirement for a change reason based on the form's previous
 	// 'complete' status.
 
@@ -896,6 +941,60 @@ $(function()
       }
       setTimeout(vFuncRestore, 250)
     })
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide auto-selection of the 'all status types' instrument status
+	// option.
+
+	function provideInstrumentAllStatusTypes()
+	{
+		if ( !defined( 'USERID' ) || USERID == '' )
+		{
+			return;
+		}
+		$selectAll = '';
+		$listUsers = $this->getSystemSetting( 'all-status-types-userlist' );
+		if ( $listUsers !== null &&
+		     ( array_search( USERID, json_decode( $listUsers, true ) ) ) !== false )
+		{
+			$selectAll = 'vAStatLink.click()';
+		}
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vIStatLink = $('[data-rc-lang="data_entry_226"]').parent()
+    var vLStatLink = $('[data-rc-lang="data_entry_227"]').parent()
+    var vAStatLink = $('[data-rc-lang="data_entry_229"]').parent()
+    if ( vIStatLink.length == 0 )
+    {
+      var vStatLinks = $('.statuslink_selected, .statuslink_unselected')
+      vIStatLink = vStatLinks.eq(0)
+      vLStatLink = vStatLinks.eq(1)
+      vAStatLink = vStatLinks.eq(2)
+    }
+    <?php echo $selectAll, "\n"; ?>
+    var vFuncSetSel = function( event )
+    {
+      $.ajax( { url : '<?php echo $this->getUrl( 'ajax_set_inst_status_display.php' ); ?>',
+                method : 'POST',
+                data : { mode : event.data.mode },
+                headers : { 'X-RC-UITweak-Req' : '1' },
+                dataType : 'json'
+              } )
+    }
+    vIStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    vLStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    vAStatLink.on( 'click', { mode: 'on' }, vFuncSetSel )
   })
 </script>
 <?php
@@ -1193,6 +1292,57 @@ $(function()
       $('#'+vFieldName+'-tr .labelrc').attr('colspan','2')
       $('#'+vFieldName+'-tr .labelrc').html( vData )
     })
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output the current user role name
+
+	function provideUserRoleName()
+	{
+		if ( !defined( 'USERID' ) || USERID == '' )
+		{
+			return;
+		}
+
+		$userRights = $this->getUser()->getRights();
+		if ( !isset( $userRights ) ||
+		     !isset( $userRights['role_name'] ) || $userRights['role_name'] == '' )
+		{
+			return;
+		}
+
+		$roleName = $this->escapeHTML( $userRights['role_name'] );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( $('#user-role-name').length > 0 )
+    {
+      return
+    }
+    var vUserIcon = $( $('#username-reference').parent().find('i.fa-lock').prop('outerHTML')
+                       ).attr('style','opacity:0').prop('outerHTML')
+    var vRoleName = $('<div style="' + $('#username-reference').parent().attr('style') + '">' +
+                      vUserIcon + 'Role: <span id="user-role-name" style="' +
+                      $('#username-reference').attr('style') +
+                      '"><?php echo $roleName; ?></span></div>')
+    vRoleName.css('margin-top','-5px')
+    if ( $('#impersonate-user-select').length == 0 || $('#impersonate-user-select').val() == '' )
+    {
+      $('#username-reference').parent().after( vRoleName )
+    }
+    else
+    {
+      $('#impersonate-user-select').parent().after( vRoleName )
+    }
   })
 </script>
 <?php

@@ -127,6 +127,14 @@ addresses* option to restrict the addresses which can be used (e.g. to limit to 
 Replaces some of the record status icons so they can be more easily distinguished by people with
 colour vision deficiency.
 
+### Remember the selection of 'all status types' on the record status dashboard
+If a user selects the 'all status types' option on the record status dashboard, their selection will
+be remembered and auto-selected when they subsequently view the dashboard. This will apply per-user
+and across all projects.
+
+### Show the user's role below their username
+If the user has been added to a role within a project, show their role below their username.
+
 ### Add a 'simplified view' option to the alerts
 If enabled, a button will be added to the alerts and notifications page to show a simplified view.
 This will provide an overview of the alerts as a table. Once the simplified view is shown, a button

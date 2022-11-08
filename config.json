@@ -81,6 +81,16 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "all-status-types",
+			"name" : "Remember the selection of 'all status types' on the record status dashboard",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "show-role-name",
+			"name" : "Show the user's role below their username",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "alerts-simplified-view",
 			"name" : "Add a 'simplified view' option to the alerts",
 			"type" : "checkbox"
