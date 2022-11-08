@@ -179,6 +179,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			{
 				$this->provideSimplifiedAlerts();
 			}
+			// Provide the alternate alerts submission.
+			if ( $this->getSystemSetting( 'custom-alert-sender' ) )
+			{
+				$this->provideAltAlertsSubmit();
+			}
 		}
 
 
@@ -619,6 +624,28 @@ $(function()
     }, 200 )
   }
 })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to change the form action URLs on the alerts page so that custom alert
+	// senders are accepted.
+
+	function provideAltAlertsSubmit()
+	{
+		$submitURL = addslashes( $this->getUrl('alerts_submit.php') );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('#importAlertForm,#importAlertForm2').attr('action','<?php echo $submitURL; ?>&mode=upload')
+  })
 </script>
 <?php
 
