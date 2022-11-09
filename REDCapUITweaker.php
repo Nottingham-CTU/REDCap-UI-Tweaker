@@ -7,8 +7,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 {
 	const SUBMIT_TYPES = [ 'record', 'continue', 'nextinstance',
 	                       'nextform', 'nextrecord', 'exitrecord' ];
+	const SUBMIT_DEFINE = 'record,nextinstance,nextform,continue';
 
 	private $customAlerts;
+
+
+
 
 
 	// Initialise module when enabled.
@@ -16,11 +20,46 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function redcap_module_system_enable()
 	{
-		$this->setSystemSetting( 'field-types-order', '1,2,7,5,6,11,3|4,8,10,9' );
-		$this->setSystemSetting( 'field-default-required', '1' );
-		$this->setSystemSetting( 'submit-option-tweak', '0' );
+		if ( $this->getSystemSetting( 'field-types-order' ) == '' &&
+		     $this->getSystemSetting( 'field-default-required' ) == '' &&
+		     $this->getSystemSetting( 'submit-option-tweak' ) == '' )
+		{
+			$this->setSystemSetting( 'field-types-order', '1,2,7,5,6,11,3|4,8,10,9' );
+			$this->setSystemSetting( 'field-default-required', '1' );
+			$this->setSystemSetting( 'submit-option-tweak', '0' );
+		}
+		elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' &&
+		         $this->getSystemSetting( 'submit-option-define' ) == '' )
+		{
+			$this->setSystemSetting( 'submit-option-define', self::SUBMIT_DEFINE );
+		}
 		$this->setSystemSetting( 'enabled', true );
 	}
+
+
+
+
+
+	// Remove the project setting for 'form submit options' if the system setting 'allow custom
+	// submit options' is not enabled.
+
+	function redcap_module_configuration_settings( $project_id, $settings )
+	{
+		if ( $project_id !== null && ! $this->getSystemSetting( 'submit-option-custom' ) )
+		{
+			foreach ( $settings as $index => $setting )
+			{
+				if ( $setting['key'] == 'submit-option' )
+				{
+					unset( $settings[ $index ] );
+					break;
+				}
+			}
+			$settings = array_values( $settings );
+		}
+		return $settings;
+	}
+
 
 
 
@@ -169,20 +208,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:setup' &&
 		     ! isset( $_GET['log'] ) )
 		{
-			// Provide custom alert sender if enabled.
+			// Provide custom alert sender (+ alt alerts submission) if enabled.
 			if ( $this->getSystemSetting( 'custom-alert-sender' ) )
 			{
 				$this->provideCustomAlertSender();
+				$this->provideAltAlertsSubmit();
 			}
 			// Provide the simplified view if enabled.
 			if ( $this->getSystemSetting( 'alerts-simplified-view' ) )
 			{
 				$this->provideSimplifiedAlerts();
-			}
-			// Provide the alternate alerts submission.
-			if ( $this->getSystemSetting( 'custom-alert-sender' ) )
-			{
-				$this->provideAltAlertsSubmit();
 			}
 		}
 
@@ -195,6 +230,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		     $this->getSystemSetting( 'codebook-simplified-view' ) )
 		{
 			$this->provideSimplifiedCodebook();
+		}
+
+
+
+		// If the instrument/event mapping page and the simplified view option is enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) ==
+		                                                   'Design/designate_forms.php' &&
+		     $this->getSystemSetting( 'instrument-simplified-view' ) )
+		{
+			$this->provideSimplifiedInstruments();
 		}
 
 
@@ -382,6 +428,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					$customSubmit = $this->rearrangeSubmitOptions( $submitOptions );
 				}
 			}
+			if ( ! $customSubmit && $this->getProjectSetting( 'submit-option' ) != '' )
+			{
+				$customSubmit =
+					$this->rearrangeSubmitOptions( $this->getProjectSetting( 'submit-option' ) );
+			}
 		}
 		// If custom submit options are not present, perform the submit option tweak that is
 		// selected in the module system settings (if applicable).
@@ -394,9 +445,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 			elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' )
 			{
-				// Limit the submit options to 'Save & Exit Form', 'Save & Add New Instance',
-				// 'Save & Go To Next Form' and 'Save & Stay'.
-				$this->rearrangeSubmitOptions( 'record,nextinstance,nextform,continue' );
+				// Limit the submit options to the defined options (if not correctly defined, use
+				// 'Save & Exit Form', 'Save & Add New Instance', 'Save & Go To Next Form' and
+				// 'Save & Stay').
+				if ( $this->getSystemSetting( 'submit-option-define' ) == '' ||
+				     ! $this->rearrangeSubmitOptions(
+				                               $this->getSystemSetting( 'submit-option-define' ) ) )
+				{
+					$this->rearrangeSubmitOptions( self::SUBMIT_DEFINE );
+				}
 			}
 		}
 
@@ -1213,6 +1270,35 @@ $(function()
     vButtons.prepend(vBtnSimplify)
     vButtons.append(vBtnSimplify2)
     $('.jqbuttonmed[onclick="window.print();"]').closest('table').after(vButtons)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the simplified view option on the instrument/event mapping.
+
+	function provideSimplifiedInstruments()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('instrument_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#table').before(vDivSimplify)
   })
 </script>
 <?php

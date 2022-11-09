@@ -78,6 +78,13 @@ in URL-encoded or base64 format, which can be indicated by prefixing the data as
 * b64: &ndash; base64 encoded
 * if not prefixed, then assume raw (no encoding)
 
+### Use alternate status icons
+Replaces some of the record status icons so they can be more easily distinguished by people with
+colour vision deficiency.
+
+### Show the user's role below their username
+If the user has been added to a role within a project, show their role below their username.
+
 ### Submit options
 On a REDCap data entry form, there are several options available when submitting.
 The **Save & Exit Form** option is always displayed next to a button/list combo of options which can
@@ -93,10 +100,8 @@ The default REDCap behaviour will order this list depending on which options the
 recently (if any). This setting allows manipulating this list of options in one of two ways.
 
 * Remove **Save & Go To Next Record**
-* Only display the following options, in this order
-  * Save & Add New Instance
-  * Save & Go To Next Form
-  * Save & Stay
+* Only display a defined set of options, in the specified order (see the custom submit options for
+  the format)
 
 Note that some of the options might not be displayed on a particular data entry form if they are not
 relevant.
@@ -118,44 +123,15 @@ To use this action tag, enter `@SAVEOPTIONS=` followed by a comma separated list
 * nextrecord &ndash; *Save & Go To Next Record*
 * exitrecord &ndash; *Save & Exit Record*
 
-### Allow custom from addresses in alerts
-Provides an option when adding an alert to enter an email from address that is not provided in the
-dropdown list. If this option is enabled, use the *regular expression to validate custom from
-addresses* option to restrict the addresses which can be used (e.g. to limit to your own domain).
-
-### Use alternate status icons
-Replaces some of the record status icons so they can be more easily distinguished by people with
-colour vision deficiency.
+If custom submit options are enabled, the submit options can also be set project-wide in the module
+project settings (in the same format as for the action tag). If a @SAVEOPTIONS action tag is used,
+it will override the project-wide setting. The @SAVEOPTIONS action tag and the project-wide setting
+will each override the system-wide setting.
 
 ### Remember the selection of 'all status types' on the record status dashboard
 If a user selects the 'all status types' option on the record status dashboard, their selection will
 be remembered and auto-selected when they subsequently view the dashboard. This will apply per-user
 and across all projects.
-
-### Show the user's role below their username
-If the user has been added to a role within a project, show their role below their username.
-
-### Add a 'simplified view' option to the alerts
-If enabled, a button will be added to the alerts and notifications page to show a simplified view.
-This will provide an overview of the alerts as a table. Once the simplified view is shown, a button
-to select the table is displayed to make it easier to copy the table e.g. for use in documentation.
-
-Other modules can add information to the alerts simplified view. If you are a module developer, see
-the [alert provider guide](README-AlertProvider.md) for more information.
-
-### Add a 'simplified view' option to the codebook
-If enabled, a button will be added to the codebook page to show a simplified view. This will hide
-any buttons and icons from the codebook table, remove the field number column, simplify the
-instrument headings and move the field annotations to a separate column. Once the simplified view
-is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
-in documentation.
-
-### Add a 'simplified view' option to the user rights page
-If enabled, a button will be added to the user rights page to show a simplified view.
-This will provide an overview of the user rights as a table showing the rights granted to each role.
-This includes the basic rights and the data viewing/export rights for each data entry instrument.
-Once the simplified view is shown, a button to select the table is displayed to make it easier to
-copy the table e.g. for use in documentation.
 
 ### Show 'My Projects' in alphabetical order
 If this option is enabled, the list of projects on the 'My Projects' page will be shown in
@@ -167,6 +143,39 @@ If this option is enabled, users with only one project will be redirected to tha
 time they load the *REDCap Home* page or the *My Projects* page following login. If the
 *My Projects* page is the first page shown after login, the user is immediately redirected to their
 project.
+
+### Allow custom from addresses in alerts
+Provides an option when adding an alert to enter an email from address that is not provided in the
+dropdown list. If this option is enabled, use the *regular expression to validate custom from
+addresses* option to restrict the addresses which can be used (e.g. to limit to your own domain).
+
+### Alerts simplified view
+If enabled, a button will be added to the alerts and notifications page to show a simplified view.
+This will provide an overview of the alerts as a table. Once the simplified view is shown, a button
+to select the table is displayed to make it easier to copy the table e.g. for use in documentation.
+
+Other modules can add information to the alerts simplified view. If you are a module developer, see
+the [alert provider guide](README-AlertProvider.md) for more information.
+
+### Codebook simplified view
+If enabled, a button will be added to the codebook page to show a simplified view. This will hide
+any buttons and icons from the codebook table, remove the field number column, simplify the
+instrument headings and move the field annotations to a separate column. Once the simplified view
+is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
+in documentation.
+
+### Instrument mapping simplified view
+If enabled, a button will be added to the designate instruments for events page to show a simplified
+view. This will provide a simple table of which instruments are on each event, in which all arms are
+shown at once. Once the simplified view is shown, a button to select the table is displayed to make
+it easier to copy the table e.g. for use in documentation.
+
+### User rights simplified view
+If enabled, a button will be added to the user rights page to show a simplified view.
+This will provide an overview of the user rights as a table showing the rights granted to each role.
+This includes the basic rights and the data viewing/export rights for each data entry instrument.
+Once the simplified view is shown, a button to select the table is displayed to make it easier to
+copy the table e.g. for use in documentation.
 
 
 ## Project-level configuration options
@@ -183,6 +192,11 @@ marked as complete again.
 
 This setting, if enabled, will override the REDCap setting in Project Setup -> Additional
 Customizations.
+
+### Form submit options
+If custom submit options are enabled, this setting allows the submit options to be set for the
+project. This will override any system setting, but can itself be overridden by the @SAVEOPTIONS
+action tag.
 
 ### Redirect from the Project Home page to this URL
 If set, this will cause the *Project Home* page to redirect to the specified URL. Either an absolute
