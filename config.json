@@ -54,6 +54,26 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "hdr-data-qual",
+			"name" : "<b>Data quality tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "dq-notify-header",
+			"name" : "Custom data quality notification header text",
+			"type" : "text"
+		},
+		{
+			"key" : "dq-notify-body",
+			"name" : "Custom data quality notification text (standard)",
+			"type" : "textarea"
+		},
+		{
+			"key" : "dq-notify-body-drw",
+			"name" : "Custom data quality notification text (data resolution workflow)",
+			"type" : "textarea"
+		},
+		{
 			"key" : "hdr-appr-proj",
 			"name" : "<b>Project appearance tweaks</b>",
 			"type" : "descriptive"

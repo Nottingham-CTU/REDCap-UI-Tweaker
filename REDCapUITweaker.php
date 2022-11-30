@@ -136,6 +136,28 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If any data entry page, and custom data quality notification text enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' )
+		{
+			$dqCustomHeader = $this->getSystemSetting( 'dq-notify-header' );
+			$dqCustomBody = $this->getSystemSetting( 'dq-notify-body' );
+			$dqCustomBodyDRW = $this->getSystemSetting( 'dq-notify-body-drw' );
+			if ( $dqCustomHeader != '' )
+			{
+				$GLOBALS['lang']['dataqueries_113'] = $dqCustomHeader;
+			}
+			if ( $dqCustomBody != '' )
+			{
+				$GLOBALS['lang']['dataqueries_118'] = $dqCustomBody;
+			}
+			if ( $dqCustomBodyDRW != '' )
+			{
+				$GLOBALS['lang']['dataqueries_309'] = $dqCustomBodyDRW;
+			}
+		}
+
+
 	}
 
 
