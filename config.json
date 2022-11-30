@@ -59,6 +59,16 @@
 			"type" : "descriptive"
 		},
 		{
+			"key" : "data-res-workflow",
+			"name" : "Enable the Data Resolution Workflow on new projects",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "missing-data-codes",
+			"name" : "Default missing data codes",
+			"type" : "textarea"
+		},
+		{
 			"key" : "dq-notify-header",
 			"name" : "Custom data quality notification header text",
 			"type" : "text"

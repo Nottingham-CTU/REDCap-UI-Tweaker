@@ -358,6 +358,27 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+
+		// When a new project has just been created, enable the Data Resolution Workflow if the
+		// option to enable it automatically has been enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' &&
+		     $_GET['msg'] == 'newproject' &&
+		     ( $this->getSystemSetting( 'data-res-workflow' ) ||
+		       $this->getSystemSetting( 'missing-data-codes' ) != '' ) )
+		{
+			$_SESSION['module_uitweak_newproject'] = true;
+			$this->provideDefaultCustom( $this->getSystemSetting( 'data-res-workflow' ),
+			                             $this->getSystemSetting( 'missing-data-codes' ) );
+		}
+		elseif ( isset( $_SESSION['module_uitweak_newproject'] ) &&
+		         substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' )
+		{
+			unset( $_SESSION['module_uitweak_newproject'] );
+			$_GET['msg'] = 'newproject';
+		}
+
+
 	}
 
 
@@ -848,6 +869,50 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript to enable Data Resolution Workflow / provide default missing data codes.
+
+	function provideDefaultCustom( $dataResolutionWorkflow, $missingDataCodes )
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('body').css('display','none')
+    setTimeout( function()
+    {
+<?php
+		if ( $dataResolutionWorkflow )
+		{
+?>
+      if ( $('#data_resolution_enabled_chkbx').prop('checked') )
+      {
+        $('#data_resolution_enabled').val('2')
+      }
+<?php
+		}
+		if ( $missingDataCodes != '' )
+		{
+			$defaultCodes =
+				str_replace( ["\r\n","\n"], '\\n', $this->escapeHTML( $missingDataCodes ) );
+?>
+      if ( $('#missing_data_codes').val() == '' )
+      {
+        $('#missing_data_codes').val('<?php echo $defaultCodes; ?>')
+      }
+<?php
+		}
+?>
+      $('#customizeprojectform').submit()
+    }, 1000 )
+  })
+</script>
+<?php
 	}
 
 
