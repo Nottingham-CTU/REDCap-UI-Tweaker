@@ -379,6 +379,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+
+		// If the data quality rules page...
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'DataQuality/index.php' )
+		{
+
+			// Default data quality rules to execute in real time
+			if ( $this->getSystemSetting( 'dq-real-time' ) )
+			{
+				$this->provideDQRealTime();
+			}
+
+		}
+
+
 	}
 
 
@@ -910,6 +925,30 @@ $(function()
 ?>
       $('#customizeprojectform').submit()
     }, 1000 )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to enable real time execution of data quality rules by default.
+
+	function provideDQRealTime()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setInterval( function()
+    {
+      if ( $('#input_rulename_id_0').val() == '' && $('#input_rulelogic_id_0').val() == '' )
+      {
+        $('#rulerte_id_0').prop('checked',true)
+      }
+    }, 2000 )
   })
 </script>
 <?php

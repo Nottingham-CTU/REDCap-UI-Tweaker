@@ -78,6 +78,21 @@ in URL-encoded or base64 format, which can be indicated by prefixing the data as
 * b64: &ndash; base64 encoded
 * if not prefixed, then assume raw (no encoding)
 
+### Enable the Data Resolution Workflow on new projects
+This option will enable the Data Resolution Workflow instead of the Field Comment Log on new
+projects.
+
+### Default missing data codes
+This will set the missing data codes on new projects to the codes defined here.
+
+### Default data quality rules to execute in real time
+Automatically selects the 'execute in real time' checkbox for new data quality rules on the data
+quality rules page.
+
+### Custom data quality notification header text
+This will override the text displayed in the header/title of the popup notification when a record is
+saved with data which violates data quality rules.
+
 ### Use alternate status icons
 Replaces some of the record status icons so they can be more easily distinguished by people with
 colour vision deficiency.

@@ -69,6 +69,11 @@
 			"type" : "textarea"
 		},
 		{
+			"key" : "dq-real-time",
+			"name" : "Default data quality rules to execute in real time",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "dq-notify-header",
 			"name" : "Custom data quality notification header text",
 			"type" : "text"
