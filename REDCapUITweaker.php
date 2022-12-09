@@ -243,6 +243,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// All pages, if the suggest a new feature link is hidden.
+
+		if ( $this->getSystemSetting( 'hide-suggest-feature' ) )
+		{
+			$this->provideHideSuggestFeature();
+		}
+
+
 		// If the alerts page.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
@@ -1162,6 +1170,24 @@ $(function()
   $(function()
   {
     $('.btn-contact-admin')<?php echo $function; ?>.parent().css('display','none')
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to hide the 'suggest a new feature' link.
+
+	function provideHideSuggestFeature()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('a[href*="redcap.vanderbilt.edu/enduser_survey"]').parent().css('display','none')
   })
 </script>
 <?php

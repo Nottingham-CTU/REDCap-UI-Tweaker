@@ -115,6 +115,11 @@
 			]
 		},
 		{
+			"key" : "hide-suggest-feature",
+			"name" : "Hide 'suggest a new feature' link",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-nav-proj",
 			"name" : "<b>Project navigation tweaks</b>",
 			"type" : "descriptive"
