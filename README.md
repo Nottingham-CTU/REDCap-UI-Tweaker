@@ -100,6 +100,9 @@ colour vision deficiency.
 ### Show the user's role below their username
 If the user has been added to a role within a project, show their role below their username.
 
+### Hide 'contact administrator' links
+Hides one or both of the 'contact REDCap administrator' links shown on project pages.
+
 ### Submit options
 On a REDCap data entry form, there are several options available when submitting.
 The **Save & Exit Form** option is always displayed next to a button/list combo of options which can

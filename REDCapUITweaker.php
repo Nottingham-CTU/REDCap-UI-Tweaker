@@ -224,6 +224,25 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// All pages, if the contact REDCap administrator links are hidden.
+
+		if ( $this->getSystemSetting( 'hide-contact-admin' ) != '' )
+		{
+			switch ( $this->getSystemSetting( 'hide-contact-admin' ) )
+			{
+				case 'first':
+					$this->provideHideContactAdmin( '.first()' );
+					break;
+				case 'last':
+					$this->provideHideContactAdmin( '.last()' );
+					break;
+				case 'all':
+					$this->provideHideContactAdmin( '' );
+					break;
+			}
+		}
+
+
 		// If the alerts page.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
@@ -1128,6 +1147,24 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript to hide the 'contact REDCap administrator' links.
+
+	function provideHideContactAdmin( $function )
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('.btn-contact-admin')<?php echo $function; ?>.parent().css('display','none')
+  })
+</script>
+<?php
 	}
 
 

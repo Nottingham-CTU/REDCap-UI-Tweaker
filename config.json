@@ -104,6 +104,17 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "hide-contact-admin",
+			"name" : "Hide 'contact administrator' links",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "Show all" },
+				{ "value" : "first", "name" : "Hide top link" },
+				{ "value" : "last", "name" : "Hide bottom link" },
+				{ "value" : "all", "name" : "Hide all" }
+			]
+		},
+		{
 			"key" : "hdr-nav-proj",
 			"name" : "<b>Project navigation tweaks</b>",
 			"type" : "descriptive"
