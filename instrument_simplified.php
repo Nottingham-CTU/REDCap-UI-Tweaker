@@ -7,8 +7,10 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('instrument-simplifie
 }
 
 $queryEvents =
-	$module->query( 'SELECT a.arm_num, m.descrip AS event_name FROM redcap_events_metadata m ' .
-	                'JOIN redcap_events_arms a ON m.arm_id = a.arm_id WHERE a.project_id = ? ' .
+	$module->query( 'SELECT a.arm_num, m.descrip AS event_name, if(r.event_id IS NULL, 0, 1) ' .
+	                'AS `repeat` FROM redcap_events_metadata m JOIN redcap_events_arms a ' .
+	                'ON m.arm_id = a.arm_id LEFT JOIN redcap_events_repeat r ' .
+	                'ON m.event_id = r.event_id AND form_name IS NULL WHERE a.project_id = ? ' .
 	                'ORDER BY a.arm_num, m.day_offset', [ $module->getProjectID() ] );
 $listEvents = [];
 $maxEvents = 0;
@@ -18,7 +20,8 @@ while ( $infoEvent = $queryEvents->fetch_assoc() )
 	{
 		$listEvents[ $infoEvent['arm_num'] ] = [];
 	}
-	$listEvents[ $infoEvent['arm_num'] ][] = $infoEvent['event_name'];
+	$listEvents[ $infoEvent['arm_num'] ][] = [ 'name' => $infoEvent['event_name'],
+	                                           'repeat' => $infoEvent['repeat'] ];
 	if ( $maxEvents < count( $listEvents[ $infoEvent['arm_num'] ] ) )
 	{
 		$maxEvents = count( $listEvents[ $infoEvent['arm_num'] ] );
@@ -27,12 +30,14 @@ while ( $infoEvent = $queryEvents->fetch_assoc() )
 
 $queryInstruments =
 	$module->query( 'SELECT a.arm_num, a.arm_name, rm.form_menu_description AS form_name, ' .
-	                'm.descrip AS event_names FROM redcap_events_forms f ' .
-	                'JOIN redcap_events_metadata m ON f.event_id = m.event_id ' .
-	                'JOIN redcap_events_arms a ON m.arm_id = a.arm_id ' .
+	                'm.descrip AS event_names, if(r.event_id IS NULL, 0, 1) AS `repeat` ' .
+	                'FROM redcap_events_forms f JOIN redcap_events_metadata m ' .
+	                'ON f.event_id = m.event_id JOIN redcap_events_arms a ON m.arm_id = a.arm_id ' .
 	                'JOIN redcap_metadata rm ON a.project_id = rm.project_id AND ' .
 	                'f.form_name = rm.form_name AND rm.form_menu_description IS NOT NULL ' .
-	                'WHERE a.project_id = ? ORDER BY a.arm_num, rm.field_order, m.day_offset',
+	                'LEFT JOIN redcap_events_repeat r ON m.event_id = r.event_id AND ' .
+	                'r.form_name = f.form_name WHERE a.project_id = ? ' .
+	                'ORDER BY a.arm_num, rm.field_order, m.day_offset',
 	                [ $module->getProjectID() ] );
 $listInstruments = [];
 $lastInstrument = '';
@@ -42,10 +47,17 @@ while ( $infoInstrument = $queryInstruments->fetch_assoc() )
 	{
 		$listInstruments[ array_key_last( $listInstruments ) ]['event_names'][] =
 				$infoInstrument['event_names'];
+		if ( $infoInstrument['repeat'] == 1 )
+		{
+			$listInstruments[ array_key_last( $listInstruments ) ]['repeat'][] =
+					$infoInstrument['event_names'];
+		}
 	}
 	else
 	{
 		$infoInstrument['event_names'] = [ $infoInstrument['event_names'] ];
+		$infoInstrument['repeat'] =
+				( $infoInstrument['repeat'] == 1 ) ? [ $infoInstrument['event_names'] ] : [];
 		$listInstruments[] = $infoInstrument;
 	}
 	$lastInstrument = $infoInstrument['arm_num'] . '/' . $infoInstrument['form_name'];
@@ -115,10 +127,11 @@ foreach ( $listInstruments as $infoInstrument )
   <th><?php echo $module->escapeHTML( $GLOBALS['lang']['global_35'] ); ?></th>
 <?php
 
-		foreach ( $listEvents[ $armNum ] as $eventName )
+		foreach ( $listEvents[ $armNum ] as $infoEvent )
 		{
 ?>
-  <th><?php echo $module->escapeHTML( $eventName ); ?></th>
+  <th><?php echo $module->escapeHTML( $infoEvent['name'] ),
+                 ( $infoEvent['repeat'] == 1 ? ' &#10227;' : '' ); ?></th>
 <?php
 		}
 		for ( $i = count( $listEvents[ $armNum ] ); $i < $maxEvents; $i++ )
@@ -139,12 +152,13 @@ foreach ( $listInstruments as $infoInstrument )
   <td><?php echo $module->escapeHTML( $infoInstrument['form_name'] ); ?></td>
 <?php
 
-		foreach ( $listEvents[ $armNum ] as $eventName )
+		foreach ( $listEvents[ $armNum ] as $infoEvent )
 		{
 ?>
   <td><?php
-			echo in_array( $eventName, $infoInstrument['event_names'] )
-			     ? $module->escapeHTML( $GLOBALS['lang']['design_100'] ) : '';
+			echo in_array( $infoEvent['name'], $infoInstrument['event_names'] )
+			     ? $module->escapeHTML( $GLOBALS['lang']['design_100'] ) : '',
+			     in_array( $infoEvent['name'], $infoInstrument['repeat'] ) ? ' &#10227;' : '';
 ?></td>
 <?php
 		}
