@@ -127,9 +127,6 @@ recently (if any). This setting allows manipulating this list of options in one 
 Note that some of the options might not be displayed on a particular data entry form if they are not
 relevant.
 
-This setting does not change the *Save & Exit Form* option, but this can be moved or removed using
-the custom submit options (see below).
-
 ### Allow custom submit options
 Allow use of the **@SAVEOPTIONS** action tag to specify the options for submitting a data entry form.
 This is applied on a per-form basis by using the action tag on any of the fields on that form.
@@ -184,6 +181,13 @@ any buttons and icons from the codebook table, remove the field number column, s
 instrument headings and move the field annotations to a separate column. Once the simplified view
 is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
 in documentation.
+
+### Data quality rules simplified view
+If enabled, a button will be added to the data quality rules page to show a simplified view. This
+will provide a simple table of the data quality rules, showing a unique ID number, the rule name,
+the rule logic, and whether real-time execution is enabled. Once the simplified view is shown, a
+button to select the table is displayed to make it easier to copy the table e.g. for use in
+documentation.
 
 ### Instrument mapping simplified view
 If enabled, a button will be added to the designate instruments for events page to show a simplified

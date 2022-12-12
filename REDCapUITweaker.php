@@ -418,6 +418,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				$this->provideDQRealTime();
 			}
 
+			// Add simplified view option.
+			if ( $this->getSystemSetting( 'quality-rules-simplified-view' ) )
+			{
+				$this->provideSimplifiedQualityRules();
+			}
+
 		}
 
 
@@ -1488,6 +1494,35 @@ $(function()
     var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
     vDivSimplify.append(vBtnSimplify)
     $('#table').before(vDivSimplify)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the simplified view option on the data quality rules.
+
+	function provideSimplifiedQualityRules()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('quality_rules_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#table-rules-parent').before(vDivSimplify)
   })
 </script>
 <?php

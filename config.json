@@ -199,6 +199,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "quality-rules-simplified-view",
+			"name" : "Data quality rules simplified view",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "instrument-simplified-view",
 			"name" : "Instrument mapping simplified view",
 			"type" : "checkbox"
