@@ -20,14 +20,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function redcap_module_system_enable()
 	{
+		// If settings uninitialised (module installed for first time).
 		if ( $this->getSystemSetting( 'field-types-order' ) == '' &&
 		     $this->getSystemSetting( 'field-default-required' ) == '' &&
 		     $this->getSystemSetting( 'submit-option-tweak' ) == '' )
 		{
+			// Set field types order to text, notes, yes/no, radio, checkbox, slider, calculated |
+			// dropdown, true/false, upload, signature.
 			$this->setSystemSetting( 'field-types-order', '1,2,7,5,6,11,3|4,8,10,9' );
+			// Set new fields to default to required.
 			$this->setSystemSetting( 'field-default-required', '1' );
+			// Set submit options to REDCap default.
 			$this->setSystemSetting( 'submit-option-tweak', '0' );
 		}
+		// Upgrade defined submit options from older module version.
 		elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' &&
 		         $this->getSystemSetting( 'submit-option-define' ) == '' )
 		{
