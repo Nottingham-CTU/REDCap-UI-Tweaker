@@ -1371,12 +1371,17 @@ $(function()
         vFuncSelect()
         return
       }
+      var vFormHdrSelector = '.ReportTableWithBorder .codebook-form-header'
+      if ( $(vFormHdrSelector).length == 0 )
+      {
+        vFormHdrSelector = '.ReportTableWithBorder td[colspan]'
+      }
       var vRowsSelector = '.ReportTableWithBorder tr[data-field]'
       if ( $(vRowsSelector).length == 0 )
       {
         vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
       }
-      $('.ReportTableWithBorder td[colspan]').attr('colspan','4')
+      $(vFormHdrSelector).attr('colspan','4')
       if ( vIsDesigner || ! vKeepRowNums )
       {
         $(vRowsSelector + '>td:nth-child(1)').css('display','none')
@@ -1387,8 +1392,15 @@ $(function()
         $(vRowsSelector + '>td:nth-child(2)').css('display','none')
         $('.ReportTableWithBorder th:nth-child(2)').css('display','none')
       }
+      $(vFormHdrSelector).css('display','')
+      $(vFormHdrSelector).css('position','unset')
+      $(vFormHdrSelector).css('box-shadow','unset')
+      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
+        ')>code').each( function(i,el){$(el).parent().html($(el).html())} )
       $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
         ')>span[style*="margin"]').css('display','none')
+      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
+        ')>span.text-dangerrc').removeClass('text-dangerrc')
       var vHdrAttribute = $('.ReportTableWithBorder th:nth-child(' +
                             ( vIsDesigner ? '5' : '4' ) + ')')
       var vHdrAnnotation = $('<th><?php echo $GLOBALS['lang']['design_527']; ?></th>')
@@ -1431,18 +1443,18 @@ $(function()
           vFieldVals.find('tr td:nth-child(2)').css('display','none')
         }
       })
-      $('.ReportTableWithBorder td[colspan] .btn').css('display','none')
+      $(vFormHdrSelector + ' .btn').css('display','none')
       //$('.ReportTableWithBorder td table td').css('display','')
       $('.ReportTableWithBorder i.fa-chalkboard-teacher').removeClass('fa-chalkboard-teacher')
-      $('.ReportTableWithBorder td[colspan]').contents().filter(function(){
+      $(vFormHdrSelector).contents().filter(function(){
         return this.nodeType == 3}).remove()
-      $('.ReportTableWithBorder td[colspan] span').before('&nbsp;&nbsp;')
-      $('.ReportTableWithBorder td[colspan] span').css('margin-left','0px')
-      $('.ReportTableWithBorder td[colspan] font').before('&nbsp;&nbsp;&nbsp;&nbsp;')
-      $('.ReportTableWithBorder td[colspan] font').css('margin-left','0px')
+      $(vFormHdrSelector + ' span').before('&nbsp;&nbsp;')
+      $(vFormHdrSelector + ' span').css('margin-left','0px')
+      $(vFormHdrSelector + ' font').before('&nbsp;&nbsp;&nbsp;&nbsp;')
+      $(vFormHdrSelector + ' font').css('margin-left','0px')
       if ( vKeepRowNums )
       {
-        $('.ReportTableWithBorder td[colspan]').before('<td></td>')
+        $(vFormHdrSelector).before('<td></td>')
       }
       $('#simplifiedView').text('Select Codebook table')
       $('#simplifiedView2').css('display','none')
