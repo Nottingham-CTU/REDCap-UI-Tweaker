@@ -1402,7 +1402,7 @@ $(function()
       $(vFormHdrSelector).css('position','unset')
       $(vFormHdrSelector).css('box-shadow','unset')
       $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
-        ')>code').each( function(i,el){$(el).parent().html($(el).html())} )
+        ')>code').each( function(i,el){$(el).before($(el).html());$(el).remove()} )
       $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
         ')>span[style*="margin"]').css('display','none')
       $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
