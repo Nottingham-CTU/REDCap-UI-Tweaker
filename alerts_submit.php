@@ -13,7 +13,7 @@ if ( $_GET['mode'] == 'upload' )
 {
 	if ( isset( $_POST['csv_content'] ) && $_POST['csv_content'] != '' )
 	{
-		$post_csv_content = $_POST['csv_content'];
+		$GLOBALS['post_csv_content'] = $_POST['csv_content'];
 	}
 	$objAlerts =
 		new class() extends Alerts
@@ -31,7 +31,6 @@ if ( $_GET['mode'] == 'upload' )
 			}
 			private function getExtraFromEmails()
 			{
-				global $module, $post_csv_content;
 				if ( is_array( $this->listExtraEmails ) )
 				{
 					return $this->listExtraEmails;
@@ -41,9 +40,10 @@ if ( $_GET['mode'] == 'upload' )
 				{
 					$uploadData = file_get_contents( $_FILES['file']['tmp_name'] );
 				}
-				elseif ( isset( $post_csv_content ) && $post_csv_content != '' )
+				elseif ( isset( $GLOBALS['post_csv_content'] ) &&
+				         $GLOBALS['post_csv_content'] != '' )
 				{
-					$uploadData = $post_csv_content;
+					$uploadData = $GLOBALS['post_csv_content'];
 				}
 				$this->listExtraEmails = [];
 				if ( $uploadData == '' )
@@ -54,7 +54,8 @@ if ( $_GET['mode'] == 'upload' )
 				foreach ( $uploadEmails[0] as $uploadEmail )
 				{
 					if ( preg_match( '/' .
-					                 $module->getSystemSetting( 'custom-alert-sender-regex' ) . '/',
+					                 $GLOBALS['module']->getSystemSetting(
+					                                            'custom-alert-sender-regex' ) . '/',
 					                 $_POST['email-from'] ) )
 					{
 						$this->listExtraEmails[] = $uploadEmail;

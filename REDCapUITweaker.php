@@ -7,8 +7,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 {
 	const SUBMIT_TYPES = [ 'record', 'continue', 'nextinstance',
 	                       'nextform', 'nextrecord', 'exitrecord' ];
+	const SUBMIT_DEFINE = 'record,nextinstance,nextform,continue';
 
 	private $customAlerts;
+
+
+
 
 
 	// Initialise module when enabled.
@@ -16,11 +20,52 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function redcap_module_system_enable()
 	{
-		$this->setSystemSetting( 'field-types-order', '1,2,7,5,6,11,3|4,8,10,9' );
-		$this->setSystemSetting( 'field-default-required', '1' );
-		$this->setSystemSetting( 'submit-option-tweak', '0' );
+		// If settings uninitialised (module installed for first time).
+		if ( $this->getSystemSetting( 'field-types-order' ) == '' &&
+		     $this->getSystemSetting( 'field-default-required' ) == '' &&
+		     $this->getSystemSetting( 'submit-option-tweak' ) == '' )
+		{
+			// Set field types order to text, notes, yes/no, radio, checkbox, slider, calculated |
+			// dropdown, true/false, upload, signature.
+			$this->setSystemSetting( 'field-types-order', '1,2,7,5,6,11,3|4,8,10,9' );
+			// Set new fields to default to required.
+			$this->setSystemSetting( 'field-default-required', '1' );
+			// Set submit options to REDCap default.
+			$this->setSystemSetting( 'submit-option-tweak', '0' );
+		}
+		// Upgrade defined submit options from older module version.
+		elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' &&
+		         $this->getSystemSetting( 'submit-option-define' ) == '' )
+		{
+			$this->setSystemSetting( 'submit-option-define', self::SUBMIT_DEFINE );
+		}
 		$this->setSystemSetting( 'enabled', true );
 	}
+
+
+
+
+
+	// Remove the project setting for 'form submit options' if the system setting 'allow custom
+	// submit options' is not enabled.
+
+	function redcap_module_configuration_settings( $project_id, $settings )
+	{
+		if ( $project_id !== null && ! $this->getSystemSetting( 'submit-option-custom' ) )
+		{
+			foreach ( $settings as $index => $setting )
+			{
+				if ( $setting['key'] == 'submit-option' )
+				{
+					unset( $settings[ $index ] );
+					break;
+				}
+			}
+			$settings = array_values( $settings );
+		}
+		return $settings;
+	}
+
 
 
 
@@ -97,6 +142,28 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If any data entry page, and custom data quality notification text enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' )
+		{
+			$dqCustomHeader = $this->getSystemSetting( 'dq-notify-header' );
+			$dqCustomBody = $this->getSystemSetting( 'dq-notify-body' );
+			$dqCustomBodyDRW = $this->getSystemSetting( 'dq-notify-body-drw' );
+			if ( $dqCustomHeader != '' )
+			{
+				$GLOBALS['lang']['dataqueries_113'] = $dqCustomHeader;
+			}
+			if ( $dqCustomBody != '' )
+			{
+				$GLOBALS['lang']['dataqueries_118'] = $dqCustomBody;
+			}
+			if ( $dqCustomBodyDRW != '' )
+			{
+				$GLOBALS['lang']['dataqueries_309'] = $dqCustomBodyDRW;
+			}
+		}
+
+
 	}
 
 
@@ -163,26 +230,49 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// All pages, if the contact REDCap administrator links are hidden.
+
+		if ( $this->getSystemSetting( 'hide-contact-admin' ) != '' )
+		{
+			switch ( $this->getSystemSetting( 'hide-contact-admin' ) )
+			{
+				case 'first':
+					$this->provideHideContactAdmin( '.first()' );
+					break;
+				case 'last':
+					$this->provideHideContactAdmin( '.last()' );
+					break;
+				case 'all':
+					$this->provideHideContactAdmin( '' );
+					break;
+			}
+		}
+
+
+		// All pages, if the suggest a new feature link is hidden.
+
+		if ( $this->getSystemSetting( 'hide-suggest-feature' ) )
+		{
+			$this->provideHideSuggestFeature();
+		}
+
+
 		// If the alerts page.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
 		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:setup' &&
 		     ! isset( $_GET['log'] ) )
 		{
-			// Provide custom alert sender if enabled.
+			// Provide custom alert sender (+ alt alerts submission) if enabled.
 			if ( $this->getSystemSetting( 'custom-alert-sender' ) )
 			{
 				$this->provideCustomAlertSender();
+				$this->provideAltAlertsSubmit();
 			}
 			// Provide the simplified view if enabled.
 			if ( $this->getSystemSetting( 'alerts-simplified-view' ) )
 			{
 				$this->provideSimplifiedAlerts();
-			}
-			// Provide the alternate alerts submission.
-			if ( $this->getSystemSetting( 'custom-alert-sender' ) )
-			{
-				$this->provideAltAlertsSubmit();
 			}
 		}
 
@@ -195,6 +285,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		     $this->getSystemSetting( 'codebook-simplified-view' ) )
 		{
 			$this->provideSimplifiedCodebook();
+		}
+
+
+
+		// If the instrument/event mapping page and the simplified view option is enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) ==
+		                                                   'Design/designate_forms.php' &&
+		     $this->getSystemSetting( 'instrument-simplified-view' ) )
+		{
+			$this->provideSimplifiedInstruments();
 		}
 
 
@@ -290,6 +391,48 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+
+		// When a new project has just been created, enable the Data Resolution Workflow if the
+		// option to enable it automatically has been enabled.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' &&
+		     $_GET['msg'] == 'newproject' &&
+		     ( $this->getSystemSetting( 'data-res-workflow' ) ||
+		       $this->getSystemSetting( 'missing-data-codes' ) != '' ) )
+		{
+			$_SESSION['module_uitweak_newproject'] = true;
+			$this->provideDefaultCustom( $this->getSystemSetting( 'data-res-workflow' ),
+			                             $this->getSystemSetting( 'missing-data-codes' ) );
+		}
+		elseif ( isset( $_SESSION['module_uitweak_newproject'] ) &&
+		         substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' )
+		{
+			unset( $_SESSION['module_uitweak_newproject'] );
+			$_GET['msg'] = 'newproject';
+		}
+
+
+
+		// If the data quality rules page...
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'DataQuality/index.php' )
+		{
+
+			// Default data quality rules to execute in real time
+			if ( $this->getSystemSetting( 'dq-real-time' ) )
+			{
+				$this->provideDQRealTime();
+			}
+
+			// Add simplified view option.
+			if ( $this->getSystemSetting( 'quality-rules-simplified-view' ) )
+			{
+				$this->provideSimplifiedQualityRules();
+			}
+
+		}
+
+
 	}
 
 
@@ -382,6 +525,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					$customSubmit = $this->rearrangeSubmitOptions( $submitOptions );
 				}
 			}
+			if ( ! $customSubmit && $this->getProjectSetting( 'submit-option' ) != '' )
+			{
+				$customSubmit =
+					$this->rearrangeSubmitOptions( $this->getProjectSetting( 'submit-option' ) );
+			}
 		}
 		// If custom submit options are not present, perform the submit option tweak that is
 		// selected in the module system settings (if applicable).
@@ -394,9 +542,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 			elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' )
 			{
-				// Limit the submit options to 'Save & Exit Form', 'Save & Add New Instance',
-				// 'Save & Go To Next Form' and 'Save & Stay'.
-				$this->rearrangeSubmitOptions( 'record,nextinstance,nextform,continue' );
+				// Limit the submit options to the defined options (if not correctly defined, use
+				// 'Save & Exit Form', 'Save & Add New Instance', 'Save & Go To Next Form' and
+				// 'Save & Stay').
+				if ( $this->getSystemSetting( 'submit-option-define' ) == '' ||
+				     ! $this->rearrangeSubmitOptions(
+				                               $this->getSystemSetting( 'submit-option-define' ) ) )
+				{
+					$this->rearrangeSubmitOptions( self::SUBMIT_DEFINE );
+				}
 			}
 		}
 
@@ -775,6 +929,74 @@ $(function()
 
 
 
+	// Output JavaScript to enable Data Resolution Workflow / provide default missing data codes.
+
+	function provideDefaultCustom( $dataResolutionWorkflow, $missingDataCodes )
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('body').css('display','none')
+    setTimeout( function()
+    {
+<?php
+		if ( $dataResolutionWorkflow )
+		{
+?>
+      if ( $('#data_resolution_enabled_chkbx').prop('checked') )
+      {
+        $('#data_resolution_enabled').val('2')
+      }
+<?php
+		}
+		if ( $missingDataCodes != '' )
+		{
+			$defaultCodes =
+				str_replace( ["\r\n","\n"], '\\n', $this->escapeHTML( $missingDataCodes ) );
+?>
+      if ( $('#missing_data_codes').val() == '' )
+      {
+        $('#missing_data_codes').val('<?php echo $defaultCodes; ?>')
+      }
+<?php
+		}
+?>
+      $('#customizeprojectform').submit()
+    }, 1000 )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to enable real time execution of data quality rules by default.
+
+	function provideDQRealTime()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setInterval( function()
+    {
+      if ( $('#input_rulename_id_0').val() == '' && $('#input_rulelogic_id_0').val() == '' )
+      {
+        $('#rulerte_id_0').prop('checked',true)
+      }
+    }, 2000 )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
 	// Output JavaScript to set fields to be required by default.
 
 	function provideDefaultRequired()
@@ -951,6 +1173,42 @@ $(function()
 
 
 
+	// Output JavaScript to hide the 'contact REDCap administrator' links.
+
+	function provideHideContactAdmin( $function )
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('.btn-contact-admin')<?php echo $function; ?>.parent().css('display','none')
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to hide the 'suggest a new feature' link.
+
+	function provideHideSuggestFeature()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('a[href*="redcap.vanderbilt.edu/enduser_survey"]').parent().css('display','none')
+  })
+</script>
+<?php
+	}
+
+
+
+
+
 	// Output JavaScript to provide auto-selection of the 'all status types' instrument status
 	// option.
 
@@ -1119,12 +1377,17 @@ $(function()
         vFuncSelect()
         return
       }
+      var vFormHdrSelector = '.ReportTableWithBorder .codebook-form-header'
+      if ( $(vFormHdrSelector).length == 0 )
+      {
+        vFormHdrSelector = '.ReportTableWithBorder td[colspan]'
+      }
       var vRowsSelector = '.ReportTableWithBorder tr[data-field]'
       if ( $(vRowsSelector).length == 0 )
       {
         vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
       }
-      $('.ReportTableWithBorder td[colspan]').attr('colspan','4')
+      $(vFormHdrSelector).attr('colspan','4')
       if ( vIsDesigner || ! vKeepRowNums )
       {
         $(vRowsSelector + '>td:nth-child(1)').css('display','none')
@@ -1135,8 +1398,15 @@ $(function()
         $(vRowsSelector + '>td:nth-child(2)').css('display','none')
         $('.ReportTableWithBorder th:nth-child(2)').css('display','none')
       }
+      $(vFormHdrSelector).css('display','')
+      $(vFormHdrSelector).css('position','unset')
+      $(vFormHdrSelector).css('box-shadow','unset')
+      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
+        ')>code').each( function(i,el){$(el).before($(el).html());$(el).remove()} )
       $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
         ')>span[style*="margin"]').css('display','none')
+      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
+        ')>span.text-dangerrc').removeClass('text-dangerrc')
       var vHdrAttribute = $('.ReportTableWithBorder th:nth-child(' +
                             ( vIsDesigner ? '5' : '4' ) + ')')
       var vHdrAnnotation = $('<th><?php echo $GLOBALS['lang']['design_527']; ?></th>')
@@ -1179,18 +1449,18 @@ $(function()
           vFieldVals.find('tr td:nth-child(2)').css('display','none')
         }
       })
-      $('.ReportTableWithBorder td[colspan] .btn').css('display','none')
+      $(vFormHdrSelector + ' .btn').css('display','none')
       //$('.ReportTableWithBorder td table td').css('display','')
       $('.ReportTableWithBorder i.fa-chalkboard-teacher').removeClass('fa-chalkboard-teacher')
-      $('.ReportTableWithBorder td[colspan]').contents().filter(function(){
+      $(vFormHdrSelector).contents().filter(function(){
         return this.nodeType == 3}).remove()
-      $('.ReportTableWithBorder td[colspan] span').before('&nbsp;&nbsp;')
-      $('.ReportTableWithBorder td[colspan] span').css('margin-left','0px')
-      $('.ReportTableWithBorder td[colspan] font').before('&nbsp;&nbsp;&nbsp;&nbsp;')
-      $('.ReportTableWithBorder td[colspan] font').css('margin-left','0px')
+      $(vFormHdrSelector + ' span').before('&nbsp;&nbsp;')
+      $(vFormHdrSelector + ' span').css('margin-left','0px')
+      $(vFormHdrSelector + ' font').before('&nbsp;&nbsp;&nbsp;&nbsp;')
+      $(vFormHdrSelector + ' font').css('margin-left','0px')
       if ( vKeepRowNums )
       {
-        $('.ReportTableWithBorder td[colspan]').before('<td></td>')
+        $(vFormHdrSelector).before('<td></td>')
       }
       $('#simplifiedView').text('Select Codebook table')
       $('#simplifiedView2').css('display','none')
@@ -1213,6 +1483,64 @@ $(function()
     vButtons.prepend(vBtnSimplify)
     vButtons.append(vBtnSimplify2)
     $('.jqbuttonmed[onclick="window.print();"]').closest('table').after(vButtons)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the simplified view option on the instrument/event mapping.
+
+	function provideSimplifiedInstruments()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('instrument_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#table').before(vDivSimplify)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the simplified view option on the data quality rules.
+
+	function provideSimplifiedQualityRules()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('quality_rules_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#table-rules-parent').before(vDivSimplify)
   })
 </script>
 <?php

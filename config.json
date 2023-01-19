@@ -24,6 +24,11 @@
 	},
 	"system-settings" : [
 		{
+			"key" : "hdr-design",
+			"name" : "<b>Designer and field tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
 			"key" : "field-types-order",
 			"name" : "Order / placement of field types",
 			"required" : false,
@@ -49,19 +54,122 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "hdr-data-qual",
+			"name" : "<b>Data quality tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "data-res-workflow",
+			"name" : "Enable the Data Resolution Workflow on new projects",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "missing-data-codes",
+			"name" : "Default missing data codes",
+			"type" : "textarea"
+		},
+		{
+			"key" : "dq-real-time",
+			"name" : "Default data quality rules to execute in real time",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "dq-notify-header",
+			"name" : "Custom data quality notification header text",
+			"type" : "text"
+		},
+		{
+			"key" : "dq-notify-body",
+			"name" : "Custom data quality notification text (standard)",
+			"type" : "textarea"
+		},
+		{
+			"key" : "dq-notify-body-drw",
+			"name" : "Custom data quality notification text (data resolution workflow)",
+			"type" : "textarea"
+		},
+		{
+			"key" : "hdr-appr-proj",
+			"name" : "<b>Project appearance tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "alternate-status-icons",
+			"name" : "Use alternate status icons",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "show-role-name",
+			"name" : "Show the user's role below their username",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "hide-contact-admin",
+			"name" : "Hide 'contact administrator' links",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "Show all" },
+				{ "value" : "first", "name" : "Hide top link" },
+				{ "value" : "last", "name" : "Hide bottom link" },
+				{ "value" : "all", "name" : "Hide all" }
+			]
+		},
+		{
+			"key" : "hide-suggest-feature",
+			"name" : "Hide 'suggest a new feature' link",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "hdr-nav-proj",
+			"name" : "<b>Project navigation tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
 			"key" : "submit-option-tweak",
 			"name" : "Submit options",
 			"type" : "radio",
 			"choices" : [
-				{ "value" : "0", "name" : "Default" },
+				{ "value" : "0", "name" : "REDCap default" },
 				{ "value" : "1", "name" : "Remove 'Save and Go To Next Record'" },
-				{ "value" : "2", "name" : "'Exit Form', 'New Instance', 'Next Form' and 'Stay' only" }
+				{ "value" : "2", "name" : "Defined submit options" }
 			]
+		},
+		{
+			"key" : "submit-option-define",
+			"name" : "Defined form submit options",
+			"type" : "text",
+			"branchingLogic" : { "field" : "submit-option-tweak", "value" : "2" },
+			"required" : true
 		},
 		{
 			"key" : "submit-option-custom",
 			"name" : "Allow custom submit options",
 			"type" : "checkbox"
+		},
+		{
+			"key" : "all-status-types",
+			"name" : "Remember the selection of 'all status types' on the record status dashboard",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "hdr-nav-sys",
+			"name" : "<b>System navigation tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "my-projects-alphabetical",
+			"name" : "Show 'My Projects' in alphabetical order",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "single-project-redirect",
+			"name" : "Redirect users with one project to that project",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "hdr-email",
+			"name" : "<b>Email tweaks</b>",
+			"type" : "descriptive"
 		},
 		{
 			"key" : "custom-alert-sender",
@@ -76,48 +184,38 @@
 			"required" : true
 		},
 		{
-			"key" : "alternate-status-icons",
-			"name" : "Use alternate status icons",
-			"type" : "checkbox"
-		},
-		{
-			"key" : "all-status-types",
-			"name" : "Remember the selection of 'all status types' on the record status dashboard",
-			"type" : "checkbox"
-		},
-		{
-			"key" : "show-role-name",
-			"name" : "Show the user's role below their username",
-			"type" : "checkbox"
+			"key" : "hdr-simplified-proj",
+			"name" : "<b>Project simplified views</b>",
+			"type" : "descriptive"
 		},
 		{
 			"key" : "alerts-simplified-view",
-			"name" : "Add a 'simplified view' option to the alerts",
+			"name" : "Alerts simplified view",
 			"type" : "checkbox"
 		},
 		{
 			"key" : "codebook-simplified-view",
-			"name" : "Add a 'simplified view' option to the codebook",
+			"name" : "Codebook simplified view",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "quality-rules-simplified-view",
+			"name" : "Data quality rules simplified view",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "instrument-simplified-view",
+			"name" : "Instrument mapping simplified view",
 			"type" : "checkbox"
 		},
 		{
 			"key" : "user-rights-simplified-view",
-			"name" : "Add a 'simplified view' option to the user rights page",
-			"type" : "checkbox"
-		},
-		{
-			"key" : "my-projects-alphabetical",
-			"name" : "Show 'My Projects' in alphabetical order",
-			"type" : "checkbox"
-		},
-		{
-			"key" : "single-project-redirect",
-			"name" : "Redirect users with one project to that project",
+			"name" : "User rights simplified view",
 			"type" : "checkbox"
 		},
 		{
 			"key" : "fmt1",
-			"name" : "<script type=\"text/javascript\">$('[field=field-types-order] td').first().css('width','40%')</script>",
+			"name" : "<script type=\"text/javascript\">$('[field=field-types-order] td').first().css('width','50%')</script>",
 			"type" : "descriptive"
 		},
 		{
@@ -141,6 +239,11 @@
 			"key" : "require-change-reason-complete",
 			"name" : "Require a reason for change for forms marked 'complete' only",
 			"type" : "checkbox"
+		},
+		{
+			"key" : "submit-option",
+			"name" : "Form submit options",
+			"type" : "text"
 		},
 		{
 			"key" : "project-home-redirect",
