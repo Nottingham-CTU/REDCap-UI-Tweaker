@@ -78,6 +78,11 @@ in URL-encoded or base64 format, which can be indicated by prefixing the data as
 * b64: &ndash; base64 encoded
 * if not prefixed, then assume raw (no encoding)
 
+### Enable @SQLCHECKBOX action tag
+Allow use of the **@SQLCHECKBOX** action tag for check box fields, which will run a select query and replace check box options with query results. 
+The format must follow the pattern @SQLCHECKBOX=\'????\'' 
+Note: If the form is soft locked or database is hard locked using the Locking Module, the check box options will NOT be replaced
+
 ### Enable the Data Resolution Workflow on new projects
 This option will enable the Data Resolution Workflow instead of the Field Comment Log on new
 projects.

@@ -161,9 +161,40 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			{
 				$GLOBALS['lang']['dataqueries_309'] = $dqCustomBodyDRW;
 			}
-		}
+                        
+  
+                          
+                        // Check if the @SQLDCHECKBOX action tag is enabled and provide its functionality if so.
+                        if($_GET['page'] != '' && $this->getSystemSetting( 'sql-checkbox' ))
+                        {
+
+                            $record = $_GET['id'];
+                            $event_id = $_GET['event_id'];
+                            $instrument = $_GET['page'];
+                            $instance= $_GET['instance'];
+                            $listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
 
 
+                            $fieldsSQLCheckBox = array();
+
+                            global $Proj;
+
+                            foreach ( $listFields as $infoField )
+                            {
+                                if ($infoField['field_type'] == 'checkbox'  && str_contains($infoField['field_annotation'], '@SQLCHECKBOX') )
+                                {
+                                     array_push($fieldsSQLCheckBox, $infoField);
+                                   
+                                }
+                            }
+                            if ( ! empty($fieldsSQLCheckBox) )
+                            {
+                                $this->provideSQLCheckBox($fieldsSQLCheckBox, $project_id, $_GET['id'], $_GET['event_id'], $_GET['page'], $_GET['instance']);
+                              
+
+                            }
+                        }
+                    }
 	}
 
 
@@ -386,6 +417,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					'handled corectly, you may wish to output it from the database as ' .
 					'URL-encoded or base64, in which case you can prefix it with url: or b64: ' .
 					'respectively to indicate the format.';
+			}
+                        if ( defined( 'SUPER_USER' ) && SUPER_USER &&
+			     $this->getSystemSetting( 'sql-checkbox' ) )
+			{
+				$listActionTags['@SQLCHECKBOX'] =
+					'On check box fields, the format must follow the pattern @SQLCHECKBOX=\'????\''
+                                        . ' which will run the select query defined and replace checkbox options with query results. '
+                                        .'Note: If the form is soft locked or database is hard locked using the Locking Module, the check box options will NOT be replaced.';
 			}
 			$this->provideActionTagExplain( $listActionTags );
 		}
@@ -2104,7 +2143,49 @@ $(function()
 		return null;
 	}
 
+        function provideSQLCheckBox( $listFields,$project_id, $record, $event_id, $instrument, $instance)
+        {
+            global $Proj;
+            foreach ($listFields as $infoField )
+            {
+                $fieldname = $infoField['field_name'];
+                $SQLValue = \Form::getValueInQuotesActionTag($infoField['field_annotation'], "@SQLCHECKBOX");
+                try 
+                {
+                    $enum = getSqlFieldEnum($SQLValue, $project_id, $record, $event_id, $instance, null, null, $instrument);
 
+                    $Locking = new \Locking();
+                    $Locking->findLocked($Proj, $record, $fieldname, $event_id);
+                    $Locking->findLockedWholeRecord($project_id, $record);
+                    $locked = !empty($Locking->lockedWhole) || !empty($Locking->locked[$record][$event_id][$instance]);
 
+                    if (!$locked && $this->isModuleEnabled('locking_forms')) 
+                    {
+                        $Locking = \ExternalModules\ExternalModules::getModuleInstance('locking_forms');
+                        $locked = $Locking->isHardLocked($event_id, $instrument);
+                    }
+
+                    if ($Proj->metadata[$fieldname]['element_enum'] !== $enum && !$locked)
+                    {
+                        $Proj->metadata[$fieldname]['element_enum'] = $enum;
+
+                        $sql = "UPDATE redcap.redcap_metadata SET element_enum = ? WHERE project_id = ? AND field_name = ?";
+                        if ($this->query($sql, [$enum, $project_id, $fieldname])) {
+                            if ($enum == "") {
+                                $enum = "No options returned";
+                            }
+                            \REDCap::logEvent('UI Tweaker-@SQLCHECKBOX', "Update check box options\nField=" . $fieldname . "\nOptions=" . $enum, "UI Tweaker", $record, "", $project_id);
+                        } else {
+
+                            \REDCap::logEvent('UI Tweaker-@SQLCHECKBOX', "Failed to update check box enum\nField=" . $fieldname, "UI Tweaker", $record, "", $project_id);
+                        }
+                    }
+                } 
+                catch (\Exception $e) 
+                {
+                    \REDCap::logEvent('UI Tweaker-@SQLCHECKBOX', "Failed to update check box enum\nField=" . $fieldname . "\nError=" . $e->getMessage(), "UI Tweaker", $record, "", $project_id);
+                }
+            }
+        }
 }
 
