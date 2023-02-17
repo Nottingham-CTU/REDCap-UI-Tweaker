@@ -1,5 +1,8 @@
 <?php
 
+namespace Nottingham\REDCapUITweaker;
+
+
 // Exit if not in project context or alerts simplified view is disabled.
 if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('alerts-simplified-view') )
 {

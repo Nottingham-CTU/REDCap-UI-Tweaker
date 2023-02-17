@@ -2,6 +2,9 @@
 
 // This page receives AJAX requests as part of the form navigation fix.
 
+namespace Nottingham\REDCapUITweaker;
+
+
 header( 'Content-Type: application/json' );
 
 $nav = $_POST['nav'];

@@ -1,5 +1,8 @@
 <?php
 
+namespace Nottingham\REDCapUITweaker;
+
+
 // Exit if not in project context or alerts simplified view is disabled.
 if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('user-rights-simplified-view') )
 {
@@ -22,7 +25,7 @@ $lookupExport = [ '1' => $GLOBALS['lang']['rights_49'],
                             ?? $GLOBALS['lang']['data_export_tool_290'] ];
 
 
-$listForms = REDCap::getInstrumentNames();
+$listForms = \REDCap::getInstrumentNames();
 
 $queryRoles = $module->query( "SELECT * " .
                               "FROM redcap_user_roles WHERE project_id = ? ORDER BY role_name",
@@ -55,7 +58,7 @@ $listModules = [];
 while ( $infoModule = $queryModules->fetch_assoc() )
 {
 	$moduleID = $infoModule['directory_prefix'];
-	$moduleObj = ExternalModules\ExternalModules::getModuleInstance( $moduleID );
+	$moduleObj = \ExternalModules\ExternalModules::getModuleInstance( $moduleID );
 	$moduleName = $moduleObj->getModuleName();
 	$listModules[ $moduleID ] = $moduleName;
 }

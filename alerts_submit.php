@@ -3,6 +3,9 @@
 // Handle alert uploads, to allow any custom alert senders which conform to the regex
 // defined in the module settings.
 
+namespace Nottingham\REDCapUITweaker;
+
+
 if ( !isset( $_GET['mode'] ) || !isset( $_GET['pid'] ) ||
      !$module->getSystemSetting( 'custom-alert-sender' ) )
 {

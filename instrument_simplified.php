@@ -1,5 +1,8 @@
 <?php
 
+namespace Nottingham\REDCapUITweaker;
+
+
 // Exit if not in project context or instrument/event mapping simplified view is disabled.
 if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('instrument-simplified-view') )
 {
