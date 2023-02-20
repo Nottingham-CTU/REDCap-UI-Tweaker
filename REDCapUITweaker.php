@@ -423,7 +423,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			{
 				$listActionTags['@SQLCHECKBOX'] =
 					'On check box fields, the format must follow the pattern @SQLCHECKBOX=\'????\''
-                                        . ' which will run the select query defined and replace checkbox options with query results. '
+                                        . ' in which sql field name is defined e.g. \'sql_field\'. The SQL field will define the select query '
+                                        . 'to be run and the results from the query will replace the checkbox options. '
                                         .'Note: If the form is soft locked or database is hard locked using the Locking Module, the check box options will NOT be replaced.';
 			}
 			$this->provideActionTagExplain( $listActionTags );
@@ -2148,10 +2149,19 @@ $(function()
             global $Proj;
             foreach ($listFields as $infoField )
             {
-                $fieldname = $infoField['field_name'];
-                $SQLValue = \Form::getValueInQuotesActionTag($infoField['field_annotation'], "@SQLCHECKBOX");
+                $fieldname = $infoField['field_name']; 
+                $sqlfieldname = \Form::getValueInQuotesActionTag($infoField['field_annotation'], "@SQLCHECKBOX");
                 try 
                 {
+                    if(!isset($Proj->metadata[$sqlfieldname]) || $Proj->metadata[$sqlfieldname]['element_type'] !== 'sql')
+                    {
+                        throw new \Exception('SQL field ('.$sqlfieldname.') does not exist.');
+                    }
+                    $SQLValue = $Proj->metadata[$sqlfieldname]['element_enum'];
+                    if($SQLValue == '')
+                    {
+                        throw new \Exception('SQL for field ('.$sqlfieldname.') is not defined.');
+                    }
                     $enum = getSqlFieldEnum($SQLValue, $project_id, $record, $event_id, $instance, null, null, $instrument);
 
                     $Locking = new \Locking();
