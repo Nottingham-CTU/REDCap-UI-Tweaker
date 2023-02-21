@@ -19,8 +19,9 @@
 		}
 	],
 	"framework-version" : 6,
-	"compatibility": {
-		"redcap-version-min": "10.6.0"
+	"compatibility" : {
+		"redcap-version-min" : "10.6.0",
+		"php-version-min" : "7.4.0"
 	},
 	"system-settings" : [
 		{
