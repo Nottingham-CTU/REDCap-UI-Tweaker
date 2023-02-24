@@ -1267,6 +1267,8 @@ $(function()
   {
     var vIStatLink = $('[data-rc-lang="data_entry_226"]').parent()
     var vLStatLink = $('[data-rc-lang="data_entry_227"]').parent()
+    var vEStatLink = $('[data-rc-lang="data_entry_228"]').parent()
+    var vLEStatLink = $('[data-rc-lang="data_entry_230"]').parent()
     var vAStatLink = $('[data-rc-lang="data_entry_229"]').parent()
     if ( vIStatLink.length == 0 )
     {
@@ -1274,6 +1276,16 @@ $(function()
       vIStatLink = vStatLinks.eq(0)
       vLStatLink = vStatLinks.eq(1)
       vAStatLink = vStatLinks.eq(2)
+      if ( vStatLinks.length == 4 )
+      {
+        vEStatLink = vStatLinks.eq(2)
+        vAStatLink = vStatLinks.eq(3)
+      }
+      if ( vStatLinks.length == 5 )
+      {
+        vLEStatLink = vStatLinks.eq(3)
+        vAStatLink = vStatLinks.eq(4)
+      }
     }
     <?php echo $selectAll, "\n"; ?>
     var vFuncSetSel = function( event )
@@ -1287,6 +1299,14 @@ $(function()
     }
     vIStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
     vLStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    if ( vEStatLink.length > 0 )
+    {
+      vEStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    }
+    if ( vLEStatLink.length > 0 )
+    {
+      vLEStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    }
     vAStatLink.on( 'click', { mode: 'on' }, vFuncSetSel )
   })
 </script>
