@@ -1393,130 +1393,16 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
-    var vActivated = false
-    var vIsDesigner = ( $('.ReportTableWithBorder th').first().text() != '#' )
-    var vKeepRowNums = false
-    var vFuncSelect = function()
-    {
-      var vElem = $('.ReportTableWithBorder')[0]
-      var vSel = window.getSelection()
-      var vRange = document.createRange()
-      vRange.selectNodeContents(vElem)
-      vSel.removeAllRanges()
-      vSel.addRange(vRange)
-    }
     var vFuncSimplify = function()
     {
-      if ( vActivated )
-      {
-        vFuncSelect()
-        return
-      }
-      var vFormHdrSelector = '.ReportTableWithBorder .codebook-form-header'
-      if ( $(vFormHdrSelector).length == 0 )
-      {
-        vFormHdrSelector = '.ReportTableWithBorder td[colspan]'
-      }
-      var vRowsSelector = '.ReportTableWithBorder tr[data-field]'
-      if ( $(vRowsSelector).length == 0 )
-      {
-        vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
-      }
-      $(vFormHdrSelector).attr('colspan','4')
-      if ( vIsDesigner || ! vKeepRowNums )
-      {
-        $(vRowsSelector + '>td:nth-child(1)').css('display','none')
-        $('.ReportTableWithBorder th:nth-child(1)').css('display','none')
-      }
-      if ( vIsDesigner && ! vKeepRowNums )
-      {
-        $(vRowsSelector + '>td:nth-child(2)').css('display','none')
-        $('.ReportTableWithBorder th:nth-child(2)').css('display','none')
-      }
-      $(vFormHdrSelector).css('display','')
-      $(vFormHdrSelector).css('position','unset')
-      $(vFormHdrSelector).css('box-shadow','unset')
-      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
-        ')>code').each( function(i,el){$(el).before($(el).html());$(el).remove()} )
-      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
-        ')>span[style*="margin"]').css('display','none')
-      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
-        ')>span.text-dangerrc').removeClass('text-dangerrc')
-      var vHdrAttribute = $('.ReportTableWithBorder th:nth-child(' +
-                            ( vIsDesigner ? '5' : '4' ) + ')')
-      var vHdrAnnotation = $('<th><?php echo $GLOBALS['lang']['design_527']; ?></th>')
-      vHdrAnnotation.css('background-color',vHdrAttribute.css('background-color'))
-      vHdrAttribute.css('width','')
-      vHdrAttribute.after(vHdrAnnotation)
-      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '5' : '4' ) + ')').each(function()
-      {
-        var vAnnotation = ''
-        var vFieldAttr = $(this).html()
-        var vPos = vFieldAttr.indexOf('<br><span data-rc-lang="design_527">' +
-                                      '<?php echo $GLOBALS['lang']['design_527']; ?></span>: ')
-        if ( vPos != -1 )
-        {
-          vAnnotation = vFieldAttr.substring(vPos + <?php
-		echo strlen($GLOBALS['lang']['design_527']) + 45; ?>).replace(/\n/g, '<br>\n')
-        }
-        else
-        {
-          vPos = vFieldAttr.indexOf('<br><?php echo $GLOBALS['lang']['design_527']; ?>: ')
-          if ( vPos != -1 )
-          {
-            vAnnotation = vFieldAttr.substring(vPos + <?php
-		echo strlen($GLOBALS['lang']['design_527']) + 6; ?>).replace(/\n/g, '<br>\n')
-          }
-        }
-        if ( vPos != -1 )
-        {
-          vFieldAttr = vFieldAttr.substring(0,vPos)
-        }
-        vFieldAttr = vFieldAttr.replace('<br><span data-rc-lang="design_489">' +
-                                        '<?php echo $GLOBALS['lang']['design_489']; ?></span> ',
-                                        '<br>')
-        vFieldAttr = vFieldAttr.replace('<br><?php echo $GLOBALS['lang']['design_489']; ?> ','<br>')
-        $(this).html(vFieldAttr)
-        $(this).after($('<td></td>').css('border-top',$(this).css('border-top')).html(vAnnotation))
-        vFieldVals = $(this).find('table')
-        if ( vFieldVals.length == 1 && vFieldVals.find('tr').first().children().length == 3 )
-        {
-          vFieldVals.find('tr td:nth-child(2)').css('display','none')
-        }
-      })
-      $(vFormHdrSelector + ' .btn').css('display','none')
-      //$('.ReportTableWithBorder td table td').css('display','')
-      $('.ReportTableWithBorder i.fa-chalkboard-teacher').removeClass('fa-chalkboard-teacher')
-      $(vFormHdrSelector).contents().filter(function(){
-        return this.nodeType == 3}).remove()
-      $(vFormHdrSelector + ' span').before('&nbsp;&nbsp;')
-      $(vFormHdrSelector + ' span').css('margin-left','0px')
-      $(vFormHdrSelector + ' font').before('&nbsp;&nbsp;&nbsp;&nbsp;')
-      $(vFormHdrSelector + ' font').css('margin-left','0px')
-      if ( vKeepRowNums )
-      {
-        $(vFormHdrSelector).before('<td></td>')
-      }
-      $('#simplifiedView').text('Select Codebook table')
-      $('#simplifiedView2').css('display','none')
-      vActivated = true
-    }
-    var vFuncSimplify2 = function()
-    {
-      vKeepRowNums = true
-      vFuncSimplify()
+      window.location = '<?php echo addslashes( $this->getUrl('codebook_simplified.php') ); ?>'
     }
     var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
                          ' ui-widget" id="simplifiedView">Simplified view</button>')
     vBtnSimplify.css('margin-top','5px')
     vBtnSimplify.click(vFuncSimplify)
-    var vBtnSimplify2 = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
-                          ' ui-widget" id="simplifiedView2">Simplified view with row numbers</button>')
-    vBtnSimplify2.css('margin-top','5px')
-    vBtnSimplify2.click(vFuncSimplify2)
     var vButtons = $('<p> </p>')
     vButtons.prepend(vBtnSimplify)
-    vButtons.append(vBtnSimplify2)
     $('.jqbuttonmed[onclick="window.print();"]').closest('table').after(vButtons)
   })
 </script>

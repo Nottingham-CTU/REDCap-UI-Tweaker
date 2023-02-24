@@ -130,7 +130,7 @@ $prevFormName = '';
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
 ?>
-<div class="projhdr"><i class="fas fa-clipboard-check"></i> Data Quality</div>
+<div class="projhdr"><i class="fas fa-book"></i> <?php echo $GLOBALS['lang']['global_116']; ?></div>
 <script type="text/javascript">
   $(function()
   {
@@ -204,8 +204,10 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 <?php
 foreach ( $listCodebook as $infoCodebook )
 {
+	// Check if this is one of the 'Complete?' fields and set the row class if so.
 	$rowClass = ( $infoCodebook['field_name'] == $infoCodebook['form_name'] . '_complete' )
 	            ? ' class="compRow"' : '';
+	// If the form name is different from the previous field, this is a new form, so add a header.
 	if ( $infoCodebook['form_name'] != $prevFormName )
 	{
 ?>
@@ -225,6 +227,7 @@ foreach ( $listCodebook as $infoCodebook )
 <?php
 		$prevFormName = $infoCodebook['form_name'];
 	}
+	// If the field includes a section header, output a row for it.
 	if ( $infoCodebook['element_preceding_header'] != '' )
 	{
 ?>
@@ -236,7 +239,11 @@ foreach ( $listCodebook as $infoCodebook )
 ?></td>
  </tr>
 <?php
+
 	}
+
+	// Output the row for the field.
+
 ?>
  <tr<?php echo $rowClass; ?>>
   <td class="colID" rowspan="<?php echo $infoCodebook['rowspan']; ?>"><?php
@@ -246,6 +253,7 @@ foreach ( $listCodebook as $infoCodebook )
 ?></td>
   <td rowspan="<?php echo $infoCodebook['rowspan']; ?>"><?php
 
+	// Output the field name and branching logic.
 	echo $module->escapeHTML( $infoCodebook['field_name'] );
 	if ( $infoCodebook['branching_logic'] )
 	{
@@ -256,9 +264,11 @@ foreach ( $listCodebook as $infoCodebook )
 ?></td>
   <td rowspan="<?php
 	echo $infoCodebook['rowspan'] - ( $infoCodebook['element_note'] == '' ? 0 : 1 ); ?>"><?php
+	// Output the field label.
 	echo codebookEscape( $infoCodebook['element_label'] ); ?></td>
   <td colspan="2" rowspan="<?php
 
+	// Output the field type, validation, alignment, survey attributes.
 	echo ( $infoCodebook['element_enum'] == '' &&
 	       $infoCodebook['element_note'] != '' ) ? 2 : 1; ?>"><?php
 	echo $module->escapeHTML( $infoCodebook['element_type'] .
@@ -288,6 +298,7 @@ foreach ( $listCodebook as $infoCodebook )
 ?></td>
   <td rowspan="<?php echo $infoCodebook['rowspan']; ?>"><?php
 
+	// Output the field annotation.
 	echo codebookEscape( $infoCodebook['misc'] );
 
 ?></td>
@@ -298,6 +309,8 @@ foreach ( $listCodebook as $infoCodebook )
 ?>
  <tr<?php echo $rowClass; ?>>
 <?php
+
+		// Output the field note.
 		if ( $infoCodebook['element_note'] != '' && $i == $infoCodebook['rowspan'] - 2 )
 		{
 ?>
@@ -306,6 +319,8 @@ foreach ( $listCodebook as $infoCodebook )
   </td>
 <?php
 		}
+
+		// Output the field values/labels for radio/select/checkbox fields.
 		if ( is_array( $infoCodebook['element_enum'] ) )
 		{
 ?>
@@ -317,6 +332,7 @@ foreach ( $listCodebook as $infoCodebook )
   </td>
 <?php
 		}
+		// Output calculations/SQL.
 		elseif ( $infoCodebook['element_enum'] != '' )
 		{
 ?>
