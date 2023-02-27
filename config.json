@@ -53,6 +53,11 @@
 			"name" : "Enable @SQLDESCRIPTIVE action tag",
 			"type" : "checkbox"
 		},
+                {
+			"key" : "sql-checkbox",
+			"name" : "Enable @SQLCHECKBOX action tag",
+			"type" : "checkbox"
+		},
 		{
 			"key" : "hdr-data-qual",
 			"name" : "<b>Data quality tweaks</b>",
