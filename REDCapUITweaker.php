@@ -10,6 +10,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	const SUBMIT_DEFINE = 'record,nextinstance,nextform,continue';
 
 	private $customAlerts;
+	private $customReports;
 
 
 
@@ -652,6 +653,40 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	{
 		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
 		       $_GET['page'] == 'alerts_simplified';
+	}
+
+
+
+
+
+	// Allows a different module to supply its own report details for the reports simplified view.
+	// $infoReport should be an array containing the following keys (all fields as plain text):
+	// 'title': title/name of the report
+	// 'type': type of the report (e.g. Gantt, SQL)
+	// 'description': description of the report
+	// 'permissions': details of who can view/edit/download etc. the report
+	// 'definition': e.g. report fields, SQL query
+	// 'options': any additonal report options which have been set
+
+	function addCustomReport( $infoReport )
+	{
+		if ( ! is_array( $this->customReports ) )
+		{
+			$this->customReports = [];
+		}
+		$this->customReports[] = $infoReport;
+	}
+
+
+
+
+
+	// Allows a different module to ask this module if it needs to supply its own report details.
+
+	function areCustomReportsExpected()
+	{
+		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
+		       $_GET['page'] == 'reports_simplified';
 	}
 
 
