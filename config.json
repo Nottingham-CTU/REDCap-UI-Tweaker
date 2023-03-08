@@ -75,6 +75,21 @@
 			"type" : "textarea"
 		},
 		{
+			"key" : "require-change-reason",
+			"name" : "Require a reason for change on new projects",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "No" },
+				{ "value" : "1", "name" : "Yes, REDCap standard functionality" },
+				{ "value" : "2", "name" : "Yes, on forms previously marked 'complete' only" }
+			]
+		},
+		{
+			"key" : "default-prevent-lock-as-change",
+			"name" : "Prevent the 'lock this instrument' option being treated as a data change",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "dq-real-time",
 			"name" : "Default data quality rules to execute in real time",
 			"type" : "checkbox"

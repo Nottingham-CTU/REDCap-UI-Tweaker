@@ -435,17 +435,27 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-		// When a new project has just been created, enable the Data Resolution Workflow if the
-		// option to enable it automatically has been enabled.
+		// When a new project has just been created, if the options to enable these features on new
+		// projects are enabled: enable the Data Resolution Workflow, set the Missing Data Codes,
+		// enable the reason for change, and prevent setting the instrument to locked being counted
+		// as a data change.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' &&
 		     $_GET['msg'] == 'newproject' &&
+		     $this->getSystemSetting( 'default-prevent-lock-as-change' ) )
+		{
+			$this->setProjectSetting( 'prevent-lock-as-change', true );
+		}
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' &&
+		     $_GET['msg'] == 'newproject' &&
 		     ( $this->getSystemSetting( 'data-res-workflow' ) ||
-		       $this->getSystemSetting( 'missing-data-codes' ) != '' ) )
+		       $this->getSystemSetting( 'missing-data-codes' ) != '' ||
+		       $this->getSystemSetting( 'require-change-reason' ) != '' ) )
 		{
 			$_SESSION['module_uitweak_newproject'] = true;
 			$this->provideDefaultCustom( $this->getSystemSetting( 'data-res-workflow' ),
-			                             $this->getSystemSetting( 'missing-data-codes' ) );
+			                             $this->getSystemSetting( 'missing-data-codes' ),
+			                             $this->getSystemSetting( 'require-change-reason' ) );
 		}
 		elseif ( isset( $_SESSION['module_uitweak_newproject'] ) &&
 		         substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' )
@@ -1017,8 +1027,12 @@ $(function()
 
 	// Output JavaScript to enable Data Resolution Workflow / provide default missing data codes.
 
-	function provideDefaultCustom( $dataResolutionWorkflow, $missingDataCodes )
+	function provideDefaultCustom( $dataResolutionWorkflow, $missingDataCodes, $reasonForChange )
 	{
+		if ( $reasonForChange === '2' )
+		{
+			$this->setProjectSetting( 'require-change-reason-complete', true );
+		}
 ?>
 <script type="text/javascript">
   $(function()
@@ -1045,6 +1059,12 @@ $(function()
       {
         $('#missing_data_codes').val('<?php echo $defaultCodes; ?>')
       }
+<?php
+		}
+		if ( $reasonForChange != '' )
+		{
+?>
+      $('#require_change_reason').prop('checked',true)
 <?php
 		}
 ?>
