@@ -524,6 +524,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If the 'lock this instrument' option is not to be treated as a data change, amend so the
+		// data changed flag is not set by ticking the option.
+
+		if ( $this->getProjectSetting( 'prevent-lock-as-change' ) === true )
+		{
+			$this->providePreventLockAsChange();
+		}
+
+
 		// If the form navigation fix is enabled, amend the dataEntrySubmit function to perform a
 		// save and stay before performing the selected action. A session variable is set (by AJAX
 		// request) which triggers the selected action once the page reloads following the save
@@ -1350,6 +1359,33 @@ $(function()
       vLEStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
     }
     vAStatLink.on( 'click', { mode: 'on' }, vFuncSetSel )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to prevent selecting 'lock this instrument' from being treated as a data
+	// change.
+
+	function providePreventLockAsChange()
+	{
+
+?>
+<script type="text/javascript">
+  $(function() {
+    $('#__LOCKRECORD__').click(function(e)
+    {
+      setTimeout(function()
+      {
+        $('#__LOCKRECORD__').prop( 'checked', ! $('#__LOCKRECORD__').prop('checked') )
+      }, 100)
+      e.preventDefault()
+    })
   })
 </script>
 <?php

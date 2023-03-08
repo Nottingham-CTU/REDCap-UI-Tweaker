@@ -247,6 +247,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "prevent-lock-as-change",
+			"name" : "Prevent selecting the 'lock this instrument' option being treated as a data change",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "submit-option",
 			"name" : "Form submit options",
 			"type" : "text"
