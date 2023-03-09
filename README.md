@@ -2,6 +2,58 @@
 This module provides a selection of options to adjust the REDCap user interface.
 
 
+## Project-level configuration options
+
+### Hide 'Unverified' option on data entry forms
+This will remove the *Unverified* option from the form status field, leaving only *Incomplete* and
+*Complete*.
+
+### Require a reason for change for forms marked 'complete' only
+This will prompt users for a reason for change whenever editing a form that was previously marked as
+complete. Note that a reason for change will be required if a form is changed from complete to
+incomplete, but further changes will not then require a reason for change until the form has been
+marked as complete again.
+
+This setting, if enabled, will override the REDCap setting in Project Setup -> Additional
+Customizations.
+
+### Prevent selecting the 'lock this instrument' option being treated as a data change
+This will prevent the 'lock this instrument' checkbox from counting as a data change when it is
+toggled on a data entry form. This will prevent warnings about unsaved data and prompts for a reason
+for change if no other data has been modified on the form.
+
+### Form submit options
+If custom submit options are enabled, this setting allows the submit options to be set for the
+project. This will override any system setting, but can itself be overridden by the @SAVEOPTIONS
+action tag.
+
+### Redirect from the Project Home page to this URL
+If set, this will cause the *Project Home* page to redirect to the specified URL. Either an absolute
+URL (starting with `http://` or `https://`) or a relative URL can be used. Relative URLs are
+relative to the REDCap version directory.
+
+If the URL is a relative URL and it contains `pid=*`, the `*` will be replaced with the current
+project ID. This does not apply to absolute URLs.
+
+Only administrators can set the URL to an absolute URL or a relative URL for a different project
+(where `pid` has a value other than `*`).
+
+### If custom logo/name is displayed
+Within the project settings in the REDCap control center, there is an option to display the custom
+logo and institution name at the top of all project pages. If that option is set to yes, this
+setting allows it to be further adjusted so only the logo or only the institution name is displayed.
+
+This setting is only available to administrators.
+
+### Form navigation fix
+When submitting a form and navigating away from the form (e.g. *Save & Go To Next Form*), a
+*Save & Stay* will be performed first if this option is enabled. This can be used to work around
+issues in REDCap or other modules if data needs to be saved first for the form navigation to work
+correctly.
+
+This setting is only available to administrators.
+
+
 ## System-wide configuration options
 
 ### Order / placement of field types
@@ -66,10 +118,11 @@ Miscellaneous
 ```
 
 ### Enable @SQLDESCRIPTIVE action tag
-Allow use of the **@SQLDESCRIPTIVE** action tag, which will use the option label from the selected
-option in an SQL field as descriptive text and render the field like a descriptive field. This
-allows HTML content to be generated on the page using a database query. You will probably want to
-pair this action tag with @DEFAULT or @SETVALUE/@PREFILL to select the appropriate option.
+Allow use of the **@SQLDESCRIPTIVE** action tag for SQL fields, which will use the option label from
+the selected option in an SQL field as descriptive text and render the field like a descriptive
+field. This allows HTML content to be generated on the page using a database query. You will
+probably want to pair this action tag with @DEFAULT or @SETVALUE/@PREFILL to select the appropriate
+option.
 
 As REDCap may strip HTML from option labels, for best results try returning data from the database
 in URL-encoded or base64 format, which can be indicated by prefixing the data as follows:
@@ -85,8 +138,8 @@ the checkbox options with those from a specified SQL field. The format must foll
 project.<br>Note: Checkbox options will **not** be replaced if the form, record or project has been
 locked.
 
-For best results, the SQL query should return all possible options outside of a record context
-(where [record-name] = '') and only limit to a subset (if required) within a record context.
+For best results, the SQL query should return all possible options outside of a record context<br>
+(where \[record-name\] = '') and only limit to a subset (if required) within a record context.
 
 ### Enable the Data Resolution Workflow on new projects
 This option will enable the Data Resolution Workflow instead of the Field Comment Log on new
@@ -94,6 +147,15 @@ projects.
 
 ### Default missing data codes
 This will set the missing data codes on new projects to the codes defined here.
+
+### Require a reason for change on new projects
+This option will enable the reason for change prompts on new projects. If enabled, it can either be
+using REDCap standard functionality (prompts for all changes), or only for forms which have
+previously been marked 'complete'.
+
+### Prevent the 'lock this instrument' option being treated as a data change
+This option will default new projects to not treat toggling the 'lock this instrument' checkbox as
+a data change. It can still be enabled/disabled on individual projects as required.
 
 ### Default data quality rules to execute in real time
 Automatically selects the 'execute in real time' checkbox for new data quality rules on the data
@@ -211,50 +273,3 @@ This will provide an overview of the user rights as a table showing the rights g
 This includes the basic rights and the data viewing/export rights for each data entry instrument.
 Once the simplified view is shown, a button to select the table is displayed to make it easier to
 copy the table e.g. for use in documentation.
-
-
-## Project-level configuration options
-
-### Hide 'Unverified' option on data entry forms
-This will remove the *Unverified* option from the form status field, leaving only *Incomplete* and
-*Complete*.
-
-### Require a reason for change for forms marked 'complete' only
-This will prompt users for a reason for change whenever editing a form that was previously marked as
-complete. Note that a reason for change will be required if a form is changed from complete to
-incomplete, but further changes will not then require a reason for change until the form has been
-marked as complete again.
-
-This setting, if enabled, will override the REDCap setting in Project Setup -> Additional
-Customizations.
-
-### Form submit options
-If custom submit options are enabled, this setting allows the submit options to be set for the
-project. This will override any system setting, but can itself be overridden by the @SAVEOPTIONS
-action tag.
-
-### Redirect from the Project Home page to this URL
-If set, this will cause the *Project Home* page to redirect to the specified URL. Either an absolute
-URL (starting with `http://` or `https://`) or a relative URL can be used. Relative URLs are
-relative to the REDCap version directory.
-
-If the URL is a relative URL and it contains `pid=*`, the `*` will be replaced with the current
-project ID. This does not apply to absolute URLs.
-
-Only administrators can set the URL to an absolute URL or a relative URL for a different project
-(where `pid` has a value other than `*`).
-
-### If custom logo/name is displayed
-Within the project settings in the REDCap control center, there is an option to display the custom
-logo and institution name at the top of all project pages. If that option is set to yes, this
-setting allows it to be further adjusted so only the logo or only the institution name is displayed.
-
-This setting is only available to administrators.
-
-### Form navigation fix
-When submitting a form and navigating away from the form (e.g. *Save & Go To Next Form*), a
-*Save & Stay* will be performed first if this option is enabled. This can be used to work around
-issues in REDCap or other modules if data needs to be saved first for the form navigation to work
-correctly.
-
-This setting is only available to administrators.
