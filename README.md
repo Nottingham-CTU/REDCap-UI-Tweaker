@@ -85,6 +85,9 @@ the checkbox options with those from a specified SQL field. The format must foll
 project.<br>Note: Checkbox options will **not** be replaced if the form, record or project has been
 locked.
 
+For best results, the SQL query should return all possible options outside of a record context
+(where [record-name] = '') and only limit to a subset (if required) within a record context.
+
 ### Enable the Data Resolution Workflow on new projects
 This option will enable the Data Resolution Workflow instead of the Field Comment Log on new
 projects.

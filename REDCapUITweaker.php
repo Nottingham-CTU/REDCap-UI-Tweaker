@@ -1650,8 +1650,36 @@ $(function()
 				{
 					throw new \Exception( 'SQL for field (' . $sqlfieldname . ') is not defined.');
 				}
-				$enum = getSqlFieldEnum( $SQLValue, $project_id, $record, $event_id, $instance,
-				                         null, null, $instrument );
+				$enum = getSqlFieldEnum( $SQLValue, $project_id, null, null, null, null, null,
+				                         $instrument );
+				$recordEnum = getSqlFieldEnum( $SQLValue, $project_id, $record, $event_id,
+				                               $instance, null, null, $instrument );
+				$listEnum = explode( ' \n ', $enum );
+				$listRecordEnum = explode( ' \n ', $recordEnum );
+				if ( empty( array_diff( $listRecordEnum, $listEnum ) ) )
+				{
+					// $recordEnum is a subset of $enum, use the values from $enum as the field
+					// values enumeration and use the @HIDECHOICE action tag to hide options which
+					// are not applicable in the context.
+					$listHideEnum = array_diff( $listEnum, $listRecordEnum );
+					$listHideChoices = [];
+					foreach ( $listHideEnum as $itemEnum )
+					{
+						$listHideChoices[] = explode( ',', $itemEnum, 2 )[0];
+					}
+					$oldHideChoices =
+							\Form::getValueInQuotesActionTag( $infoField['field_annotation'],
+							                                  '@HIDECHOICE' );
+					$oldHideChoices = ( $oldHideChoices == '' ? '' : ",$oldHideChoices" );
+					$Proj->metadata[$fieldname]['misc'] =
+							"@HIDECHOICE='" . implode( ',', $listHideChoices ) . $oldHideChoices .
+							"' " .$Proj->metadata[$fieldname]['misc'];
+				}
+				else
+				{
+					// $recordEnum is not a subset of $enum, use the values from $recordEnum
+					$enum = $recordEnum;
+				}
 
 				$Locking = new \Locking();
 				$Locking->findLocked($Proj, $record, $fieldname, $event_id);
