@@ -1893,6 +1893,7 @@ $(function()
     setTimeout(function() {
       var vTypeOptions = $('#field_type option')
       var vTypeList = $('#field_type')
+      var vTypeValue = vTypeList.val()
       vTypeList.html('')
       var vCommonTypeList =
             $( '<optgroup label="Common Field Types"></optgroup>' )
@@ -1948,6 +1949,10 @@ $(function()
       vTypeList.append( vHeaderTypeList )
       vTypeList.append( vOtherTypeList )
       vTypeList.prepend( vTypeOptions[0] )
+      if ( vTypeValue != 'file' )
+      {
+        vTypeList.val( vTypeValue )
+      }
     }, 800 )
   })
 </script>
