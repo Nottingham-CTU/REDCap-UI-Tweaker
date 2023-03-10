@@ -486,6 +486,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+
+		// If the reports page, add simplified view option.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' &&
+		     $_GET['addedit'] != '1' && $_GET['other_report_options'] != '1' &&
+		     $this->getSystemSetting( 'reports-simplified-view' ) )
+		{
+			$this->provideSimplifiedReports();
+		}
+
+
 	}
 
 
@@ -728,6 +739,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	function getCustomAlerts()
 	{
 		return is_array( $this->customAlerts ) ? $this->customAlerts : [];
+	}
+
+
+
+
+
+	// Get the alerts supplied by other modules.
+
+	function getCustomReports()
+	{
+		return is_array( $this->customReports ) ? $this->customReports : [];
 	}
 
 
@@ -1580,6 +1602,35 @@ $(function()
     var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
     vDivSimplify.append(vBtnSimplify)
     $('#table-rules-parent').before(vDivSimplify)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the simplified view option on the reports page.
+
+	function provideSimplifiedReports()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('reports_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#report_list_parent_div').before(vDivSimplify)
   })
 </script>
 <?php

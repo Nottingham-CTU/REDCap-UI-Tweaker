@@ -267,6 +267,14 @@ view. This will provide a simple table of which instruments are on each event, i
 shown at once. Once the simplified view is shown, a button to select the table is displayed to make
 it easier to copy the table e.g. for use in documentation.
 
+### Reports simplified view
+If enabled, a button will be added to the reports page to show a simplified view. This will provide
+an overview of the reports as a table. Once the simplified view is shown, a button to select the
+table is displayed to make it easier to copy the table e.g. for use in documentation.
+
+Other modules can add information to the reports simplified view. If you are a module developer, see
+the [report provider guide](README-ReportProvider.md) for more information.
+
 ### User rights simplified view
 If enabled, a button will be added to the user rights page to show a simplified view.
 This will provide an overview of the user rights as a table showing the rights granted to each role.
