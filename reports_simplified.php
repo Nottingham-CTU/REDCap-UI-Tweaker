@@ -151,12 +151,12 @@ foreach ( $listCustomReports as $infoReport )
 {
 ?>
  <tr>
-  <td><?php echo $module->escapeHTML( $infoAlert['title'] ); ?></td>
-  <td><?php echo $module->escapeHTML( $infoAlert['type'] ); ?></td>
-  <td><?php echo $module->escapeHTML( $infoAlert['description'] ); ?></td>
-  <td><?php echo $module->escapeHTML( $infoAlert['permissions'] ); ?></td>
-  <td><?php echo $module->escapeHTML( $infoAlert['definition'] ); ?></td>
-  <td><?php echo $module->escapeHTML( $infoAlert['options'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoReport['title'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoReport['type'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoReport['description'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoReport['permissions'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoReport['definition'] ); ?></td>
+  <td><?php echo $module->escapeHTML( $infoReport['options'] ); ?></td>
  </tr>
 <?php
 }

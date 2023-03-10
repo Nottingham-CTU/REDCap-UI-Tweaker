@@ -19,7 +19,7 @@ if ( $_GET['mode'] == 'upload' )
 		$GLOBALS['post_csv_content'] = $_POST['csv_content'];
 	}
 	$objAlerts =
-		new class() extends Alerts
+		new class() extends \Alerts
 		{
 			private $listExtraEmails;
 			public function saveAlert()
