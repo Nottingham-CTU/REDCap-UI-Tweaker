@@ -22,17 +22,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	function redcap_module_system_enable()
 	{
 		// If settings uninitialised (module installed for first time).
-		if ( $this->getSystemSetting( 'field-types-order' ) == '' &&
-		     $this->getSystemSetting( 'field-default-required' ) == '' &&
+		if ( $this->getSystemSetting( 'field-default-required' ) == '' &&
 		     $this->getSystemSetting( 'submit-option-tweak' ) == '' )
 		{
-			// Set field types order to text, notes, yes/no, radio, checkbox, slider, calculated |
-			// dropdown, true/false, upload, signature.
-			$this->setSystemSetting( 'field-types-order', '1,2,7,5,6,11,3|4,8,10,9' );
-			// Set new fields to default to required.
-			$this->setSystemSetting( 'field-default-required', '1' );
-			// Set submit options to REDCap default.
-			$this->setSystemSetting( 'submit-option-tweak', '0' );
+			// Prompt the user to activate the default settings.
+			$_SESSION['module_uitweak_system_enable'] = true;
 		}
 		// Upgrade defined submit options from older module version.
 		elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' &&
@@ -233,6 +227,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
 		{
 			$this->provideProjectSorting();
+		}
+
+
+		// Provide the initial configuration dialog.
+
+		if ( isset( $_SESSION['module_uitweak_system_enable'] ) )
+		{
+			$this->provideInitialConfig();
 		}
 
 
@@ -1328,6 +1330,39 @@ $(function()
   $(function()
   {
     $('a[href*="redcap.vanderbilt.edu/enduser_survey"]').parent().css('display','none')
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to provide the initial configuration dialog for the module.
+
+	function provideInitialConfig()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    simpleDialog( '<p>This module will alter some REDCap features by default.<br>You can ' +
+                  'deactivate these features now, or later via the module system settings.</p>' +
+                  '<form id="uitweak_init_config" method="post"><p><label><input type="checkbox" ' +
+                  'name="fieldtypes" value="1" checked> Amend order/placement of field types' +
+                  '</label><br><label><input type="checkbox" name="requiredfields" value="1" ' +
+                  'checked> Set required status on new fields</label><br><label><input ' +
+                  'type="checkbox" name="fieldannotations" value="1" checked> Set predefined ' +
+                  'field annotations to the DataCat project categories</label><br><label><input ' +
+                  'type="checkbox" name="dqrealtime" value="1" checked> Default data quality ' +
+                  'rules to execute in real time</label><br><label><input type="checkbox" ' +
+                  'name="statusicons" value="1" checked> Alternate status icons</label><br>' +
+                  '<label><input type="checkbox" name="nonextrecord" value="1" checked> Remove ' +
+                  '\'Save and Go To Next Record\' submit option</label></p></form>',
+                  'REDCap UI Tweaker', null, 600,
+                  function() { $.post( '<?php echo $this->getUrl( 'ajax_init_config.php' ); ?>',
+                                       $('#uitweak_init_config').serialize() ) } )
   })
 </script>
 <?php
