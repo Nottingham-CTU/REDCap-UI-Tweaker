@@ -27,6 +27,17 @@ If custom submit options are enabled, this setting allows the submit options to 
 project. This will override any system setting, but can itself be overridden by the @SAVEOPTIONS
 action tag.
 
+To use this setting, enter a comma separated list of submit options:
+* record &ndash; *Save & Exit Form*
+* continue &ndash; *Save & Stay*
+* nextinstance &ndash; *Save & Add New Instance*
+* nextform &ndash; *Save & Go To Next Form*
+* nextrecord &ndash; *Save & Go To Next Record*
+* exitrecord &ndash; *Save & Exit Record*
+* compresp &ndash; *Save & Mark Survey as Complete*
+
+To use the action tag, enter `@SAVEOPTIONS=` followed by a comma separated list of submit options.
+
 ### Redirect from the Project Home page to this URL
 If set, this will cause the *Project Home* page to redirect to the specified URL. Either an absolute
 URL (starting with `http://` or `https://`) or a relative URL can be used. Relative URLs are
@@ -204,14 +215,6 @@ Allow use of the **@SAVEOPTIONS** action tag to specify the options for submitti
 This is applied on a per-form basis by using the action tag on any of the fields on that form.
 The first @SAVEOPTIONS action tag encountered on the form will be used, excluding fields hidden by
 branching logic when the form loads.
-
-To use this action tag, enter `@SAVEOPTIONS=` followed by a comma separated list of submit options:
-* record &ndash; *Save & Exit Form*
-* continue &ndash; *Save & Stay*
-* nextinstance &ndash; *Save & Add New Instance*
-* nextform &ndash; *Save & Go To Next Form*
-* nextrecord &ndash; *Save & Go To Next Record*
-* exitrecord &ndash; *Save & Exit Record*
 
 If custom submit options are enabled, the submit options can also be set project-wide in the module
 project settings (in the same format as for the action tag). If a @SAVEOPTIONS action tag is used,

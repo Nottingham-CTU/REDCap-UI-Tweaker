@@ -6,7 +6,7 @@ namespace Nottingham\REDCapUITweaker;
 class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 {
 	const SUBMIT_TYPES = [ 'record', 'continue', 'nextinstance',
-	                       'nextform', 'nextrecord', 'exitrecord' ];
+	                       'nextform', 'nextrecord', 'exitrecord', 'compresp' ];
 	const SUBMIT_DEFINE = 'record,nextinstance,nextform,continue';
 
 	private $customAlerts;
