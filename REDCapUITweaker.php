@@ -416,9 +416,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					'On SQL fields, hide the drop-down and use the text in the selected option ' .
 					'as descriptive text. You may want to pair this tag with @DEFAULT or ' .
 					'@SETVALUE/@PREFILL to select the desired option. To ensure that the data is ' .
-					'handled corectly, you may wish to output it from the database as ' .
-					'URL-encoded or base64, in which case you can prefix it with url: or b64: ' .
-					'respectively to indicate the format.';
+					'handled corectly, you may wish to output it from the database as URL-encoded' .
+					' or base64, in which case you can prefix it with url: or b64: respectively ' .
+					'to indicate the format. Note: This action tag does not work with @IF.';
 			}
 			if ($this->getSystemSetting( 'sql-checkbox' ) )
 			{
@@ -426,8 +426,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					'On checkbox fields, dynamically replace the options with those from a ' .
 					'specified SQL field. The format must follow the pattern ' .
 					'@SQLCHECKBOX=\'????\', in which the desired value must be the field name of ' .
-					'an SQL field in the project. Note: Checkbox options will NOT be replaced ' .
-					'if the form, record or project has been locked.';
+					'an SQL field in the project. Note: This action tag does not work with @IF. ' .
+					'Checkbox options will NOT be replaced if the form, record or project has ' .
+					'been locked.';
 			}
 			$this->provideActionTagExplain( $listActionTags );
 		}
@@ -583,8 +584,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
 			foreach ( $listFields as $infoField )
 			{
+				$fieldAnnotationEIf = $this->replaceIfActionTag( $infoField['field_annotation'],
+				                                                 $project_id, $record, $event_id,
+				                                                 $instrument, $repeat_instance );
 				if ( preg_match( '/@SAVEOPTIONS=((\'[^\']*\')|("[^"]*")|(\S*))/',
-				                 $infoField['field_annotation'], $submitOptions ) &&
+				                 $fieldAnnotationEIf, $submitOptions ) &&
 				     ( $infoField['branching_logic'] == '' ||
 				       \REDCap::evaluateLogic( $infoField['branching_logic'], $project_id, $record,
 				                               $event_id, $repeat_instance, $instrument ) ) )

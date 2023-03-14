@@ -37,6 +37,9 @@ To use this setting, enter a comma separated list of submit options:
 * compresp &ndash; *Save & Mark Survey as Complete*
 
 To use the action tag, enter `@SAVEOPTIONS=` followed by a comma separated list of submit options.
+This is applied on a per-form basis by using the action tag on any of the fields on that form.
+The first @SAVEOPTIONS action tag encountered on the form will be used, excluding fields hidden by
+branching logic when the form loads.
 
 ### Redirect from the Project Home page to this URL
 If set, this will cause the *Project Home* page to redirect to the specified URL. Either an absolute
@@ -213,8 +216,6 @@ relevant.
 ### Allow custom submit options
 Allow use of the **@SAVEOPTIONS** action tag to specify the options for submitting a data entry form.
 This is applied on a per-form basis by using the action tag on any of the fields on that form.
-The first @SAVEOPTIONS action tag encountered on the form will be used, excluding fields hidden by
-branching logic when the form loads.
 
 If custom submit options are enabled, the submit options can also be set project-wide in the module
 project settings (in the same format as for the action tag). If a @SAVEOPTIONS action tag is used,
