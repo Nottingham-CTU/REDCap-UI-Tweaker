@@ -165,25 +165,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			if($_GET['page'] != '' && $this->getSystemSetting( 'sql-checkbox' ))
 			{
 
-				$record = $_GET['id'];
-				$event_id = $_GET['event_id'];
-				$instrument = $_GET['page'];
-				$instance= $_GET['instance'];
 				$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
-				$fieldsSQLCheckBox = array();
+				$listFieldsSQLChkbx = [];
 
 				foreach ( $listFields as $infoField )
 				{
 					if ( $infoField['field_type'] == 'checkbox' &&
 					     str_contains( $infoField['field_annotation'], '@SQLCHECKBOX' ) )
 					{
-						array_push( $fieldsSQLCheckBox, $infoField );
+						array_push( $listFieldsSQLChkbx, $infoField );
 					}
 				}
-				if ( ! empty( $fieldsSQLCheckBox ) )
+				if ( ! empty( $listFieldsSQLChkbx ) )
 				{
-					$this->provideSQLCheckBox( $fieldsSQLCheckBox, $project_id, $record,
-					                           $event_id, $instrument, $instance);
+					$this->provideSQLCheckBox( $listFieldsSQLChkbx, $project_id,
+					                           $_GET['id'], $_GET['event_id'],
+					                           $_GET['page'], $_GET['instance'] );
 				}
 			}
 
@@ -1722,6 +1719,9 @@ $(function()
 		foreach ( $listFields as $infoField )
 		{
 			$fieldname = $infoField['field_name'];
+			$fieldAnnotationEIf = $this->replaceIfActionTag( $infoField['field_annotation'],
+			                                                 $project_id, $record, $event_id,
+			                                                 $instrument, $instance );
 			$sqlfieldname = \Form::getValueInActionTag( $infoField['field_annotation'],
 			                                            '@SQLCHECKBOX' );
 			try
@@ -1753,13 +1753,16 @@ $(function()
 					{
 						$listHideChoices[] = explode( ',', $itemEnum, 2 )[0];
 					}
-					$oldHideChoices =
-							\Form::getValueInQuotesActionTag( $infoField['field_annotation'],
-							                                  '@HIDECHOICE' );
-					$oldHideChoices = ( $oldHideChoices == '' ? '' : ",$oldHideChoices" );
-					$Proj->metadata[$fieldname]['misc'] =
-							"@HIDECHOICE='" . implode( ',', $listHideChoices ) . $oldHideChoices .
-							"' " .$Proj->metadata[$fieldname]['misc'];
+					if ( !empty( $listHideChoices ) )
+					{
+						$oldHideChoices =
+								\Form::getValueInQuotesActionTag( $fieldAnnotationEIf,
+								                                  '@HIDECHOICE' );
+						$oldHideChoices = ( $oldHideChoices == '' ? '' : ",$oldHideChoices" );
+						$Proj->metadata[$fieldname]['misc'] =
+								"@HIDECHOICE='" . implode( ',', $listHideChoices ) .
+								$oldHideChoices . "' " .$Proj->metadata[$fieldname]['misc'];
+					}
 				}
 				else
 				{
@@ -2108,6 +2111,22 @@ $(function()
 <?php
 
 		return true;
+	}
+
+
+
+
+
+	// If supported, evaluate the @IF action tag.
+
+	function replaceIfActionTag( $misc, $project_id, $record, $event_id, $instrument, $instance )
+	{
+		if ( method_exists('\Form', 'replaceIfActionTag') )
+		{
+			return \Form::replaceIfActionTag( $misc, $project_id, $record,
+			                                  $event_id, $instrument, $instance );
+		}
+		return $misc;
 	}
 
 
