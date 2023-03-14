@@ -405,9 +405,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					'the desired value must be a comma separated list of the following options: ' .
 					'record (Save and Exit Form), continue (Save and Stay), nextinstance (Save ' .
 					'and Add New Instance), nextform (Save and Go To Next Form), nextrecord ' .
-					'(Save and Go To Next Record), exitrecord (Save and Exit Record). If this ' .
-					'action tag is used on multiple fields on a form, the value from the first ' .
-					'field not hidden by branching logic when the form loads will be used.';
+					'(Save and Go To Next Record), exitrecord (Save and Exit Record), compresp ' .
+					'(Save and Mark Survey as Complete). If this action tag is used on multiple ' .
+					'fields on a form, the value from the first field not hidden by branching ' .
+					'logic when the form loads, and not suppressed by @IF, will be used.';
 			}
 			if ( defined( 'SUPER_USER' ) && SUPER_USER &&
 			     $this->getSystemSetting( 'sql-descriptive' ) )
