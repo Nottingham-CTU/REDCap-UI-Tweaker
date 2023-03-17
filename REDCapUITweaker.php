@@ -1465,6 +1465,14 @@ $(function()
       }, 100)
       e.preventDefault()
     })
+    $('#__ESIGNATURE__').click(function(e)
+    {
+      setTimeout(function()
+      {
+        $('#__ESIGNATURE__').prop( 'checked', ! $('#__ESIGNATURE__').prop('checked') )
+      }, 100)
+      e.preventDefault()
+    })
   })
 </script>
 <?php
