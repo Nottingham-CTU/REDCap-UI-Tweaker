@@ -43,6 +43,10 @@ while ( $infoCodebook = $queryCodebook->fetch_assoc() )
 	{
 		$infoCodebook['element_validation_type'] .= '_ymd';
 	}
+	if ( $infoCodebook['element_type'] == 'select' )
+	{
+		$infoCodebook['element_type'] = 'dropdown';
+	}
 	// Set element validation string.
 	$infoCodebook['element_validation'] = $infoCodebook['element_validation_type'] ?? '';
 	if ( $infoCodebook['element_validation_min'] != '' )
@@ -61,8 +65,8 @@ while ( $infoCodebook = $queryCodebook->fetch_assoc() )
 	                                        ? '' : ' (' . $infoCodebook['element_validation'] . ')';
 	// Set default field rowspan.
 	$infoCodebook['rowspan'] = 1;
-	// For select/radio/checkbox fields, get the options and increment the rowspan.
-	if ( in_array( $infoCodebook['element_type'], [ 'select', 'radio', 'checkbox' ] ) )
+	// For dropdown/radio/checkbox fields, get the options and increment the rowspan.
+	if ( in_array( $infoCodebook['element_type'], [ 'dropdown', 'radio', 'checkbox' ] ) )
 	{
 		$infoCodebook['element_enum'] =
 			array_map( function( $i ) { return explode( ', ', trim( $i ), 2 ); },
@@ -320,7 +324,7 @@ foreach ( $listCodebook as $infoCodebook )
 <?php
 		}
 
-		// Output the field values/labels for radio/select/checkbox fields.
+		// Output the field values/labels for radio/dropdown/checkbox fields.
 		if ( is_array( $infoCodebook['element_enum'] ) )
 		{
 ?>
