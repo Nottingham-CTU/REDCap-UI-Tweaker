@@ -68,10 +68,21 @@ while ( $infoCodebook = $queryCodebook->fetch_assoc() )
 	// For dropdown/radio/checkbox fields, get the options and increment the rowspan.
 	if ( in_array( $infoCodebook['element_type'], [ 'dropdown', 'radio', 'checkbox' ] ) )
 	{
-		$infoCodebook['element_enum'] =
-			array_map( function( $i ) { return explode( ', ', trim( $i ), 2 ); },
-			           explode( '\n', $infoCodebook['element_enum'] ) );
-		$infoCodebook['rowspan'] += count( $infoCodebook['element_enum'] );
+		if ( $infoCodebook['element_type'] == 'checkbox' &&
+		     strpos( $infoCodebook['misc'], '@SQLCHECKBOX' ) !== false )
+		{
+			$infoCodebook['element_type'] = 'sqlcheckbox';
+			$infoCodebook['element_enum'] = \Form::getValueInActionTag( $infoCodebook['misc'],
+			                                                            '@SQLCHECKBOX' );
+			$infoCodebook['rowspan'] = 2;
+		}
+		else
+		{
+			$infoCodebook['element_enum'] =
+				array_map( function( $i ) { return explode( ', ', trim( $i ), 2 ); },
+				           explode( '\n', $infoCodebook['element_enum'] ) );
+			$infoCodebook['rowspan'] += count( $infoCodebook['element_enum'] );
+		}
 	}
 	// For other non-blank element_enum (calc, sql), set the rowspan to 2.
 	elseif ( $infoCodebook['element_enum'] != '' )
