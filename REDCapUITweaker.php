@@ -389,6 +389,19 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If the 'Unverified' option in the form status dropdown is to be hidden,
+		// remove 'Unverified' from the legend for status icons.
+
+		if ( ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 37 ) ==
+		                                        'DataEntry/record_status_dashboard.php' ||
+		       substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 25 ) ==
+		                                        'DataEntry/record_home.php' ) &&
+		     $this->getProjectSetting( 'hide-unverified-option' ) )
+		{
+			$this->hideUnverifiedOption( null );
+		}
+
+
 
 		// Amend the list of action tags (accessible from the add/edit field window in the
 		// instrument designer) when features which provide extra action tags are enabled.
@@ -811,10 +824,37 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-	// Output JavaScript to hide the 'unverified' option on data entry forms.
+	// Output JavaScript to hide the 'unverified' option on data entry forms / status icons legend.
 
 	function hideUnverifiedOption( $instrument )
 	{
+
+		// Hide entry on legend for status icons.
+		if ( $instrument === null )
+		{
+
+?>
+<script type="text/javascript">
+  $(function() {
+    var vRemUnver = setInterval( function()
+    {
+      if ( $('img[src$="circle_yellow.png"],img[src$="circle_yellow_stack.png"]').length == 0 )
+      {
+        clearInterval( vRemUnver )
+        return
+      }
+      $('img[src$="circle_yellow.png"]').parents('td').first().html('')
+      $('img[src$="circle_yellow_stack.png"]').parent().find('img,span').css('left','')
+      $('img[src$="circle_yellow_stack.png"]').remove()
+    }, 300 )
+  })
+</script>
+<?php
+
+			return;
+		}
+
+		// Hide 'unverified' option on data entry form.
 
 ?>
 <script type="text/javascript">
