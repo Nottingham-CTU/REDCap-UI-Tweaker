@@ -60,7 +60,7 @@ while ( $infoInstrument = $queryInstruments->fetch_assoc() )
 	{
 		$infoInstrument['event_names'] = [ $infoInstrument['event_names'] ];
 		$infoInstrument['repeat'] =
-				( $infoInstrument['repeat'] == 1 ) ? [ $infoInstrument['event_names'] ] : [];
+				( $infoInstrument['repeat'] == 1 ) ? $infoInstrument['event_names'] : [];
 		$listInstruments[] = $infoInstrument;
 	}
 	$lastInstrument = $infoInstrument['arm_num'] . '/' . $infoInstrument['form_name'];
@@ -69,20 +69,6 @@ while ( $infoInstrument = $queryInstruments->fetch_assoc() )
 
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-
-$listEnabledCustomAlerts = [];
-$listDisabledCustomAlerts = [];
-foreach ( $module->getCustomAlerts() as $infoAlert )
-{
-	if ( $infoAlert['enabled'] )
-	{
-		$listEnabledCustomAlerts[] = $infoAlert;
-	}
-	else
-	{
-		$listDisabledCustomAlerts[] = $infoAlert;
-	}
-}
 
 ?>
 <div class="projhdr"><i class="fas fa-business-time"></i> Instruments and Events</div>
