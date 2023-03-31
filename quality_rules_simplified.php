@@ -1,5 +1,8 @@
 <?php
 
+namespace Nottingham\REDCapUITweaker;
+
+
 // Exit if not in project context or data quality rules simplified view is disabled.
 if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('quality-rules-simplified-view') )
 {
@@ -41,15 +44,31 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
       vSel.addRange(vRange)
     }
     $('#selectTable').click(vFuncSelect)
+    var vFuncShowHideID = function()
+    {
+      var vElems = $('.colID')
+      if ( vElems.first().css('display') == 'none' )
+      {
+        vElems.css('display', '')
+      }
+      else
+      {
+        vElems.css('display', 'none')
+      }
+    }
+    $('#showHideID').click(vFuncShowHideID)
   })
 </script>
 <div>
+ <button class="jqbuttonmed invisible_in_print ui-button ui-corner-all ui-widget"
+         id="showHideID" style="margin-bottom:15px">Show/Hide ID</button>
+ &nbsp;
  <button class="jqbuttonmed invisible_in_print ui-button ui-corner-all ui-widget"
          id="selectTable" style="margin-bottom:15px">Select table</button>
 </div>
 <table class="simpRulesTable">
  <tr>
-  <th><?php echo $GLOBALS['lang']['multilang_73'] ?? 'ID'; ?></th>
+  <th class="colID"><?php echo $GLOBALS['lang']['multilang_73'] ?? 'ID'; ?></th>
   <th><?php echo $GLOBALS['lang']['dataqueries_15']; ?></th>
   <th><?php echo $GLOBALS['lang']['dataqueries_16']; ?></th>
   <th><?php echo $GLOBALS['lang']['dataqueries_123']; ?></th>
@@ -59,7 +78,7 @@ foreach ( $listRules as $infoRule )
 {
 ?>
  <tr>
-  <td><?php echo intval( $infoRule['rule_id'] ); ?></td>
+  <td class="colID"><?php echo intval( $infoRule['rule_id'] ); ?></td>
   <td><?php echo $module->escapeHTML( $infoRule['rule_name'] ); ?></td>
   <td><?php echo $module->escapeHTML( $infoRule['rule_logic'] ); ?></td>
   <td><?php echo $lookupYN[ $infoRule['real_time_execute'] ]; ?></td>

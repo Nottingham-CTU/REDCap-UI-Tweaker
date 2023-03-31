@@ -5,6 +5,9 @@
 // the module framework when getting the URL of a static file.
 
 
+namespace Nottingham\REDCapUITweaker;
+
+
 // Default to no icon.
 $icon = null;
 

@@ -6,10 +6,11 @@ namespace Nottingham\REDCapUITweaker;
 class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 {
 	const SUBMIT_TYPES = [ 'record', 'continue', 'nextinstance',
-	                       'nextform', 'nextrecord', 'exitrecord' ];
+	                       'nextform', 'nextrecord', 'exitrecord', 'compresp' ];
 	const SUBMIT_DEFINE = 'record,nextinstance,nextform,continue';
 
 	private $customAlerts;
+	private $customReports;
 
 
 
@@ -21,17 +22,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	function redcap_module_system_enable()
 	{
 		// If settings uninitialised (module installed for first time).
-		if ( $this->getSystemSetting( 'field-types-order' ) == '' &&
-		     $this->getSystemSetting( 'field-default-required' ) == '' &&
+		if ( $this->getSystemSetting( 'field-default-required' ) == '' &&
 		     $this->getSystemSetting( 'submit-option-tweak' ) == '' )
 		{
-			// Set field types order to text, notes, yes/no, radio, checkbox, slider, calculated |
-			// dropdown, true/false, upload, signature.
-			$this->setSystemSetting( 'field-types-order', '1,2,7,5,6,11,3|4,8,10,9' );
-			// Set new fields to default to required.
-			$this->setSystemSetting( 'field-default-required', '1' );
-			// Set submit options to REDCap default.
-			$this->setSystemSetting( 'submit-option-tweak', '0' );
+			// Prompt the user to activate the default settings.
+			$_SESSION['module_uitweak_system_enable'] = true;
 		}
 		// Upgrade defined submit options from older module version.
 		elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '2' &&
@@ -74,6 +69,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function redcap_every_page_before_render( $project_id = null )
 	{
+
+		// IMPORTANT: This function runs in all contexts, when adding code ensure that it will only
+		// run in the desired contexts (system or project).
 
 		// If the option to redirect users with one project to that project is enabled, perform the
 		// redirect from the my projects page the first time that page is loaded in that session.
@@ -142,10 +140,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
-		// If any data entry page, and custom data quality notification text enabled.
+		// If any data entry page.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' )
 		{
+			// If custom data quality notification text enabled, use it.
 			$dqCustomHeader = $this->getSystemSetting( 'dq-notify-header' );
 			$dqCustomBody = $this->getSystemSetting( 'dq-notify-body' );
 			$dqCustomBodyDRW = $this->getSystemSetting( 'dq-notify-body-drw' );
@@ -161,8 +160,31 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			{
 				$GLOBALS['lang']['dataqueries_309'] = $dqCustomBodyDRW;
 			}
-		}
 
+			// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
+			if($_GET['page'] != '' && $this->getSystemSetting( 'sql-checkbox' ))
+			{
+
+				$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+				$listFieldsSQLChkbx = [];
+
+				foreach ( $listFields as $infoField )
+				{
+					if ( $infoField['field_type'] == 'checkbox' &&
+					     str_contains( $infoField['field_annotation'], '@SQLCHECKBOX' ) )
+					{
+						array_push( $listFieldsSQLChkbx, $infoField );
+					}
+				}
+				if ( ! empty( $listFieldsSQLChkbx ) )
+				{
+					$this->provideSQLCheckBox( $listFieldsSQLChkbx, $project_id,
+					                           $_GET['id'], $_GET['event_id'],
+					                           $_GET['page'], $_GET['instance'] );
+				}
+			}
+
+		}
 
 	}
 
@@ -192,6 +214,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	function redcap_every_page_top( $project_id = null )
 	{
 
+		// IMPORTANT: This function runs in all contexts, when adding code ensure that it will only
+		// run in the desired contexts (system or project).
+
 		// Provide sorting for the my projects page.
 
 		if ( $project_id === null && $this->getSystemSetting( 'my-projects-alphabetical' ) &&
@@ -199,6 +224,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
 		{
 			$this->provideProjectSorting();
+		}
+
+
+		// Provide the initial configuration dialog.
+
+		if ( isset( $_SESSION['module_uitweak_system_enable'] ) )
+		{
+			$this->provideInitialConfig();
 		}
 
 
@@ -356,6 +389,19 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If the 'Unverified' option in the form status dropdown is to be hidden,
+		// remove 'Unverified' from the legend for status icons.
+
+		if ( ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 37 ) ==
+		                                        'DataEntry/record_status_dashboard.php' ||
+		       substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 25 ) ==
+		                                        'DataEntry/record_home.php' ) &&
+		     $this->getProjectSetting( 'hide-unverified-option' ) )
+		{
+			$this->hideUnverifiedOption( null );
+		}
+
+
 
 		// Amend the list of action tags (accessible from the add/edit field window in the
 		// instrument designer) when features which provide extra action tags are enabled.
@@ -372,9 +418,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					'the desired value must be a comma separated list of the following options: ' .
 					'record (Save and Exit Form), continue (Save and Stay), nextinstance (Save ' .
 					'and Add New Instance), nextform (Save and Go To Next Form), nextrecord ' .
-					'(Save and Go To Next Record), exitrecord (Save and Exit Record). If this ' .
-					'action tag is used on multiple fields on a form, the value from the first ' .
-					'field not hidden by branching logic when the form loads will be used.';
+					'(Save and Go To Next Record), exitrecord (Save and Exit Record), compresp ' .
+					'(Save and Mark Survey as Complete). If this action tag is used on multiple ' .
+					'fields on a form, the value from the first field not hidden by branching ' .
+					'logic when the form loads, and not suppressed by @IF, will be used.';
 			}
 			if ( defined( 'SUPER_USER' ) && SUPER_USER &&
 			     $this->getSystemSetting( 'sql-descriptive' ) )
@@ -383,26 +430,46 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					'On SQL fields, hide the drop-down and use the text in the selected option ' .
 					'as descriptive text. You may want to pair this tag with @DEFAULT or ' .
 					'@SETVALUE/@PREFILL to select the desired option. To ensure that the data is ' .
-					'handled corectly, you may wish to output it from the database as ' .
-					'URL-encoded or base64, in which case you can prefix it with url: or b64: ' .
-					'respectively to indicate the format.';
+					'handled corectly, you may wish to output it from the database as URL-encoded' .
+					' or base64, in which case you can prefix it with url: or b64: respectively ' .
+					'to indicate the format. Note: This action tag does not work with @IF.';
+			}
+			if ($this->getSystemSetting( 'sql-checkbox' ) )
+			{
+				$listActionTags['@SQLCHECKBOX'] =
+					'On checkbox fields, dynamically replace the options with those from a ' .
+					'specified SQL field. The format must follow the pattern ' .
+					'@SQLCHECKBOX=\'????\', in which the desired value must be the field name of ' .
+					'an SQL field in the project. Note: This action tag does not work with @IF. ' .
+					'Checkbox options will NOT be replaced if the form, record or project has ' .
+					'been locked.';
 			}
 			$this->provideActionTagExplain( $listActionTags );
 		}
 
 
 
-		// When a new project has just been created, enable the Data Resolution Workflow if the
-		// option to enable it automatically has been enabled.
+		// When a new project has just been created, if the options to enable these features on new
+		// projects are enabled: enable the Data Resolution Workflow, set the Missing Data Codes,
+		// enable the reason for change, and prevent setting the instrument to locked being counted
+		// as a data change.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' &&
 		     $_GET['msg'] == 'newproject' &&
+		     $this->getSystemSetting( 'default-prevent-lock-as-change' ) )
+		{
+			$this->setProjectSetting( 'prevent-lock-as-change', true );
+		}
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' &&
+		     $_GET['msg'] == 'newproject' &&
 		     ( $this->getSystemSetting( 'data-res-workflow' ) ||
-		       $this->getSystemSetting( 'missing-data-codes' ) != '' ) )
+		       $this->getSystemSetting( 'missing-data-codes' ) != '' ||
+		       $this->getSystemSetting( 'require-change-reason' ) != '' ) )
 		{
 			$_SESSION['module_uitweak_newproject'] = true;
 			$this->provideDefaultCustom( $this->getSystemSetting( 'data-res-workflow' ),
-			                             $this->getSystemSetting( 'missing-data-codes' ) );
+			                             $this->getSystemSetting( 'missing-data-codes' ),
+			                             $this->getSystemSetting( 'require-change-reason' ) );
 		}
 		elseif ( isset( $_SESSION['module_uitweak_newproject'] ) &&
 		         substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' )
@@ -430,6 +497,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				$this->provideSimplifiedQualityRules();
 			}
 
+		}
+
+
+
+		// If the reports page, add simplified view option.
+
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' &&
+		     $_GET['addedit'] != '1' && $_GET['other_report_options'] != '1' &&
+		     $this->getSystemSetting( 'reports-simplified-view' ) )
+		{
+			$this->provideSimplifiedReports();
 		}
 
 
@@ -481,6 +559,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If the 'lock this instrument' option is not to be treated as a data change, amend so the
+		// data changed flag is not set by ticking the option.
+
+		if ( $this->getProjectSetting( 'prevent-lock-as-change' ) === true )
+		{
+			$this->providePreventLockAsChange();
+		}
+
+
 		// If the form navigation fix is enabled, amend the dataEntrySubmit function to perform a
 		// save and stay before performing the selected action. A session variable is set (by AJAX
 		// request) which triggers the selected action once the page reloads following the save
@@ -511,8 +598,11 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
 			foreach ( $listFields as $infoField )
 			{
+				$fieldAnnotationEIf = $this->replaceIfActionTag( $infoField['field_annotation'],
+				                                                 $project_id, $record, $event_id,
+				                                                 $instrument, $repeat_instance );
 				if ( preg_match( '/@SAVEOPTIONS=((\'[^\']*\')|("[^"]*")|(\S*))/',
-				                 $infoField['field_annotation'], $submitOptions ) &&
+				                 $fieldAnnotationEIf, $submitOptions ) &&
 				     ( $infoField['branching_logic'] == '' ||
 				       \REDCap::evaluateLogic( $infoField['branching_logic'], $project_id, $record,
 				                               $event_id, $repeat_instance, $instrument ) ) )
@@ -616,6 +706,40 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Allows a different module to supply its own report details for the reports simplified view.
+	// $infoReport should be an array containing the following keys (all fields as plain text):
+	// 'title': title/name of the report
+	// 'type': type of the report (e.g. Gantt, SQL)
+	// 'description': description of the report
+	// 'permissions': details of who can view/edit/download etc. the report
+	// 'definition': e.g. report fields, SQL query
+	// 'options': any additonal report options which have been set
+
+	function addCustomReport( $infoReport )
+	{
+		if ( ! is_array( $this->customReports ) )
+		{
+			$this->customReports = [];
+		}
+		$this->customReports[] = $infoReport;
+	}
+
+
+
+
+
+	// Allows a different module to ask this module if it needs to supply its own report details.
+
+	function areCustomReportsExpected()
+	{
+		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
+		       $_GET['page'] == 'reports_simplified';
+	}
+
+
+
+
+
 	// Escapes text for inclusion in HTML.
 
 	function escapeHTML( $text )
@@ -632,6 +756,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	function getCustomAlerts()
 	{
 		return is_array( $this->customAlerts ) ? $this->customAlerts : [];
+	}
+
+
+
+
+
+	// Get the alerts supplied by other modules.
+
+	function getCustomReports()
+	{
+		return is_array( $this->customReports ) ? $this->customReports : [];
 	}
 
 
@@ -689,10 +824,37 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-	// Output JavaScript to hide the 'unverified' option on data entry forms.
+	// Output JavaScript to hide the 'unverified' option on data entry forms / status icons legend.
 
 	function hideUnverifiedOption( $instrument )
 	{
+
+		// Hide entry on legend for status icons.
+		if ( $instrument === null )
+		{
+
+?>
+<script type="text/javascript">
+  $(function() {
+    var vRemUnver = setInterval( function()
+    {
+      if ( $('img[src$="circle_yellow.png"],img[src$="circle_yellow_stack.png"]').length == 0 )
+      {
+        clearInterval( vRemUnver )
+        return
+      }
+      $('img[src$="circle_yellow.png"]').parents('td').first().html('')
+      $('img[src$="circle_yellow_stack.png"]').parent().find('img,span').css('left','')
+      $('img[src$="circle_yellow_stack.png"]').remove()
+    }, 300 )
+  })
+</script>
+<?php
+
+			return;
+		}
+
+		// Hide 'unverified' option on data entry form.
 
 ?>
 <script type="text/javascript">
@@ -931,8 +1093,12 @@ $(function()
 
 	// Output JavaScript to enable Data Resolution Workflow / provide default missing data codes.
 
-	function provideDefaultCustom( $dataResolutionWorkflow, $missingDataCodes )
+	function provideDefaultCustom( $dataResolutionWorkflow, $missingDataCodes, $reasonForChange )
 	{
+		if ( $reasonForChange === '2' )
+		{
+			$this->setProjectSetting( 'require-change-reason-complete', true );
+		}
 ?>
 <script type="text/javascript">
   $(function()
@@ -959,6 +1125,12 @@ $(function()
       {
         $('#missing_data_codes').val('<?php echo $defaultCodes; ?>')
       }
+<?php
+		}
+		if ( $reasonForChange != '' )
+		{
+?>
+      $('#require_change_reason').prop('checked',true)
 <?php
 		}
 ?>
@@ -1209,6 +1381,39 @@ $(function()
 
 
 
+	// Output JavaScript to provide the initial configuration dialog for the module.
+
+	function provideInitialConfig()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    simpleDialog( '<p>This module will alter some REDCap features by default.<br>You can ' +
+                  'deactivate these features now, or later via the module system settings.</p>' +
+                  '<form id="uitweak_init_config" method="post"><p><label><input type="checkbox" ' +
+                  'name="fieldtypes" value="1" checked> Amend order/placement of field types' +
+                  '</label><br><label><input type="checkbox" name="requiredfields" value="1" ' +
+                  'checked> Set required status on new fields</label><br><label><input ' +
+                  'type="checkbox" name="fieldannotations" value="1" checked> Set predefined ' +
+                  'field annotations to the DataCat project categories</label><br><label><input ' +
+                  'type="checkbox" name="dqrealtime" value="1" checked> Default data quality ' +
+                  'rules to execute in real time</label><br><label><input type="checkbox" ' +
+                  'name="statusicons" value="1" checked> Alternate status icons</label><br>' +
+                  '<label><input type="checkbox" name="nonextrecord" value="1" checked> Remove ' +
+                  '\'Save and Go To Next Record\' submit option</label></p></form>',
+                  'REDCap UI Tweaker', null, 600,
+                  function() { $.post( '<?php echo $this->getUrl( 'ajax_init_config.php' ); ?>',
+                                       $('#uitweak_init_config').serialize() ) } )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
 	// Output JavaScript to provide auto-selection of the 'all status types' instrument status
 	// option.
 
@@ -1232,6 +1437,8 @@ $(function()
   {
     var vIStatLink = $('[data-rc-lang="data_entry_226"]').parent()
     var vLStatLink = $('[data-rc-lang="data_entry_227"]').parent()
+    var vEStatLink = $('[data-rc-lang="data_entry_228"]').parent()
+    var vLEStatLink = $('[data-rc-lang="data_entry_230"]').parent()
     var vAStatLink = $('[data-rc-lang="data_entry_229"]').parent()
     if ( vIStatLink.length == 0 )
     {
@@ -1239,6 +1446,16 @@ $(function()
       vIStatLink = vStatLinks.eq(0)
       vLStatLink = vStatLinks.eq(1)
       vAStatLink = vStatLinks.eq(2)
+      if ( vStatLinks.length == 4 )
+      {
+        vEStatLink = vStatLinks.eq(2)
+        vAStatLink = vStatLinks.eq(3)
+      }
+      if ( vStatLinks.length == 5 )
+      {
+        vLEStatLink = vStatLinks.eq(3)
+        vAStatLink = vStatLinks.eq(4)
+      }
     }
     <?php echo $selectAll, "\n"; ?>
     var vFuncSetSel = function( event )
@@ -1252,7 +1469,50 @@ $(function()
     }
     vIStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
     vLStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    if ( vEStatLink.length > 0 )
+    {
+      vEStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    }
+    if ( vLEStatLink.length > 0 )
+    {
+      vLEStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
+    }
     vAStatLink.on( 'click', { mode: 'on' }, vFuncSetSel )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to prevent selecting 'lock this instrument' from being treated as a data
+	// change.
+
+	function providePreventLockAsChange()
+	{
+
+?>
+<script type="text/javascript">
+  $(function() {
+    $('#__LOCKRECORD__').click(function(e)
+    {
+      setTimeout(function()
+      {
+        $('#__LOCKRECORD__').prop( 'checked', ! $('#__LOCKRECORD__').prop('checked') )
+      }, 100)
+      e.preventDefault()
+    })
+    $('#__ESIGNATURE__').click(function(e)
+    {
+      setTimeout(function()
+      {
+        $('#__ESIGNATURE__').prop( 'checked', ! $('#__ESIGNATURE__').prop('checked') )
+      }, 100)
+      e.preventDefault()
+    })
   })
 </script>
 <?php
@@ -1358,130 +1618,16 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
-    var vActivated = false
-    var vIsDesigner = ( $('.ReportTableWithBorder th').first().text() != '#' )
-    var vKeepRowNums = false
-    var vFuncSelect = function()
-    {
-      var vElem = $('.ReportTableWithBorder')[0]
-      var vSel = window.getSelection()
-      var vRange = document.createRange()
-      vRange.selectNodeContents(vElem)
-      vSel.removeAllRanges()
-      vSel.addRange(vRange)
-    }
     var vFuncSimplify = function()
     {
-      if ( vActivated )
-      {
-        vFuncSelect()
-        return
-      }
-      var vFormHdrSelector = '.ReportTableWithBorder .codebook-form-header'
-      if ( $(vFormHdrSelector).length == 0 )
-      {
-        vFormHdrSelector = '.ReportTableWithBorder td[colspan]'
-      }
-      var vRowsSelector = '.ReportTableWithBorder tr[data-field]'
-      if ( $(vRowsSelector).length == 0 )
-      {
-        vRowsSelector = '.ReportTableWithBorder tr[class^="toggle-"]'
-      }
-      $(vFormHdrSelector).attr('colspan','4')
-      if ( vIsDesigner || ! vKeepRowNums )
-      {
-        $(vRowsSelector + '>td:nth-child(1)').css('display','none')
-        $('.ReportTableWithBorder th:nth-child(1)').css('display','none')
-      }
-      if ( vIsDesigner && ! vKeepRowNums )
-      {
-        $(vRowsSelector + '>td:nth-child(2)').css('display','none')
-        $('.ReportTableWithBorder th:nth-child(2)').css('display','none')
-      }
-      $(vFormHdrSelector).css('display','')
-      $(vFormHdrSelector).css('position','unset')
-      $(vFormHdrSelector).css('box-shadow','unset')
-      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
-        ')>code').each( function(i,el){$(el).before($(el).html());$(el).remove()} )
-      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
-        ')>span[style*="margin"]').css('display','none')
-      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '3' : '2' ) +
-        ')>span.text-dangerrc').removeClass('text-dangerrc')
-      var vHdrAttribute = $('.ReportTableWithBorder th:nth-child(' +
-                            ( vIsDesigner ? '5' : '4' ) + ')')
-      var vHdrAnnotation = $('<th><?php echo $GLOBALS['lang']['design_527']; ?></th>')
-      vHdrAnnotation.css('background-color',vHdrAttribute.css('background-color'))
-      vHdrAttribute.css('width','')
-      vHdrAttribute.after(vHdrAnnotation)
-      $(vRowsSelector + '>td:nth-child(' + ( vIsDesigner ? '5' : '4' ) + ')').each(function()
-      {
-        var vAnnotation = ''
-        var vFieldAttr = $(this).html()
-        var vPos = vFieldAttr.indexOf('<br><span data-rc-lang="design_527">' +
-                                      '<?php echo $GLOBALS['lang']['design_527']; ?></span>: ')
-        if ( vPos != -1 )
-        {
-          vAnnotation = vFieldAttr.substring(vPos + <?php
-		echo strlen($GLOBALS['lang']['design_527']) + 45; ?>).replace(/\n/g, '<br>\n')
-        }
-        else
-        {
-          vPos = vFieldAttr.indexOf('<br><?php echo $GLOBALS['lang']['design_527']; ?>: ')
-          if ( vPos != -1 )
-          {
-            vAnnotation = vFieldAttr.substring(vPos + <?php
-		echo strlen($GLOBALS['lang']['design_527']) + 6; ?>).replace(/\n/g, '<br>\n')
-          }
-        }
-        if ( vPos != -1 )
-        {
-          vFieldAttr = vFieldAttr.substring(0,vPos)
-        }
-        vFieldAttr = vFieldAttr.replace('<br><span data-rc-lang="design_489">' +
-                                        '<?php echo $GLOBALS['lang']['design_489']; ?></span> ',
-                                        '<br>')
-        vFieldAttr = vFieldAttr.replace('<br><?php echo $GLOBALS['lang']['design_489']; ?> ','<br>')
-        $(this).html(vFieldAttr)
-        $(this).after($('<td></td>').css('border-top',$(this).css('border-top')).html(vAnnotation))
-        vFieldVals = $(this).find('table')
-        if ( vFieldVals.length == 1 && vFieldVals.find('tr').first().children().length == 3 )
-        {
-          vFieldVals.find('tr td:nth-child(2)').css('display','none')
-        }
-      })
-      $(vFormHdrSelector + ' .btn').css('display','none')
-      //$('.ReportTableWithBorder td table td').css('display','')
-      $('.ReportTableWithBorder i.fa-chalkboard-teacher').removeClass('fa-chalkboard-teacher')
-      $(vFormHdrSelector).contents().filter(function(){
-        return this.nodeType == 3}).remove()
-      $(vFormHdrSelector + ' span').before('&nbsp;&nbsp;')
-      $(vFormHdrSelector + ' span').css('margin-left','0px')
-      $(vFormHdrSelector + ' font').before('&nbsp;&nbsp;&nbsp;&nbsp;')
-      $(vFormHdrSelector + ' font').css('margin-left','0px')
-      if ( vKeepRowNums )
-      {
-        $(vFormHdrSelector).before('<td></td>')
-      }
-      $('#simplifiedView').text('Select Codebook table')
-      $('#simplifiedView2').css('display','none')
-      vActivated = true
-    }
-    var vFuncSimplify2 = function()
-    {
-      vKeepRowNums = true
-      vFuncSimplify()
+      window.location = '<?php echo addslashes( $this->getUrl('codebook_simplified.php') ); ?>'
     }
     var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
                          ' ui-widget" id="simplifiedView">Simplified view</button>')
     vBtnSimplify.css('margin-top','5px')
     vBtnSimplify.click(vFuncSimplify)
-    var vBtnSimplify2 = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
-                          ' ui-widget" id="simplifiedView2">Simplified view with row numbers</button>')
-    vBtnSimplify2.css('margin-top','5px')
-    vBtnSimplify2.click(vFuncSimplify2)
     var vButtons = $('<p> </p>')
     vButtons.prepend(vBtnSimplify)
-    vButtons.append(vBtnSimplify2)
     $('.jqbuttonmed[onclick="window.print();"]').closest('table').after(vButtons)
   })
 </script>
@@ -1551,6 +1697,35 @@ $(function()
 
 
 
+	// Output JavaScript to provide the simplified view option on the reports page.
+
+	function provideSimplifiedReports()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('reports_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.click(vFuncSimplify)
+    var vDivSimplify = $('<div style="margin-bottom:10px"></div>')
+    vDivSimplify.append(vBtnSimplify)
+    $('#report_list_parent_div').before(vDivSimplify)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to provide the simplified view option on the user rights page.
 
 	function provideSimplifiedUserRights()
@@ -1582,6 +1757,113 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Logic to run before page render to provide the SQL checkbox field functionality.
+
+	function provideSQLCheckBox( $listFields, $project_id, $record,
+	                             $event_id, $instrument, $instance )
+	{
+		global $Proj;
+		foreach ( $listFields as $infoField )
+		{
+			$fieldname = $infoField['field_name'];
+			$fieldAnnotationEIf = $this->replaceIfActionTag( $infoField['field_annotation'],
+			                                                 $project_id, $record, $event_id,
+			                                                 $instrument, $instance );
+			$sqlfieldname = \Form::getValueInActionTag( $infoField['field_annotation'],
+			                                            '@SQLCHECKBOX' );
+			try
+			{
+				if ( ! isset( $Proj->metadata[$sqlfieldname] ) ||
+				     $Proj->metadata[$sqlfieldname]['element_type'] !== 'sql' )
+				{
+					throw new \Exception( 'SQL field (' . $sqlfieldname . ') does not exist.' );
+				}
+				$SQLValue = $Proj->metadata[$sqlfieldname]['element_enum'];
+				if ( $SQLValue == '' )
+				{
+					throw new \Exception( 'SQL for field (' . $sqlfieldname . ') is not defined.');
+				}
+				$enum = getSqlFieldEnum( $SQLValue, $project_id, null, null, null, null, null,
+				                         $instrument );
+				$recordEnum = getSqlFieldEnum( $SQLValue, $project_id, $record, $event_id,
+				                               $instance, null, null, $instrument );
+				$listEnum = explode( ' \n ', $enum );
+				$listRecordEnum = explode( ' \n ', $recordEnum );
+				if ( empty( array_diff( $listRecordEnum, $listEnum ) ) )
+				{
+					// $recordEnum is a subset of $enum, use the values from $enum as the field
+					// values enumeration and use the @HIDECHOICE action tag to hide options which
+					// are not applicable in the context.
+					$listHideEnum = array_diff( $listEnum, $listRecordEnum );
+					$listHideChoices = [];
+					foreach ( $listHideEnum as $itemEnum )
+					{
+						$listHideChoices[] = explode( ',', $itemEnum, 2 )[0];
+					}
+					if ( !empty( $listHideChoices ) )
+					{
+						$oldHideChoices =
+								\Form::getValueInQuotesActionTag( $fieldAnnotationEIf,
+								                                  '@HIDECHOICE' );
+						$oldHideChoices = ( $oldHideChoices == '' ? '' : ",$oldHideChoices" );
+						$Proj->metadata[$fieldname]['misc'] =
+								"@HIDECHOICE='" . implode( ',', $listHideChoices ) .
+								$oldHideChoices . "' " .$Proj->metadata[$fieldname]['misc'];
+					}
+				}
+				else
+				{
+					// $recordEnum is not a subset of $enum, use the values from $recordEnum
+					$enum = $recordEnum;
+				}
+
+				$Locking = new \Locking();
+				$Locking->findLocked($Proj, $record, $fieldname, $event_id);
+				$Locking->findLockedWholeRecord($project_id, $record);
+				$locked = ( ! empty( $Locking->lockedWhole ) ||
+				            ! empty( $Locking->locked[$record][$event_id][$instance] ) );
+
+				if ( ! $locked && $this->isModuleEnabled('locking_forms') )
+				{
+					$Locking = \ExternalModules\ExternalModules::getModuleInstance('locking_forms');
+					$locked = $Locking->isHardLocked( $event_id, $instrument );
+				}
+
+				if ( $Proj->metadata[$fieldname]['element_enum'] !== $enum && !$locked )
+				{
+					$Proj->metadata[$fieldname]['element_enum'] = $enum;
+					$sql = 'UPDATE redcap_metadata SET element_enum = ? ' .
+					       'WHERE project_id = ? AND field_name = ?';
+					if ( ! $this->query( $sql, [ $enum, $project_id, $fieldname ] ) )
+					{
+						\REDCap::logEvent( 'REDCap UI Tweaker',
+						                   "Failed to update check box enum\nField=" . $fieldname,
+						                   $sql, $record, $event_id, $project_id );
+						continue;
+					}
+					if ( $enum == '' )
+					{
+						$enum = 'No options returned';
+					}
+					\REDCap::logEvent( 'REDCap UI Tweaker',
+					                   "Update check box options\nField=" . $fieldname . "\n" .
+					                   "Options=" . $enum, $sql, $record, $event_id, $project_id );
+				}
+			}
+			catch (\Exception $e)
+			{
+				\REDCap::logEvent( 'REDCap UI Tweaker',
+				                   "Failed to update check box options\nField=" . $fieldname .
+				                   "\nError=" . $e->getMessage(),
+				                   null, $record, $event_id, $project_id );
+			}
+		}
 	}
 
 
@@ -1702,6 +1984,7 @@ $(function()
     setTimeout(function() {
       var vTypeOptions = $('#field_type option')
       var vTypeList = $('#field_type')
+      var vTypeValue = vTypeList.val()
       vTypeList.html('')
       var vCommonTypeList =
             $( '<optgroup label="Common Field Types"></optgroup>' )
@@ -1757,6 +2040,10 @@ $(function()
       vTypeList.append( vHeaderTypeList )
       vTypeList.append( vOtherTypeList )
       vTypeList.prepend( vTypeOptions[0] )
+      if ( vTypeValue != 'file' )
+      {
+        vTypeList.val( vTypeValue )
+      }
     }, 800 )
   })
 </script>
@@ -1877,6 +2164,22 @@ $(function()
 <?php
 
 		return true;
+	}
+
+
+
+
+
+	// If supported, evaluate the @IF action tag.
+
+	function replaceIfActionTag( $misc, $project_id, $record, $event_id, $instrument, $instance )
+	{
+		if ( method_exists('\Form', 'replaceIfActionTag') )
+		{
+			return \Form::replaceIfActionTag( $misc, $project_id, $record,
+			                                  $event_id, $instrument, $instance );
+		}
+		return $misc;
 	}
 
 
@@ -2103,8 +2406,6 @@ $(function()
 		}
 		return null;
 	}
-
-
 
 }
 

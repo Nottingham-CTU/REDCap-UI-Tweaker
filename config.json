@@ -19,8 +19,9 @@
 		}
 	],
 	"framework-version" : 6,
-	"compatibility": {
-		"redcap-version-min": "10.6.0"
+	"compatibility" : {
+		"redcap-version-min" : "10.6.0",
+		"php-version-min" : "7.4.0"
 	},
 	"system-settings" : [
 		{
@@ -54,6 +55,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "sql-checkbox",
+			"name" : "Enable @SQLCHECKBOX action tag",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-data-qual",
 			"name" : "<b>Data quality tweaks</b>",
 			"type" : "descriptive"
@@ -67,6 +73,21 @@
 			"key" : "missing-data-codes",
 			"name" : "Default missing data codes",
 			"type" : "textarea"
+		},
+		{
+			"key" : "require-change-reason",
+			"name" : "Require a reason for change on new projects",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "No" },
+				{ "value" : "1", "name" : "Yes, REDCap standard functionality" },
+				{ "value" : "2", "name" : "Yes, on forms previously marked 'complete' only" }
+			]
+		},
+		{
+			"key" : "default-prevent-lock-as-change",
+			"name" : "Prevent the 'lock this instrument' option being treated as a data change",
+			"type" : "checkbox"
 		},
 		{
 			"key" : "dq-real-time",
@@ -209,13 +230,18 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "reports-simplified-view",
+			"name" : "Reports simplified view",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "user-rights-simplified-view",
 			"name" : "User rights simplified view",
 			"type" : "checkbox"
 		},
 		{
 			"key" : "fmt1",
-			"name" : "<script type=\"text/javascript\">$('[field=field-types-order] td').first().css('width','50%')</script>",
+			"name" : "<script type=\"text/javascript\">$('[field=field-types-order] td').first().css('width','47%')</script>",
 			"type" : "descriptive"
 		},
 		{
@@ -238,6 +264,11 @@
 		{
 			"key" : "require-change-reason-complete",
 			"name" : "Require a reason for change for forms marked 'complete' only",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "prevent-lock-as-change",
+			"name" : "Prevent selecting the 'lock this instrument' option being treated as a data change",
 			"type" : "checkbox"
 		},
 		{

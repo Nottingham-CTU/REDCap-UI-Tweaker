@@ -2,6 +2,9 @@
 
 // This page receives AJAX requests to set the instrument status display.
 
+namespace Nottingham\REDCapUITweaker;
+
+
 header( 'Content-Type: application/json' );
 
 $mode = $_POST['mode'];
