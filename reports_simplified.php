@@ -144,9 +144,9 @@ foreach ( $listReports as $infoReport )
 	// Output the report permissions.
 ?>
   <td>
-   View Access: <?php echo $infoReport['user_access'], "\n"; ?>
+   View Access: <?php echo $module->escapeHTML( $infoReport['user_access'] ), "\n"; ?>
    <br>
-   Edit Access: <?php echo $infoReport['user_edit_access'], "\n"; ?>
+   Edit Access: <?php echo $module->escapeHTML( $infoReport['user_edit_access'] ), "\n"; ?>
   </td>
 <?php
 	// Output the report definition.
