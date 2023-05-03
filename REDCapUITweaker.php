@@ -774,6 +774,49 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Outputs JavaScript to fix table on Firefox so formatting is included on copy/paste.
+
+	function ffFormattingFix( $table )
+	{
+		if ( ! isset( $_SERVER['HTTP_USER_AGENT'] ) ||
+		     strpos( $_SERVER['HTTP_USER_AGENT'], 'Firefox' ) === false )
+		{
+			return;
+		}
+
+?>
+<script type="text/javascript">
+$( function()
+{
+  var vTblCS = getComputedStyle($('<?php echo $table; ?>')[0])
+  $('<?php echo $table; ?>')[0].style.borderCollapse = vTblCS.getPropertyValue('border-collapse')
+  $('<?php echo $table; ?>')[0].style.fontFamily = vTblCS.getPropertyValue('font-family')
+  $('<?php echo $table; ?>').find('*').each( function()
+  {
+    var vCS = getComputedStyle(this)
+    this.style.background = vCS.getPropertyValue('background')
+    this.style.borderTop = vCS.getPropertyValue('border-top')
+    this.style.borderRight = vCS.getPropertyValue('border-right')
+    this.style.borderBottom = vCS.getPropertyValue('border-bottom')
+    this.style.borderLeft = vCS.getPropertyValue('border-left')
+    this.style.paddingTop = vCS.getPropertyValue('padding-top')
+    this.style.paddingRight = vCS.getPropertyValue('padding-right')
+    this.style.paddingBottom = vCS.getPropertyValue('padding-bottom')
+    this.style.paddingLeft = vCS.getPropertyValue('padding-left')
+    this.style.fontWeight = vCS.getPropertyValue('font-weight')
+    this.style.fontSize = vCS.getPropertyValue('font-size')
+    this.style.color = vCS.getPropertyValue('color')
+  } )
+} )
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Get the alerts supplied by other modules.
 
 	function getCustomAlerts()

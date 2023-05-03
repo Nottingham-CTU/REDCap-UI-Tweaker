@@ -364,6 +364,7 @@ foreach ( $listCodebook as $infoCodebook )
 ?>
 </table>
 <?php
+$module->ffFormattingFix( '.simpCodebookTable' );
 
 // Display the project footer
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

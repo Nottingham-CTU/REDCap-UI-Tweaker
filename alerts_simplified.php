@@ -311,6 +311,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 ?>
 </table>
 <?php
+$module->ffFormattingFix( '.simpAlertsTable' );
 
 // Display the project footer
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

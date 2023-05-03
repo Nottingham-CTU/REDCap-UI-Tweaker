@@ -207,6 +207,7 @@ foreach ( $listCustomReports as $infoReport )
 ?>
 </table>
 <?php
+$module->ffFormattingFix( '.simpReportsTable' );
 
 // Display the project footer
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
