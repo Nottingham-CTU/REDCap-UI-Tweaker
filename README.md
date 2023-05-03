@@ -131,6 +131,10 @@ Process Outcome
 Miscellaneous
 ```
 
+### Always show full annotations in the online designer
+If enabled, full field annotations will be shown at the bottom of each field in the online designer
+instead of just the action tags.
+
 ### Enable @SQLDESCRIPTIVE action tag
 Allow use of the **@SQLDESCRIPTIVE** action tag for SQL fields, which will use the option label from
 the selected option in an SQL field as descriptive text and render the field like a descriptive

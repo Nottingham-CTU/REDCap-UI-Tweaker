@@ -50,6 +50,11 @@
 			"type" : "textarea"
 		},
 		{
+			"key" : "expanded-annotations",
+			"name" : "Always show full annotations in the online designer",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "sql-descriptive",
 			"name" : "Enable @SQLDESCRIPTIVE action tag",
 			"type" : "checkbox"

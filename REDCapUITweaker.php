@@ -358,6 +358,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		{
 
 
+			// Provide the expanded field annotations.
+
+			if ( $this->getSystemSetting( 'expanded-annotations' ) )
+			{
+				$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+				$listFieldAnnotations = [];
+
+				foreach ( $listFields as $fieldName => $infoField )
+				{
+					$listFieldAnnotations[ $fieldName ] = $infoField['field_annotation'];
+				}
+				$this->provideExpandedAnnotations( $listFieldAnnotations );
+			}
+
+
 			// Set field 'required' option on by default.
 
 			if ( $this->getSystemSetting( 'field-default-required' ) != '0' )
@@ -1232,6 +1247,39 @@ $(function()
         }
       }
     }, 500 )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the expanded annotations on the form designer.
+
+	function provideExpandedAnnotations( $listAnnotations )
+	{
+		$listAnnotations = array_map( function( $i ) { return trim( $this->escapeHTML( $i ) ); },
+		                              $listAnnotations );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vListAnnotations = <?php echo json_encode( $listAnnotations ), "\n"; ?>
+    $('.frmedit_tbl:not(:has(.frmedit.actiontags))').find('>tbody>tr:last(),>tr:last()'
+          ).after('<tr><td class="frmedit actiontags" colspan="2"></td></tr>')
+    $('.frmedit_tbl').each( function()
+    {
+      var vAnnotationElem = $(this).find('.frmedit.actiontags')
+      var vFieldName = $(this).attr('id').slice(7)
+      $(this).css('border-collapse','separate')
+      vAnnotationElem.css('border-top','1px solid #aaa')
+      vAnnotationElem.html('<div><code style="white-space:pre">' +
+                           vListAnnotations[ vFieldName ] + '</code></div>')
+    })
   })
 </script>
 <?php
