@@ -238,6 +238,17 @@ time they load the *REDCap Home* page or the *My Projects* page following login.
 *My Projects* page is the first page shown after login, the user is immediately redirected to their
 project.
 
+### Enable versionless URLs
+If enabled, this will instruct the user's web browser to strip the version number (the _vX.X.X part)
+from the REDCap URL. This should ensure that bookmarks are always saved without the version number.
+This can make it easier to redirect users from their saved links or bookmarks to the current version
+if old REDCap code is removed from the web server.
+
+*In order to benefit from this feature, a redirect will need to be set up on the web server so that
+any attempt to load a page without the version number will be automatically redirected to the URL
+with the current REDCap version. If this feature is enabled without such a redirect in place, it
+can result in broken links/bookmarks being saved.*
+
 ### Allow custom from addresses in alerts
 Provides an option when adding an alert to enter an email from address that is not provided in the
 dropdown list. If this option is enabled, use the *regular expression to validate custom from

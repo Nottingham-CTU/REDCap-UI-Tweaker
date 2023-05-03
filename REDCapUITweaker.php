@@ -235,6 +235,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// Provide the versionless URLs.
+
+		if ( $this->getSystemSetting( 'versionless-url' ) )
+		{
+			$this->provideVersionlessURLs();
+		}
+
+
 		// Exit the function here if a system level page.
 
 		if ( $project_id === null )
@@ -1952,6 +1960,44 @@ $(function()
     else
     {
       $('#impersonate-user-select').parent().after( vRoleName )
+    }
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide versionless URLs.
+
+	function provideVersionlessURLs()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vVersionIndex = window.location.href.indexOf( 'redcap_v' + redcap_version )
+    if ( vVersionIndex != -1 )
+    {
+      var vFullURL = window.location.href
+      var vBaseElem = $('<base>')
+      vBaseElem.attr('href',vFullURL)
+      $('head').append( vBaseElem )
+      var vOldURL = vFullURL.slice( 0, vVersionIndex + 8 + redcap_version.length )
+      var vNewURL = vOldURL.replace( 'redcap_v' + redcap_version, 'redcap' )
+      history.replaceState( history.state, '', window.location.href.replace( vOldURL, vNewURL ) )
+      addEventListener('beforeunload', function()
+      {
+        if ( window.location.href.indexOf( vOldURL ) != 0 )
+        {
+          history.replaceState( history.state, '',
+                                window.location.href.replace( vNewURL, vOldURL ) )
+        }
+      })
     }
   })
 </script>

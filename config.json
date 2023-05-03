@@ -188,6 +188,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "versionless-url",
+			"name" : "Enable versionless URLs<br>(refer to README before enabling this feature)",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-email",
 			"name" : "<b>Email tweaks</b>",
 			"type" : "descriptive"
