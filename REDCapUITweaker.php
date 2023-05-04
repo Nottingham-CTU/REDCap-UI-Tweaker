@@ -2074,6 +2074,13 @@ $(function()
     var vVersionIndex = window.location.href.indexOf( 'redcap_v' + redcap_version )
     if ( vVersionIndex != -1 )
     {
+      $('form').each( function()
+      {
+        if ( $(this).attr('action') === undefined )
+        {
+          this.action = this.action // set implicit action explicitly
+        }
+      })
       var vFullURL = window.location.href
       var vBaseElem = $('<base>')
       vBaseElem.attr('href',vFullURL)
