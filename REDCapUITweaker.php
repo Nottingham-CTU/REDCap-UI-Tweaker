@@ -2088,6 +2088,11 @@ $(function()
       var vOldURL = vFullURL.slice( 0, vVersionIndex + 8 + redcap_version.length )
       var vNewURL = vOldURL.replace( 'redcap_v' + redcap_version, 'redcap' )
       history.replaceState( history.state, '', window.location.href.replace( vOldURL, vNewURL ) )
+      var vNewFullURL = window.location.href.match(/^[^#]+/)[0]
+      $('a[href^="#"]').each( function()
+      {
+        $(this).attr( 'href', vNewFullURL + $(this).attr('href') )
+      })
       addEventListener('beforeunload', function()
       {
         if ( window.location.href.indexOf( vOldURL ) != 0 )
