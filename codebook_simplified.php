@@ -12,7 +12,7 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('codebook-simplified-
 function codebookEscape( $text )
 {
 	return trim( nl2br(
-	            preg_replace( "/\n+/", "\n",
+	            preg_replace( "/(\r|\n)+/", "\n",
 	                          strip_tags( \label_decode( preg_replace( '/<\/(p|h[1-6]|tr)>/',
 	                                                                   "$0\n", $text ) ) ) ) ) );
 }
