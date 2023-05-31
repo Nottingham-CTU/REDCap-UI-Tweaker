@@ -1334,17 +1334,38 @@ $(function()
   $(function()
   {
     var vListAnnotations = <?php echo json_encode( $listAnnotations ), "\n"; ?>
-    $('.frmedit_tbl:not(:has(.frmedit.actiontags))').find('>tbody>tr:last(),>tr:last()'
+    var vLastField = ''
+    var vLastFieldAnnotation = ''
+    $('.frmedit_tbl:not(:has(.frmedit.actiontags)):not(:has(.header))'
+          ).find('>tbody>tr:last(),>tr:last()'
           ).after('<tr><td class="frmedit actiontags" colspan="2"></td></tr>')
-    $('.frmedit_tbl').each( function()
+    var vFuncExpAnno = function()
     {
       var vAnnotationElem = $(this).find('.frmedit.actiontags')
       var vFieldName = $(this).attr('id').slice(7)
+      if ( vListAnnotations[ vFieldName ] === undefined ) return
       $(this).css('border-collapse','separate')
       vAnnotationElem.css('border-top','1px solid #aaa')
-      vAnnotationElem.html('<div><code style="white-space:pre">' +
+      vAnnotationElem.html('<div class="mod-uitweaker-expanno"><code style="white-space:pre">' +
                            vListAnnotations[ vFieldName ] + '</code></div>')
-    })
+    }
+    $('.frmedit_tbl:not(:has(.header))').each( vFuncExpAnno )
+    setInterval( function()
+    {
+      if ( $('#field_name:visible').length > 0 )
+      {
+        vLastField = $('#field_name').val()
+        vLastFieldAnnotation = $('#field_annotation').val()
+        return
+      }
+      if ( vLastField == '' ) return
+      vListAnnotations[ vLastField ] = $('<div></div>').text( vLastFieldAnnotation ).html()
+      $('.frmedit_tbl:not(:has(.frmedit.actiontags)):not(:has(.header))'
+            ).find('>tbody>tr:last(),>tr:last()'
+            ).after('<tr><td class="frmedit actiontags" colspan="2"></td></tr>')
+      $('.frmedit_tbl:not(:has(.header)):not(:has(.mod-uitweaker-expanno))').each( vFuncExpAnno )
+      vLastField = ''
+    }, 1500 )
   })
 </script>
 <?php
