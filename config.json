@@ -195,7 +195,25 @@
 		{
 			"key" : "versionless-url",
 			"name" : "Enable versionless URLs<br>(refer to README before enabling this feature)",
-			"type" : "checkbox"
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "Disable" },
+				{ "value" : "A", "name" : "Always enable" },
+				{ "value" : "M", "name" : "Only where page matches regular expression" },
+				{ "value" : "E", "name" : "Excluding where page matches regular expression" }
+			]
+		},
+		{
+			"key" : "versionless-url-regex",
+			"name" : "Regular expressions to match/exclude for versionless URLs",
+			"type" : "textarea",
+			"branchingLogic" : {
+				"type" : "or",
+				"conditions" : [
+					{ "field" : "versionless-url", "value" : "M" },
+					{ "field" : "versionless-url", "value" : "E" }
+				]
+			}
 		},
 		{
 			"key" : "hdr-email",
@@ -251,7 +269,7 @@
 		},
 		{
 			"key" : "fmt1",
-			"name" : "<script type=\"text/javascript\">$('[field=field-types-order] td').first().css('width','47%')</script>",
+			"name" : "<script type=\"text/javascript\">$('[field=field-types-order] td').first().css('width','45%')</script>",
 			"type" : "descriptive"
 		},
 		{

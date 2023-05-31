@@ -253,6 +253,11 @@ any attempt to load a page without the version number will be automatically redi
 with the current REDCap version. If this feature is enabled without such a redirect in place, it
 can result in broken links/bookmarks being saved.*
 
+If matching or excluding URLs based on regular expressions, place each regular expression on its own
+line. The portion of the URL which will be matched to the regular expression is everything after the
+slash which follows the redcap version directory. Slashes do not need to be escaped in the regular
+expressions for this setting.
+
 ### Allow custom from addresses in alerts
 Provides an option when adding an alert to enter an email from address that is not provided in the
 dropdown list. If this option is enabled, use the *regular expression to validate custom from

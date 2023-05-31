@@ -237,9 +237,31 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		// Provide the versionless URLs.
 
-		if ( $this->getSystemSetting( 'versionless-url' ) )
+		$versionlessURL = $this->getSystemSetting( 'versionless-url' );
+		if ( $versionlessURL == 'A' )
 		{
 			$this->provideVersionlessURLs();
+		}
+		elseif ( in_array( $versionlessURL, [ 'M', 'E' ] ) )
+		{
+			$pagePath = substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ) ) .
+			           ( $_SERVER['QUERY_STRING'] == '' ? '' : ( '?' . $_SERVER['QUERY_STRING'] ) );
+			$versionlessURLRegex =
+				preg_split( "/(\r?\n)+/", $this->getSystemSetting( 'versionless-url-regex' ) );
+			$versionlessURLMatch = ( $versionlessURL == 'M' ? false : true );
+			foreach ( $versionlessURLRegex as $versionlessURLItem )
+			{
+				if ( preg_match( '/' . str_replace( '/', '\\/', $versionlessURLItem ) . '/',
+				                 $pagePath ) === 1 )
+				{
+					$versionlessURLMatch = ! $versionlessURLMatch;
+					break;
+				}
+			}
+			if ( $versionlessURLMatch )
+			{
+				$this->provideVersionlessURLs();
+			}
 		}
 
 
@@ -2074,14 +2096,21 @@ $(function()
     var vVersionIndex = window.location.href.indexOf( 'redcap_v' + redcap_version )
     if ( vVersionIndex != -1 )
     {
+      var vFullURL = window.location.href
       $('form').each( function()
       {
         if ( $(this).attr('action') === undefined )
         {
-          this.action = this.action // set implicit action explicitly
+          if ( typeof this.action == 'string' )
+          {
+            this.action = this.action // set implicit action explicitly
+          }
+          else
+          {
+            this.action = vFullURL.replace(/#.*$/,'')
+          }
         }
       })
-      var vFullURL = window.location.href
       var vBaseElem = $('<base>')
       vBaseElem.attr('href',vFullURL)
       $('head').append( vBaseElem )
@@ -2506,6 +2535,20 @@ $(function()
 			       preg_match( '/'.$settings['custom-alert-sender-regex'].'/', '' ) === false ) )
 			{
 				return 'The regular expression to validate custom from addresses is invalid.';
+			}
+			if ( in_array( $settings['versionless-url'], [ 'M', 'E' ] ) )
+			{
+				$versionlessURLRegex =
+					preg_split( "/(\r?\n)+/", $settings['versionless-url-regex'] );
+				foreach ( $versionlessURLRegex as $versionlessURLItem )
+				{
+					if ( preg_match( '/' . str_replace( '/', '\\/', $versionlessURLItem ) . '/',
+					                 '' ) === false )
+					{
+						return 'One or more regular expressions to match/exclude for the ' .
+						       'versionless URLs is invalid.';
+					}
+				}
 			}
 			return null;
 		}
