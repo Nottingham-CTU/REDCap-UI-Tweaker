@@ -198,9 +198,12 @@ foreach ( $listCustomReports as $infoReport )
   <td><?php echo $module->escapeHTML( $infoReport['title'] ); ?></td>
   <td><?php echo $module->escapeHTML( $infoReport['type'] ); ?></td>
   <td><?php echo $module->escapeHTML( $infoReport['description'] ); ?></td>
-  <td><?php echo $module->escapeHTML( $infoReport['permissions'] ); ?></td>
-  <td><?php echo $module->escapeHTML( $infoReport['definition'] ); ?></td>
-  <td><?php echo $module->escapeHTML( $infoReport['options'] ); ?></td>
+  <td><?php echo str_replace( [ "\r\n", "\r", "\n" ], '<br>',
+                              $module->escapeHTML( $infoReport['permissions'] ) ); ?></td>
+  <td><?php echo str_replace( [ "\r\n", "\r", "\n" ], '<br>',
+                              $module->escapeHTML( $infoReport['definition'] ) ); ?></td>
+  <td><?php echo str_replace( [ "\r\n", "\r", "\n" ], '<br>',
+                              $module->escapeHTML( $infoReport['options'] ) ); ?></td>
  </tr>
 <?php
 }
