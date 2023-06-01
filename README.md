@@ -156,6 +156,9 @@ the checkbox options with those from a specified SQL field. The format must foll
 project.<br>Note: Checkbox options will **not** be replaced if the form, record or project has been
 locked.
 
+*Note that using this action tag will cause the project data dictionary to be updated as necessary
+in order to align the checkbox options with those from the SQL field.*
+
 For best results, the SQL query should return all possible options outside of a record context<br>
 (where \[record-name\] = '') and only limit to a subset (if required) within a record context.
 
@@ -182,6 +185,11 @@ quality rules page.
 ### Custom data quality notification header text
 This will override the text displayed in the header/title of the popup notification when a record is
 saved with data which violates data quality rules.
+
+### Custom data quality notification text
+This will override the text displayed within the popup notification when a record is saved with data
+which violates data quality rules. This can be set separately for when data resolution workflow is
+*not* enabled and when it *is* enabled.
 
 ### Use alternate status icons
 Replaces some of the record status icons so they can be more easily distinguished by people with
@@ -253,6 +261,10 @@ any attempt to load a page without the version number will be automatically redi
 with the current REDCap version. If this feature is enabled without such a redirect in place, it
 can result in broken links/bookmarks being saved.*
 
+*Enabling versionless URLs may introduce bugs and other unexpected behaviour, especially in other
+external modules. It is recommended that the regular expression matching is used so that versionless
+URLs are only activated where they are most useful.*
+
 If matching or excluding URLs based on regular expressions, place each regular expression on its own
 line. The portion of the URL which will be matched to the regular expression is everything after the
 slash which follows the redcap version directory. Slashes do not need to be escaped in the regular
@@ -277,6 +289,14 @@ any buttons and icons from the codebook table, remove the field number column, s
 instrument headings and move the field annotations to a separate column. Once the simplified view
 is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
 in documentation.
+
+### External modules simplified view
+If enabled, a button will be added to the external modules page (on projects only) to show a
+simplified view. This will provide a simple table of the external modules and their settings. This
+simplified view can be enabled only for administrators, so that if there are any modules with
+sensitive settings these are not made available to regular users. Once the simplified view is shown,
+a button to select the table is displayed to make it easier to copy the table e.g. for use in
+documentation.
 
 ### Data quality rules simplified view
 If enabled, a button will be added to the data quality rules page to show a simplified view. This
