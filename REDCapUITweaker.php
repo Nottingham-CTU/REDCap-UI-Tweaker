@@ -11,6 +11,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	private $customAlerts;
 	private $customReports;
+	private $extModSettings;
 
 
 
@@ -348,6 +349,19 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		     $this->getSystemSetting( 'codebook-simplified-view' ) )
 		{
 			$this->provideSimplifiedCodebook();
+		}
+
+
+
+		// If the external modules page and the simplified view option is enabled.
+
+		$enableExtModSimplifiedView = $this->getSystemSetting('extmod-simplified-view');
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 35 ) ==
+		                                                   'ExternalModules/manager/project.php' &&
+		     ( $enableExtModSimplifiedView == 'E' ||
+		       ( $enableExtModSimplifiedView == 'A' && SUPER_USER == 1 ) ) )
+		{
+			$this->provideSimplifiedExternalModules();
 		}
 
 
@@ -785,6 +799,42 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Allows a different module to supply a function which will transform the setting names and
+	// values used on the external modules simplified view.
+	// $module should be the directory name of the module excluding version number.
+	// $function is a function which has one parameter which is an array
+	// containing the following keys:
+	// 'setting': name of the setting
+	// 'value': value of the setting
+	// The function should return the array with the data manipulated as required,
+	// false to discard the setting, or true to retain the original data.
+
+	function addExtModFunc( $module, $function )
+	{
+		if ( ! is_array( $this->extModSettings ) )
+		{
+			$this->extModSettings = [];
+		}
+		$this->extModSettings[ $module ] = $function;
+	}
+
+
+
+
+
+	// Allows a different module to ask this module if it needs to supply a module setting
+	// transformation function.
+
+	function areExtModFuncExpected()
+	{
+		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
+		       $_GET['page'] == 'extmod_simplified';
+	}
+
+
+
+
+
 	// Escapes text for inclusion in HTML.
 
 	function escapeHTML( $text )
@@ -855,6 +905,17 @@ $( function()
 	function getCustomReports()
 	{
 		return is_array( $this->customReports ) ? $this->customReports : [];
+	}
+
+
+
+
+
+	// Get the external module settings functions supplied by other modules.
+
+	function getExtModSettings()
+	{
+		return is_array( $this->extModSettings ) ? $this->extModSettings : [];
 	}
 
 
@@ -1771,6 +1832,36 @@ $(function()
     var vButtons = $('<p> </p>')
     vButtons.prepend(vBtnSimplify)
     $('.jqbuttonmed[onclick="window.print();"]').closest('table').after(vButtons)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide the simplified view option on the external modules page.
+
+	function provideSimplifiedExternalModules()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('extmod_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.css('margin-top','5px')
+    vBtnSimplify.click(vFuncSimplify)
+    var vButtons = $('<p> </p>')
+    vButtons.prepend(vBtnSimplify)
+    $('#external-modules-enable-modules-button').prev().before(vButtons)
   })
 </script>
 <?php

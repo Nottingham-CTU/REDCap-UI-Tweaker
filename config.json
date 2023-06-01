@@ -248,6 +248,16 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "extmod-simplified-view",
+			"name" : "External modules simplified view",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "Disable" },
+				{ "value" : "E", "name" : "Enable for all users" },
+				{ "value" : "A", "name" : "Enable for administrators only" }
+			]
+		},
+		{
 			"key" : "quality-rules-simplified-view",
 			"name" : "Data quality rules simplified view",
 			"type" : "checkbox"
