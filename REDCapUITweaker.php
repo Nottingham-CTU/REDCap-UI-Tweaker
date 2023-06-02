@@ -2487,13 +2487,17 @@ $(function()
 {
   var vFuncNewIcons = function()
   {
-    $('img[src$="circle_gray.png"]').attr('src','<?php echo $this->getIconUrl( 'gray' ); ?>')
-    $('img[src$="circle_red.png"]').attr('src','<?php echo $this->getIconUrl( 'red '); ?>')
-    $('img[src$="circle_red_stack.png"]').attr('src','<?php echo $this->getIconUrl( 'reds' ); ?>')
-    $('img[src$="circle_blue_stack.png"]').attr('src','<?php echo $this->getIconUrl( 'blues' ); ?>')
+    $('img[src$="circle_gray.png"]').attr('src','<?php echo $this->getIconUrl('gray'); ?>')
+    $('img[src$="circle_red.png"]').attr('src','<?php echo $this->getIconUrl('red'); ?>')
+    $('img[src$="circle_yellow.png"]').attr('src','<?php echo $this->getIconUrl('yellow'); ?>')
+    $('img[src$="circle_red_stack.png"]').attr('src','<?php echo $this->getIconUrl('reds'); ?>')
+    $('img[src$="circle_yellow_stack.png"]').attr('src', '<?php echo $this->getIconUrl('yellows'); ?>')
+    $('img[src$="circle_blue_stack.png"]').attr('src','<?php echo $this->getIconUrl('blues'); ?>')
+    $('img[src$="circle_orange_tick.png"]').attr('src','<?php echo $this->getIconUrl('orange'); ?>')
   }
   $(function(){
-    $('img[src$="circle_red_stack.png"], img[src$="circle_blue_stack.png"]').on('click',
+    $('img[src$="circle_red_stack.png"], img[src$="circle_yellow_stack.png"], ' +
+      'img[src$="circle_blue_stack.png"]').on('click',
       function(){setTimeout(vFuncNewIcons,500);setTimeout(vFuncNewIcons,1000)})
   })
   $(vFuncNewIcons)
