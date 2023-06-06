@@ -161,6 +161,23 @@ while ( $infoCodebook = $queryCodebook->fetch_assoc() )
 $prevFormName = '';
 
 
+// If not a longitudinal project, show which forms are repeating.
+// (On longitudinal projects, this is shown on the instrument/event mapping simplified view.)
+$listRepeating = [];
+if ( ! \REDCap::isLongitudinal() )
+{
+	$queryRepeating = $module->query( 'SELECT form_name FROM redcap_events_repeat WHERE event_id ' .
+	                                  '= (SELECT em.event_id FROM redcap_events_metadata em JOIN ' .
+	                                  'redcap_events_arms ea ON em.arm_id = ea.arm_id WHERE ' .
+	                                  'ea.project_id = ?) AND form_name IS NOT NULL',
+	                                  [ $module->getProjectID() ] );
+	while ( $infoRepeating = $queryRepeating->fetch_assoc() )
+	{
+		$listRepeating[] = $infoRepeating['form_name'];
+	}
+}
+
+
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
@@ -253,6 +270,10 @@ foreach ( $listCodebook as $infoCodebook )
 		echo $module->escapeHTML( $infoCodebook['form_menu_description'] ),
 		     '&nbsp; <span class="simpCodebookFormName">',
 		     $module->escapeHTML( $infoCodebook['form_name'] ), '</span>';
+		if ( in_array( $infoCodebook['form_name'], $listRepeating ) )
+		{
+			echo ' &#10227;';
+		}
 		if ( $infoCodebook['enabled_as_survey'] == '1' )
 		{
 			echo ' &nbsp;&nbsp;&nbsp;<span class="simpCodebookFormSurvey">',
