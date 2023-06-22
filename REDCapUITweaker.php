@@ -11,6 +11,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	private $customAlerts;
 	private $customReports;
+	private $extModSettings;
 
 
 
@@ -235,6 +236,36 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// Provide the versionless URLs.
+
+		$versionlessURL = $this->getSystemSetting( 'versionless-url' );
+		if ( $versionlessURL == 'A' )
+		{
+			$this->provideVersionlessURLs();
+		}
+		elseif ( in_array( $versionlessURL, [ 'M', 'E' ] ) )
+		{
+			$pagePath = substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ) ) .
+			           ( $_SERVER['QUERY_STRING'] == '' ? '' : ( '?' . $_SERVER['QUERY_STRING'] ) );
+			$versionlessURLRegex =
+				preg_split( "/(\r?\n)+/", $this->getSystemSetting( 'versionless-url-regex' ) );
+			$versionlessURLMatch = ( $versionlessURL == 'M' ? false : true );
+			foreach ( $versionlessURLRegex as $versionlessURLItem )
+			{
+				if ( preg_match( '/' . str_replace( '/', '\\/', $versionlessURLItem ) . '/',
+				                 $pagePath ) === 1 )
+				{
+					$versionlessURLMatch = ! $versionlessURLMatch;
+					break;
+				}
+			}
+			if ( $versionlessURLMatch )
+			{
+				$this->provideVersionlessURLs();
+			}
+		}
+
+
 		// Exit the function here if a system level page.
 
 		if ( $project_id === null )
@@ -322,6 +353,19 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+		// If the external modules page and the simplified view option is enabled.
+
+		$enableExtModSimplifiedView = $this->getSystemSetting('extmod-simplified-view');
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 35 ) ==
+		                                                   'ExternalModules/manager/project.php' &&
+		     ( $enableExtModSimplifiedView == 'E' ||
+		       ( $enableExtModSimplifiedView == 'A' && SUPER_USER == 1 ) ) )
+		{
+			$this->provideSimplifiedExternalModules();
+		}
+
+
+
 		// If the instrument/event mapping page and the simplified view option is enabled.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) ==
@@ -348,6 +392,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) == 'Design/online_designer.php' &&
 			 isset( $_GET[ 'page' ] ) && $_GET[ 'page' ] != '' )
 		{
+
+
+			// Provide the expanded field annotations.
+
+			if ( $this->getSystemSetting( 'expanded-annotations' ) )
+			{
+				$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+				$listFieldAnnotations = [];
+
+				foreach ( $listFields as $fieldName => $infoField )
+				{
+					$listFieldAnnotations[ $fieldName ] = $infoField['field_annotation'];
+				}
+				$this->provideExpandedAnnotations( $listFieldAnnotations );
+			}
 
 
 			// Set field 'required' option on by default.
@@ -740,11 +799,90 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Allows a different module to supply a function which will transform the setting names and
+	// values used on the external modules simplified view.
+	// $module should be the directory name of the module excluding version number.
+	// $function is a function which has one parameter which is an array
+	// containing the following keys:
+	// 'setting': name of the setting
+	// 'value': value of the setting
+	// The function should return the array with the data manipulated as required,
+	// false to discard the setting, or true to retain the original data.
+
+	function addExtModFunc( $module, $function )
+	{
+		if ( ! is_array( $this->extModSettings ) )
+		{
+			$this->extModSettings = [];
+		}
+		$this->extModSettings[ $module ] = $function;
+	}
+
+
+
+
+
+	// Allows a different module to ask this module if it needs to supply a module setting
+	// transformation function.
+
+	function areExtModFuncExpected()
+	{
+		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
+		       $_GET['page'] == 'extmod_simplified';
+	}
+
+
+
+
+
 	// Escapes text for inclusion in HTML.
 
 	function escapeHTML( $text )
 	{
 		return htmlspecialchars( $text, ENT_QUOTES );
+	}
+
+
+
+
+
+	// Outputs JavaScript to fix table on Firefox so formatting is included on copy/paste.
+
+	function ffFormattingFix( $table )
+	{
+		if ( ! isset( $_SERVER['HTTP_USER_AGENT'] ) ||
+		     strpos( $_SERVER['HTTP_USER_AGENT'], 'Firefox' ) === false )
+		{
+			return;
+		}
+
+?>
+<script type="text/javascript">
+$( function()
+{
+  var vTblCS = getComputedStyle($('<?php echo $table; ?>')[0])
+  $('<?php echo $table; ?>')[0].style.borderCollapse = vTblCS.getPropertyValue('border-collapse')
+  $('<?php echo $table; ?>')[0].style.fontFamily = vTblCS.getPropertyValue('font-family')
+  $('<?php echo $table; ?>').find('*').each( function()
+  {
+    var vCS = getComputedStyle(this)
+    this.style.background = vCS.getPropertyValue('background')
+    this.style.borderTop = vCS.getPropertyValue('border-top')
+    this.style.borderRight = vCS.getPropertyValue('border-right')
+    this.style.borderBottom = vCS.getPropertyValue('border-bottom')
+    this.style.borderLeft = vCS.getPropertyValue('border-left')
+    this.style.paddingTop = vCS.getPropertyValue('padding-top')
+    this.style.paddingRight = vCS.getPropertyValue('padding-right')
+    this.style.paddingBottom = vCS.getPropertyValue('padding-bottom')
+    this.style.paddingLeft = vCS.getPropertyValue('padding-left')
+    this.style.fontWeight = vCS.getPropertyValue('font-weight')
+    this.style.fontSize = vCS.getPropertyValue('font-size')
+    this.style.color = vCS.getPropertyValue('color')
+  } )
+} )
+</script>
+<?php
+
 	}
 
 
@@ -767,6 +905,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	function getCustomReports()
 	{
 		return is_array( $this->customReports ) ? $this->customReports : [];
+	}
+
+
+
+
+
+	// Get the external module settings functions supplied by other modules.
+
+	function getExtModSettings()
+	{
+		return is_array( $this->extModSettings ) ? $this->extModSettings : [];
 	}
 
 
@@ -1234,6 +1383,60 @@ $(function()
 
 
 
+	// Output JavaScript to provide the expanded annotations on the form designer.
+
+	function provideExpandedAnnotations( $listAnnotations )
+	{
+		$listAnnotations = array_map( function( $i ) { return trim( $this->escapeHTML( $i ) ); },
+		                              $listAnnotations );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vListAnnotations = <?php echo json_encode( $listAnnotations ), "\n"; ?>
+    var vLastField = ''
+    var vLastFieldAnnotation = ''
+    $('.frmedit_tbl:not(:has(.frmedit.actiontags)):not(:has(.header))'
+          ).find('>tbody>tr:last(),>tr:last()'
+          ).after('<tr><td class="frmedit actiontags" colspan="2"></td></tr>')
+    var vFuncExpAnno = function()
+    {
+      var vAnnotationElem = $(this).find('.frmedit.actiontags')
+      var vFieldName = $(this).attr('id').slice(7)
+      if ( vListAnnotations[ vFieldName ] === undefined ) return
+      $(this).css('border-collapse','separate')
+      vAnnotationElem.css('border-top','1px solid #aaa')
+      vAnnotationElem.html('<div class="mod-uitweaker-expanno"><code style="white-space:pre">' +
+                           vListAnnotations[ vFieldName ] + '</code></div>')
+    }
+    $('.frmedit_tbl:not(:has(.header))').each( vFuncExpAnno )
+    setInterval( function()
+    {
+      if ( $('#field_name:visible').length > 0 )
+      {
+        vLastField = $('#field_name').val()
+        vLastFieldAnnotation = $('#field_annotation').val()
+        return
+      }
+      if ( vLastField == '' ) return
+      vListAnnotations[ vLastField ] = $('<div></div>').text( vLastFieldAnnotation ).html()
+      $('.frmedit_tbl:not(:has(.frmedit.actiontags)):not(:has(.header))'
+            ).find('>tbody>tr:last(),>tr:last()'
+            ).after('<tr><td class="frmedit actiontags" colspan="2"></td></tr>')
+      $('.frmedit_tbl:not(:has(.header)):not(:has(.mod-uitweaker-expanno))').each( vFuncExpAnno )
+      vLastField = ''
+    }, 1500 )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to provide the predefined field annotations.
 
 	function provideFieldAnnotations( $predefinedAnnotations )
@@ -1639,6 +1842,36 @@ $(function()
 
 
 
+	// Output JavaScript to provide the simplified view option on the external modules page.
+
+	function provideSimplifiedExternalModules()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncSimplify = function()
+    {
+      window.location = '<?php echo addslashes( $this->getUrl('extmod_simplified.php') ); ?>'
+    }
+    var vBtnSimplify = $('<button class="jqbuttonmed invisible_in_print ui-button ui-corner-all' +
+                         ' ui-widget" id="simplifiedView">Simplified view</button>')
+    vBtnSimplify.css('margin-top','5px')
+    vBtnSimplify.click(vFuncSimplify)
+    var vButtons = $('<p> </p>')
+    vButtons.prepend(vBtnSimplify)
+    $('#external-modules-enable-modules-button').prev().before(vButtons)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to provide the simplified view option on the instrument/event mapping.
 
 	function provideSimplifiedInstruments()
@@ -1963,6 +2196,63 @@ $(function()
 
 
 
+	// Output JavaScript to provide versionless URLs.
+
+	function provideVersionlessURLs()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vVersionIndex = window.location.href.indexOf( 'redcap_v' + redcap_version )
+    if ( vVersionIndex != -1 )
+    {
+      var vFullURL = window.location.href
+      $('form').each( function()
+      {
+        if ( $(this).attr('action') === undefined )
+        {
+          if ( typeof this.action == 'string' )
+          {
+            this.action = this.action // set implicit action explicitly
+          }
+          else
+          {
+            this.action = vFullURL.replace(/#.*$/,'')
+          }
+        }
+      })
+      var vBaseElem = $('<base>')
+      vBaseElem.attr('href',vFullURL)
+      $('head').append( vBaseElem )
+      var vOldURL = vFullURL.slice( 0, vVersionIndex + 8 + redcap_version.length )
+      var vNewURL = vOldURL.replace( 'redcap_v' + redcap_version, 'redcap' )
+      history.replaceState( history.state, '', window.location.href.replace( vOldURL, vNewURL ) )
+      var vNewFullURL = window.location.href.match(/^[^#]+/)[0]
+      $('a[href^="#"]').each( function()
+      {
+        $(this).attr( 'href', vNewFullURL + $(this).attr('href') )
+      })
+      addEventListener('beforeunload', function()
+      {
+        if ( window.location.href.indexOf( vOldURL ) != 0 )
+        {
+          history.replaceState( history.state, '',
+                                window.location.href.replace( vNewURL, vOldURL ) )
+        }
+      })
+    }
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to rearrange the list of field types.
 
 	function rearrangeFieldTypes( $fieldTypesOrder )
@@ -2197,13 +2487,17 @@ $(function()
 {
   var vFuncNewIcons = function()
   {
-    $('img[src$="circle_gray.png"]').attr('src','<?php echo $this->getIconUrl( 'gray' ); ?>')
-    $('img[src$="circle_red.png"]').attr('src','<?php echo $this->getIconUrl( 'red '); ?>')
-    $('img[src$="circle_red_stack.png"]').attr('src','<?php echo $this->getIconUrl( 'reds' ); ?>')
-    $('img[src$="circle_blue_stack.png"]').attr('src','<?php echo $this->getIconUrl( 'blues' ); ?>')
+    $('img[src$="circle_gray.png"]').attr('src','<?php echo $this->getIconUrl('gray'); ?>')
+    $('img[src$="circle_red.png"]').attr('src','<?php echo $this->getIconUrl('red'); ?>')
+    $('img[src$="circle_yellow.png"]').attr('src','<?php echo $this->getIconUrl('yellow'); ?>')
+    $('img[src$="circle_red_stack.png"]').attr('src','<?php echo $this->getIconUrl('reds'); ?>')
+    $('img[src$="circle_yellow_stack.png"]').attr('src', '<?php echo $this->getIconUrl('yellows'); ?>')
+    $('img[src$="circle_blue_stack.png"]').attr('src','<?php echo $this->getIconUrl('blues'); ?>')
+    $('img[src$="circle_orange_tick.png"]').attr('src','<?php echo $this->getIconUrl('orange'); ?>')
   }
   $(function(){
-    $('img[src$="circle_red_stack.png"], img[src$="circle_blue_stack.png"]').on('click',
+    $('img[src$="circle_red_stack.png"], img[src$="circle_yellow_stack.png"], ' +
+      'img[src$="circle_blue_stack.png"]').on('click',
       function(){setTimeout(vFuncNewIcons,500);setTimeout(vFuncNewIcons,1000)})
   })
   $(vFuncNewIcons)
@@ -2357,6 +2651,20 @@ $(function()
 			       preg_match( '/'.$settings['custom-alert-sender-regex'].'/', '' ) === false ) )
 			{
 				return 'The regular expression to validate custom from addresses is invalid.';
+			}
+			if ( in_array( $settings['versionless-url'], [ 'M', 'E' ] ) )
+			{
+				$versionlessURLRegex =
+					preg_split( "/(\r?\n)+/", $settings['versionless-url-regex'] );
+				foreach ( $versionlessURLRegex as $versionlessURLItem )
+				{
+					if ( preg_match( '/' . str_replace( '/', '\\/', $versionlessURLItem ) . '/',
+					                 '' ) === false )
+					{
+						return 'One or more regular expressions to match/exclude for the ' .
+						       'versionless URLs is invalid.';
+					}
+				}
 			}
 			return null;
 		}

@@ -167,6 +167,7 @@ foreach ( $listInstruments as $infoInstrument )
 ?>
 </table>
 <?php
+$module->ffFormattingFix( '.simpInstTable' );
 
 // Display the project footer
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

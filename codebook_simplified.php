@@ -12,12 +12,32 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('codebook-simplified-
 function codebookEscape( $text )
 {
 	return trim( nl2br(
-	            preg_replace( "/\n+/", "\n",
+	            preg_replace( "/(\r|\n)+/", "\n",
 	                          strip_tags( \label_decode( preg_replace( '/<\/(p|h[1-6]|tr)>/',
 	                                                                   "$0\n", $text ) ) ) ) ) );
 }
 
 $lookupYN = [ '1' => $GLOBALS['lang']['design_100'], '0' => $GLOBALS['lang']['design_99'] ];
+
+
+$queryFDL = $module->query( 'SELECT form_name, control_condition, event_id FROM ' .
+                            'redcap_form_display_logic_conditions c JOIN (SELECT control_id, ' .
+                            'form_name, group_concat(event_id SEPARATOR \',\') event_id FROM ' .
+                            'redcap_form_display_logic_targets GROUP BY control_id, form_name) t ' .
+                            'ON c.control_id = t.control_id WHERE project_id = ?',
+                            [ $module->getProjectID() ] );
+$listFDL = [];
+while ( $infoFDL = $queryFDL->fetch_assoc() )
+{
+	if ( ! isset( $listFDL[ $infoFDL['form_name'] ] ) )
+	{
+		$listFDL[ $infoFDL['form_name'] ] = [];
+	}
+	$listFDL[ $infoFDL['form_name'] ][] = [ 'condition' => $infoFDL['control_condition'],
+	                                        'event_id' => ( $infoFDL['event_id'] === null ? null :
+	                                                        explode(',', $infoFDL['event_id']) ) ];
+}
+$listEventNames = \REDCap::getEventNames( true );
 
 
 $queryCodebook = $module->query( 'SELECT *, (SELECT 1 FROM redcap_surveys WHERE project_id = ' .
@@ -141,6 +161,23 @@ while ( $infoCodebook = $queryCodebook->fetch_assoc() )
 $prevFormName = '';
 
 
+// If not a longitudinal project, show which forms are repeating.
+// (On longitudinal projects, this is shown on the instrument/event mapping simplified view.)
+$listRepeating = [];
+if ( ! \REDCap::isLongitudinal() )
+{
+	$queryRepeating = $module->query( 'SELECT form_name FROM redcap_events_repeat WHERE event_id ' .
+	                                  '= (SELECT em.event_id FROM redcap_events_metadata em JOIN ' .
+	                                  'redcap_events_arms ea ON em.arm_id = ea.arm_id WHERE ' .
+	                                  'ea.project_id = ?) AND form_name IS NOT NULL',
+	                                  [ $module->getProjectID() ] );
+	while ( $infoRepeating = $queryRepeating->fetch_assoc() )
+	{
+		$listRepeating[] = $infoRepeating['form_name'];
+	}
+}
+
+
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
@@ -156,6 +193,7 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
                    '.simpCodebookForm{background-color:#bbb;font-weight:bold;font-size:1.1em} ' +
                    '.simpCodebookFormName{color:#444;font-weight:normal} ' +
                    '.simpCodebookFormSurvey{color:#070;font-size:0.9em} ' +
+                   '.simpCodebookFormDispLogic{color:#454;font-size:0.8em} ' +
                    '.simpCodebookSection{background-color:#eed} .colID{text-align:center} ' +
                    'td.simpCodebookFieldNote{color:#669;font-size:0.9em;border-top-style:dashed} ' +
                    'td.simpCodebookFieldEnum{border-style:dashed}</style>')
@@ -232,10 +270,42 @@ foreach ( $listCodebook as $infoCodebook )
 		echo $module->escapeHTML( $infoCodebook['form_menu_description'] ),
 		     '&nbsp; <span class="simpCodebookFormName">',
 		     $module->escapeHTML( $infoCodebook['form_name'] ), '</span>';
+		if ( in_array( $infoCodebook['form_name'], $listRepeating ) )
+		{
+			echo ' &#10227;';
+		}
 		if ( $infoCodebook['enabled_as_survey'] == '1' )
 		{
 			echo ' &nbsp;&nbsp;&nbsp;<span class="simpCodebookFormSurvey">',
 			     $GLOBALS['lang']['design_789'], '</span>';
+		}
+		if ( isset( $listFDL[ $infoCodebook['form_name'] ] ) )
+		{
+			$infoFDL =
+				array_map( function ( $i ) use ( $listEventNames )
+				           {
+				               if ( $i['event_id'] === null )
+				               {
+				                   return $i['condition'];
+				               }
+				               $listEvents = array_map( function( $e ) use ( $listEventNames )
+				                                        { return $listEventNames[$e]; },
+				                                        $i['event_id'] );
+				               return "([event-name] = '" .
+				                      implode( "' or [event-name] = '", $listEvents ) .
+				                      "') and (" . $i['condition'] . ')';
+				           },
+				           $listFDL[ $infoCodebook['form_name'] ] );
+			if ( count( $infoFDL ) == 1 )
+			{
+				$formDisplayLogic = $infoFDL[0];
+			}
+			else
+			{
+				$formDisplayLogic = '(' . implode( ') or (', $infoFDL ) . ')';
+			}
+			echo '<br><span class="simpCodebookFormDispLogic">', $GLOBALS['lang']['design_985'],
+			     ': ', $module->escapeHTML( $formDisplayLogic ), '</span>';
 		}
 ?></td>
  </tr>
@@ -364,6 +434,7 @@ foreach ( $listCodebook as $infoCodebook )
 ?>
 </table>
 <?php
+$module->ffFormattingFix( '.simpCodebookTable' );
 
 // Display the project footer
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

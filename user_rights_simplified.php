@@ -453,6 +453,7 @@ foreach ( $listForms as $formUniqueName => $formName )
 ?>
 </table>
 <?php
+$module->ffFormattingFix( '.simpRolesTable' );
 
 // Display the project footer
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

@@ -131,6 +131,10 @@ Process Outcome
 Miscellaneous
 ```
 
+### Always show full annotations in the online designer
+If enabled, full field annotations will be shown at the bottom of each field in the online designer
+instead of just the action tags.
+
 ### Enable @SQLDESCRIPTIVE action tag
 Allow use of the **@SQLDESCRIPTIVE** action tag for SQL fields, which will use the option label from
 the selected option in an SQL field as descriptive text and render the field like a descriptive
@@ -151,6 +155,9 @@ the checkbox options with those from a specified SQL field. The format must foll
 @SQLCHECKBOX='????', in which the desired value must be the field name of an SQL field in the
 project.<br>Note: Checkbox options will **not** be replaced if the form, record or project has been
 locked.
+
+*Note that using this action tag will cause the project data dictionary to be updated as necessary
+in order to align the checkbox options with those from the SQL field.*
 
 For best results, the SQL query should return all possible options outside of a record context<br>
 (where \[record-name\] = '') and only limit to a subset (if required) within a record context.
@@ -178,6 +185,11 @@ quality rules page.
 ### Custom data quality notification header text
 This will override the text displayed in the header/title of the popup notification when a record is
 saved with data which violates data quality rules.
+
+### Custom data quality notification text
+This will override the text displayed within the popup notification when a record is saved with data
+which violates data quality rules. This can be set separately for when data resolution workflow is
+*not* enabled and when it *is* enabled.
 
 ### Use alternate status icons
 Replaces some of the record status icons so they can be more easily distinguished by people with
@@ -238,6 +250,26 @@ time they load the *REDCap Home* page or the *My Projects* page following login.
 *My Projects* page is the first page shown after login, the user is immediately redirected to their
 project.
 
+### Enable versionless URLs
+If enabled, this will instruct the user's web browser to strip the version number (the _vX.X.X part)
+from the REDCap URL. This should ensure that bookmarks are always saved without the version number.
+This can make it easier to redirect users from their saved links or bookmarks to the current version
+if old REDCap code is removed from the web server.
+
+*In order to benefit from this feature, a redirect will need to be set up on the web server so that
+any attempt to load a page without the version number will be automatically redirected to the URL
+with the current REDCap version. If this feature is enabled without such a redirect in place, it
+can result in broken links/bookmarks being saved.*
+
+*Enabling versionless URLs may introduce bugs and other unexpected behaviour, especially in other
+external modules. It is recommended that the regular expression matching is used so that versionless
+URLs are only activated where they are most useful.*
+
+If matching or excluding URLs based on regular expressions, place each regular expression on its own
+line. The portion of the URL which will be matched to the regular expression is everything after the
+slash which follows the redcap version directory. Slashes do not need to be escaped in the regular
+expressions for this setting.
+
 ### Allow custom from addresses in alerts
 Provides an option when adding an alert to enter an email from address that is not provided in the
 dropdown list. If this option is enabled, use the *regular expression to validate custom from
@@ -257,6 +289,14 @@ any buttons and icons from the codebook table, remove the field number column, s
 instrument headings and move the field annotations to a separate column. Once the simplified view
 is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
 in documentation.
+
+### External modules simplified view
+If enabled, a button will be added to the external modules page (on projects only) to show a
+simplified view. This will provide a simple table of the external modules and their settings. This
+simplified view can be enabled only for administrators, so that if there are any modules with
+sensitive settings these are not made available to regular users. Once the simplified view is shown,
+a button to select the table is displayed to make it easier to copy the table e.g. for use in
+documentation.
 
 ### Data quality rules simplified view
 If enabled, a button will be added to the data quality rules page to show a simplified view. This

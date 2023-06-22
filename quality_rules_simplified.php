@@ -88,6 +88,7 @@ foreach ( $listRules as $infoRule )
 ?>
 </table>
 <?php
+$module->ffFormattingFix( '.simpRulesTable' );
 
 // Display the project footer
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
