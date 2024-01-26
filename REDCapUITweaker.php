@@ -1849,7 +1849,8 @@ $(function()
     vBtnSimplify.click(vFuncSimplify)
     var vButtons = $('<p> </p>')
     vButtons.prepend(vBtnSimplify)
-    $('.jqbuttonmed[onclick="window.print();"]').closest('table').after(vButtons)
+    $('.jqbuttonmed[onclick="window.print();"],' +
+      ' .jqbuttonmed[onclick="printCodebook();"]').closest('table').before(vButtons)
   })
 </script>
 <?php
