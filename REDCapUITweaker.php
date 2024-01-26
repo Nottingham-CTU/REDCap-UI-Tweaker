@@ -74,11 +74,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// IMPORTANT: This function runs in all contexts, when adding code ensure that it will only
 		// run in the desired contexts (system or project).
 
+
+		// Exit the function here if no user is logged in.
+
+		if ( ! defined( 'USERID' ) || USERID == '' )
+		{
+			return;
+		}
+
+
 		// If the option to redirect users with one project to that project is enabled, perform the
 		// redirect from the my projects page the first time that page is loaded in that session.
 
 		if ( $project_id === null && !isset( $_SESSION['module_uitweaker_single_proj_redirect'] ) &&
-		     defined( 'USERID' ) && $this->getSystemSetting( 'single-project-redirect' ) &&
+		     $this->getSystemSetting( 'single-project-redirect' ) &&
 		     in_array( $_GET['action'], [ '', 'myprojects' ] ) &&
 		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
 		{
@@ -218,23 +227,6 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// IMPORTANT: This function runs in all contexts, when adding code ensure that it will only
 		// run in the desired contexts (system or project).
 
-		// Provide sorting for the my projects page.
-
-		if ( $project_id === null && $this->getSystemSetting( 'my-projects-alphabetical' ) &&
-		     $_GET['action'] == 'myprojects' &&
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
-		{
-			$this->provideProjectSorting();
-		}
-
-
-		// Provide the initial configuration dialog.
-
-		if ( isset( $_SESSION['module_uitweak_system_enable'] ) )
-		{
-			$this->provideInitialConfig();
-		}
-
 
 		// Provide the versionless URLs.
 
@@ -266,13 +258,38 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// Exit the function here if no user is logged in.
+
+		if ( ! defined( 'USERID' ) || USERID == '' )
+		{
+			return;
+		}
+
+
+		// Provide sorting for the my projects page.
+
+		if ( $project_id === null && $this->getSystemSetting( 'my-projects-alphabetical' ) &&
+		     $_GET['action'] == 'myprojects' &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
+		{
+			$this->provideProjectSorting();
+		}
+
+
+		// Provide the initial configuration dialog.
+
+		if ( isset( $_SESSION['module_uitweak_system_enable'] ) )
+		{
+			$this->provideInitialConfig();
+		}
+
+
 		// Exit the function here if a system level page.
 
 		if ( $project_id === null )
 		{
 			return;
 		}
-
 
 
 		// All pages, if the option to show the role name is enabled.
@@ -359,7 +376,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 35 ) ==
 		                                                   'ExternalModules/manager/project.php' &&
 		     ( $enableExtModSimplifiedView == 'E' ||
-		       ( $enableExtModSimplifiedView == 'A' && SUPER_USER == 1 ) ) )
+		       ( $enableExtModSimplifiedView == 'A' &&
+		         defined( 'SUPER_USER' ) && SUPER_USER == 1 ) ) )
 		{
 			$this->provideSimplifiedExternalModules();
 		}
