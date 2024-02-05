@@ -70,6 +70,8 @@ while ( $infoAlert = $queryAlerts->fetch_assoc() )
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
+$module->provideSimplifiedViewTabs( 'alerts' );
+
 $listEnabledCustomAlerts = [];
 $listDisabledCustomAlerts = [];
 foreach ( $module->getCustomAlerts() as $infoAlert )

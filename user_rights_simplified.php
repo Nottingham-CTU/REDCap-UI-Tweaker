@@ -67,6 +67,8 @@ while ( $infoModule = $queryModules->fetch_assoc() )
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
+$module->provideSimplifiedViewTabs( 'user_rights' );
+
 ?>
 <div class="projhdr"><i class="fas fa-user"></i> User Rights</div>
 <script type="text/javascript">

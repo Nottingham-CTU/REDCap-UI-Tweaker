@@ -70,6 +70,8 @@ while ( $infoInstrument = $queryInstruments->fetch_assoc() )
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
+$module->provideSimplifiedViewTabs( 'instrument' );
+
 ?>
 <div class="projhdr"><i class="fas fa-business-time"></i> Instruments and Events</div>
 <script type="text/javascript">

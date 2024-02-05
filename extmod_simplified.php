@@ -68,6 +68,8 @@ if ( $usedFunction )
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
+$module->provideSimplifiedViewTabs( 'extmod' );
+
 ?>
 <div class="projhdr"><i class="fas fa-cube"></i> External Modules</div>
 <script type="text/javascript">

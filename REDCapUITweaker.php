@@ -2015,6 +2015,87 @@ $(function()
 
 
 
+	// Output tabs for navigating between the simplified views.
+
+	function provideSimplifiedViewTabs( $active = '' )
+	{
+
+?>
+<div class="clearfix">
+ <div id="sub-nav" class="d-none d-sm-block" style="margin:5px 0 15px;width:98%">
+  <ul>
+<?php
+		if ( $this->getSystemSetting( 'alerts-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'alerts' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('alerts_simplified.php'); ?>">Alerts</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'codebook-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'codebook' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('codebook_simplified.php'); ?>">Codebook</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'quality-rules-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'quality_rules' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('quality_rules_simplified.php'); ?>">Data Quality</a>
+   </li>
+<?php
+		}
+		$enableExtModSimplifiedView = $this->getSystemSetting( 'extmod-simplified-view' );
+		if ( $enableExtModSimplifiedView == 'E' ||
+		     ( $enableExtModSimplifiedView == 'A' && defined( 'SUPER_USER' ) && SUPER_USER == 1 ) )
+		{
+?>
+   <li<?php echo $active == 'extmod' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('extmod_simplified.php'); ?>">External Modules</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'instrument-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'instrument' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('instrument_simplified.php'); ?>">Instruments and Events</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'reports-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'reports' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('reports_simplified.php'); ?>">Reports</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'user-rights-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'user_rights' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('user_rights_simplified.php'); ?>">User Rights</a>
+   </li>
+<?php
+		}
+?>
+  </ul>
+ </div>
+</div>
+<script type="text/javascript">$('#sub-nav .active a').css('color','#393733')</script>
+<?php
+
+	}
+
+
+
+
+
 	// Logic to run before page render to provide the SQL checkbox field functionality.
 
 	function provideSQLCheckBox( $listFields, $project_id, $record,

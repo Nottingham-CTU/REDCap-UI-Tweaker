@@ -76,6 +76,8 @@ while ( $infoReport = $queryReports->fetch_assoc() )
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
+$module->provideSimplifiedViewTabs( 'reports' );
+
 $listCustomReports = [];
 foreach ( $module->getCustomReports() as $infoReport )
 {

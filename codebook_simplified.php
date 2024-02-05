@@ -181,6 +181,8 @@ if ( ! \REDCap::isLongitudinal() )
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
+$module->provideSimplifiedViewTabs( 'codebook' );
+
 ?>
 <div class="projhdr"><i class="fas fa-book"></i> <?php echo $GLOBALS['lang']['global_116']; ?></div>
 <script type="text/javascript">

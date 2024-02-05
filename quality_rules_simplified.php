@@ -25,6 +25,8 @@ while ( $infoRule = $queryRules->fetch_assoc() )
 // Display the project header
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
+$module->provideSimplifiedViewTabs( 'quality_rules' );
+
 ?>
 <div class="projhdr"><i class="fas fa-clipboard-check"></i> Data Quality</div>
 <script type="text/javascript">
