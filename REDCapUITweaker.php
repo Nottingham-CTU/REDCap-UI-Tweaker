@@ -9,6 +9,18 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	                       'nextform', 'nextrecord', 'exitrecord', 'compresp' ];
 	const SUBMIT_DEFINE = 'record,nextinstance,nextform,continue';
 
+	// Simplified view table styles.
+	const STL_HDR = 'font-size:1.1em';
+	const STL_CEL = 'border:solid 1px #000;padding:5px;vertical-align:top';
+	const STL_DEL = 'color:#fdd';
+	const BGC_HDR = '#ddd';
+	const BGC_HDR_NEW = '#1dc';
+	const BGC_HDR_CHG = '#dd8';
+	const BGC_HDR_DEL = '#600';
+	const BGC_NEW = '#4fe';
+	const BGC_CHG = '#ffa';
+	const BGC_DEL = '#b11';
+
 	private $customAlerts;
 	private $customReports;
 	private $extModSettings;
@@ -2009,6 +2021,50 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript for the simplified view diff highlighting popup.
+
+	function provideSimplifiedViewDiff()
+	{
+?>
+<div id="simplifiedViewDiff" style="display:none">
+  <form method="post">
+    <p>
+     To perform difference highlighting, export the simplified view data from a project and load
+     the data into another project.
+    <p>
+     <input type="hidden" name="simp_view_diff_mode" value="export">
+     <input type="submit" value="Export Data">
+    </p>
+  </form>
+  <hr>
+  <form method="post" enctype="multipart/form-data">
+   <p>File to import:&nbsp; <input type="file" name="simp_view_diff_file" required></p>
+   <p>
+    This file contains the:&nbsp;
+    <label>
+     &nbsp;<input type="radio" name="simp_view_diff_mode" value="new" required> New version
+    </label>
+    <label>
+     &nbsp;<input type="radio" name="simp_view_diff_mode" value="old" required> Old version
+    </label>
+   </p>
+   <p><input type="submit" value="Load Data and Perform Highlighting"></p>
+  </form>
+</div>
+<script type="text/javascript">
+  $('#simplifiedViewDiffBtn').click( function()
+  {
+    simpleDialog( null, 'Difference highlight', 'simplifiedViewDiff', 500 )
+    $('#simplifiedViewDiff').attr('title','')
+  } )
+</script>
+<?php
 	}
 
 
