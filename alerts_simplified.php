@@ -13,7 +13,6 @@ function alertsEscape( $text )
 {
 	$text = str_replace( [ "\r\n", "\r" ], "\n", $text );
 	$text = preg_replace( "/<\\/p>( |\n|\t)*<p>/", '<br><br>', $text );
-	$text = str_replace( "\n", '<br>', $text );
 	$text = str_replace( [ '<p>', '</p>' ], '', $text );
 	$text = htmlspecialchars( $text, ENT_QUOTES );
 	$text = preg_replace( '/&lt;(b|i|u|strong|em|span|br)&gt;/', '<$1>', $text );
@@ -70,14 +69,35 @@ $queryAlerts = $module->query( "SELECT *, if( form_name IS NULL, 'logic', if( al
                                "NULL, 'submit', 'submit-logic' ) ) alert_trigger, " .
                                "( SELECT form_menu_description FROM redcap_metadata WHERE " .
                                "form_name = redcap_alerts.form_name AND form_menu_description " .
-                               "IS NOT NULL LIMIT 1 ) form_menu_description " .
-                               "FROM redcap_alerts WHERE project_id = ? " .
+                               "IS NOT NULL AND project_id = redcap_alerts.project_id LIMIT 1 ) " .
+                               "form_menu_description FROM redcap_alerts WHERE project_id = ? " .
                                "ORDER BY email_deleted, alert_order",
                                [ $module->getProjectID() ] );
 
 
+$queryASI = $module->query( "SELECT rss.*, rs.form_name, rem.descrip event_label, rem2.descrip " .
+                            "condition_surveycomplete_event_label, ( SELECT form_menu_description" .
+                            " FROM redcap_metadata WHERE form_name = rs.form_name AND" .
+                            " form_menu_description IS NOT NULL AND project_id = rs.project_id" .
+                            " LIMIT 1 ) form_menu_description, ( SELECT form_menu_description" .
+                            " FROM redcap_metadata WHERE form_name = rs2.form_name AND" .
+                            " form_menu_description IS NOT NULL AND project_id = rs.project_id" .
+                            " LIMIT 1 ) condition_surveycomplete_form " .
+                            "FROM redcap_surveys_scheduler rss JOIN redcap_surveys rs " .
+                            "ON rss.survey_id = rs.survey_id LEFT JOIN redcap_surveys rs2 " .
+                            "ON rss.condition_surveycomplete_survey_id = rs2.survey_id " .
+                            "LEFT JOIN redcap_events_metadata rem ON rss.event_id = rem.event_id " .
+                            "LEFT JOIN redcap_events_metadata rem2 " .
+                            "ON rss.condition_surveycomplete_event_id = rem2.event_id " .
+                            "WHERE rss.active = 1 AND rs.project_id = ? " .
+                            "ORDER BY ( SELECT field_order FROM redcap_metadata WHERE form_name =" .
+                            " rs.form_name AND form_menu_description IS NOT NULL AND project_id =" .
+                            " rs.project_id LIMIT 1 ), rem.day_offset",
+                            [ $module->getProjectID() ] );
+
+
 // Build the exportable data structure.
-$listExport = [ 'simplified_view' => 'alerts', 'alerts' => [], 'custom_alerts' => [] ];
+$listExport = [ 'simplified_view' => 'alerts', 'alerts' => [], 'custom_alerts' => [], 'asi' => [] ];
 
 while ( $infoAlert = $queryAlerts->fetch_assoc() )
 {
@@ -101,6 +121,12 @@ while ( $infoAlert = $queryAlerts->fetch_assoc() )
 foreach ( $module->getCustomAlerts() as $infoAlert )
 {
 	$listExport['custom_alerts'][] = $infoAlert;
+}
+
+while ( $infoASI = $queryASI->fetch_assoc() )
+{
+	unset( $infoASI['ss_id'], $infoASI['survey_id'], $infoASI['event_id'], $infoASI['active'] );
+	$listExport['asi'][] = $infoASI;
 }
 
 // Handle upload. Get old/new data structures.
@@ -150,11 +176,13 @@ if ( isset( $_POST['simp_view_diff_mode'] ) )
 
 // Create the combined data structure.
 $listAlerts = [];
+$listASIs = [];
 $listCustomAlerts = [];
 
 // Determine whether the alerts match.
 $mapAlertsN2O = [];
 $mapCustomAlertsN2O = [];
+$mapASIsN2O = [];
 foreach ( $listNew['alerts'] as $i => $itemNewAlert )
 {
 	if ( $itemNewAlert['alert_title'] == '' )
@@ -254,6 +282,22 @@ foreach ( $listNew['custom_alerts'] as $i => $itemNewAlert )
 		}
 	}
 }
+foreach ( $listNew['asi'] as $i => $itemNewASI )
+{
+	foreach ( $listOld['asi'] as $j => $itemOldASI )
+	{
+		if ( in_array( $j, $mapASIsN2O ) )
+		{
+			continue;
+		}
+		if ( $itemNewASI['form_name'] == $itemOldASI['form_name'] &&
+		     $itemNewASI['event_label'] == $itemOldASI['event_label'] )
+		{
+			$mapASIsN2O[ $i ] = $j;
+			continue 2;
+		}
+	}
+}
 
 // Add the alerts to the combined data structure.
 foreach ( $listNew['alerts'] as $i => $itemNewAlert )
@@ -292,6 +336,25 @@ foreach ( $listOld['custom_alerts'] as $i => $itemOldAlert )
 		$itemOldAlert['alert_new'] = false;
 		$itemOldAlert['alert_deleted'] = true;
 		$listCustomAlerts[] = $itemOldAlert;
+	}
+}
+foreach ( $listNew['asi'] as $i => $itemNewASI )
+{
+	$itemNewASI['asi_new'] = ( ! isset( $mapASIsN2O[ $i ] ) );
+	$itemNewASI['asi_deleted'] = false;
+	if ( ! $itemNewASI['asi_new'] )
+	{
+		$itemNewASI['asi_oldvals'] = $listOld['asi'][ $mapASIsN2O[ $i ] ];
+	}
+	$listASIs[] = $itemNewASI;
+}
+foreach ( $listOld['asi'] as $i => $itemOldASI )
+{
+	if ( ! in_array( $i, $mapASIsN2O ) )
+	{
+		$itemOldASI['asi_new'] = false;
+		$itemOldASI['asi_deleted'] = true;
+		$listASIs[] = $itemOldASI;
 	}
 }
 
@@ -385,10 +448,17 @@ foreach ( [ true, false ] as $enabledAlerts )
 			echo '  <td style="', $tblStyle,
 			     ( $infoAlert['alert_new'] || $infoAlert['alert_deleted'] ||
 			       $infoAlert[ $key ] == $infoAlert['alert_oldvals'][ $key ]
-			       ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-			     $module->escapeHTML( $infoAlert[ $key == 'form_name' ? 'form_menu_description'
-			                                                          : $key ] ),
-			     "</td>\n";
+			       ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
+			if ( $key == 'alert_type' )
+			{
+				echo $module->escapeHTML( $lookupAlertTypes[ $infoAlert[ $key ] ] );
+			}
+			else
+			{
+				echo $module->escapeHTML( $infoAlert[ $key == 'form_name' ? 'form_menu_description'
+				                                                          : $key ] );
+			}
+			echo "</td>\n";
 		}
 
 		// Output the alert trigger.
@@ -422,7 +492,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 		}
 		if ( $infoAlert['alert_trigger'] != 'submit' )
 		{
-			echo "<br><b>Conditional logic:</b><br>",
+			echo '<br><b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b><br>',
 			     $module->escapeHTML( $infoAlert['alert_condition'] );
 		}
 		echo "</td>\n";
@@ -598,6 +668,209 @@ foreach ( [ true, false ] as $enabledAlerts )
 			     alertsEscape( $infoAlert[ $key ] ), "</td>\n";
 		}
 		echo " </tr>\n";
+	}
+	if ( $enabledAlerts )
+	{
+		foreach ( $listASIs as $infoASI )
+		{
+			$tblStyle = REDCapUITweaker::STL_CEL;
+			if ( $infoASI['asi_new'] )
+			{
+				$tblStyle .= ';background:' . REDCapUITweaker::BGC_NEW;
+			}
+			elseif ( $infoASI['asi_deleted'] )
+			{
+				$tblStyle .= ';background:' . REDCapUITweaker::BGC_DEL .
+				             ';' . REDCapUITweaker::STL_DEL;
+			}
+			echo " <tr>\n";
+
+			// Output the ASI title, type and form.
+			echo '  <td style="', $tblStyle, '">', "</td>\n";
+			echo '  <td style="', $tblStyle, '">',
+			     $module->escapeHTML( $GLOBALS['lang']['survey_1239'] ), ' <br>',
+			     $module->escapeHTML( $lookupAlertTypes[ $infoASI['delivery_type'] ] ), "</td>\n";
+			echo '  <td style="', $tblStyle, '">',
+			     $module->escapeHTML( $infoASI['form_menu_description'] ),
+			     ( \REDCap::isLongitudinal()
+			       ? ' <br>(' . $module->escapeHTML( $infoASI['event_label'] ) . ')' : '' ),
+			     "</td>\n";
+
+			// TODO: Output the ASI trigger.
+			$tblIdentical = true;
+			if ( ! $infoASI['asi_new'] && ! $infoASI['asi_deleted'] )
+			{
+				foreach ( [ 'condition_surveycomplete_survey_id',
+				            'condition_surveycomplete_event_id', 'condition_andor',
+				            'condition_logic' ] as $key )
+				{
+					if ( $infoASI[ $key ] != $infoASI['asi_oldvals'][ $key ] )
+					{
+						$tblIdentical = false;
+						break;
+					}
+				}
+			}
+			echo '  <td style="', $tblStyle,
+			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
+			if ( $infoASI['condition_surveycomplete_survey_id'] != '' )
+			{
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_419'] ), '</b><br>',
+				     $module->escapeHTML( $infoASI['condition_surveycomplete_form'] );
+				if ( \REDCap::isLongitudinal() &&
+				     $infoASI['condition_surveycomplete_event_id'] != '' )
+				{
+					echo ' (',
+					     $module->escapeHTML( $infoASI['condition_surveycomplete_event_label'] ),
+					     ')';
+				}
+			}
+			if ( $infoASI['condition_surveycomplete_survey_id'] != '' &&
+			     $infoASI['condition_logic'] != '' )
+			{
+				echo "<br><b>", $module->escapeHTML( $infoASI['condition_andor'] ), '</b> ';
+			}
+			if ( $infoASI['condition_logic'] != '' )
+			{
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_420'] ), '</b><br>',
+				     $module->escapeHTML( $infoASI['condition_logic'] );
+			}
+			echo "</td>\n";
+
+			// Output the ASI schedule and recurrence.
+			$tblIdentical = true;
+			if ( ! $infoASI['asi_new'] && ! $infoASI['asi_deleted'] )
+			{
+				foreach ( [ 'condition_send_time_option', 'condition_send_next_day_type',
+				            'condition_send_next_time', 'condition_send_time_lag_days',
+				            'condition_send_time_lag_hours', 'condition_send_time_lag_minutes',
+				            'condition_send_time_lag_field_after', 'condition_send_time_lag_field',
+				            'condition_send_time_exact', 'num_recurrence', 'units_recurrence',
+				            'max_recurrence', 'reminder_type', 'reminder_nextday_type',
+				            'reminder_nexttime' ,'reminder_timelag_days', 'reminder_timelag_hours',
+				            'reminder_timelag_minutes', 'reminder_exact_time',
+				            'reminder_num' ] as $key )
+				{
+					if ( $infoASI[ $key ] != $infoASI['asi_oldvals'][ $key ] )
+					{
+						$tblIdentical = false;
+						break;
+					}
+				}
+			}
+			echo '  <td style="', $tblStyle,
+			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
+			if ( $infoASI['condition_send_time_option'] == 'IMMEDIATELY' )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
+				                          ?? $GLOBALS['lang']['global_1540'] );
+			}
+			elseif ( $infoASI['condition_send_time_option'] == 'NEXT_OCCURRENCE' )
+			{
+				echo $GLOBALS['lang']['survey_423'], ' ',
+				     $module->escapeHTML( $lookupDaysOfWeek[ $infoASI['condition_send_next_day_type'] ] ),
+				     ' ', $GLOBALS['lang']['global_15'], ' ',
+				     $module->escapeHTML( rtrim( rtrim( $infoASI['condition_send_next_time'],
+				                                        '0' ), ':' ) );
+			}
+			elseif ( $infoASI['condition_send_time_option'] == 'TIME_LAG' )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
+				                          $infoASI['condition_send_time_lag_days'] . ' ' .
+				                          $GLOBALS['lang']['survey_426'] . ' ' .
+				                          $infoASI['condition_send_time_lag_hours'] . ' ' .
+				                          $GLOBALS['lang']['survey_427'] . ' ' .
+				                          $infoASI['condition_send_time_lag_minutes'] . ' ' .
+				                          $GLOBALS['lang']['survey_428'] . ' ' .
+				                          $lookupBeforeAfter[
+				                               $infoASI['condition_send_time_lag_field_after'] ] .
+				                          ' ' . $infoASI['condition_send_time_lag_field'] );
+			}
+			elseif ( $infoASI['condition_send_time_option'] == 'EXACT_TIME' )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
+				     $module->escapeHTML( rtrim( rtrim( $infoASI['condition_send_time_exact'],
+				                                        '0' ), ':' ) );
+			}
+			echo '<br>';
+			if ( $infoASI['num_recurrence'] != 0 )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['survey_735'] ), ' ',
+				     $module->escapeHTML( $infoASI['num_recurrence'] ), ' ',
+				     $module->escapeHTML( $lookupUnits[ $infoASI['units_recurrence'] ] ), ' ',
+				     $module->escapeHTML( $GLOBALS['lang']['alerts_152'] );
+				echo ( $infoASI['max_recurrence'] == '' ? '' :
+				       ( "<br>" .
+				         $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
+				                              $infoASI['max_recurrence'] . ' ' .
+				                              $GLOBALS['lang']['alerts_233'] ) ) );
+			}
+			else
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['alerts_61'] );
+			}
+			if ( $infoASI['reminder_type'] == 'NEXT_OCCURRENCE' )
+			{
+				echo '<br>', $GLOBALS['lang']['survey_754'], ' (x',
+				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
+				     $GLOBALS['lang']['survey_423'], ' ',
+				     $module->escapeHTML( $lookupDaysOfWeek[ $infoASI['reminder_nextday_type'] ] ),
+				     ' ', $GLOBALS['lang']['global_15'], ' ',
+				     $module->escapeHTML( rtrim( rtrim( $infoASI['reminder_nexttime'],
+				                                        '0' ), ':' ) );
+			}
+			elseif ( $infoASI['reminder_type'] == 'TIME_LAG' )
+			{
+				echo '<br>', $GLOBALS['lang']['survey_754'], ' (x',
+				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
+				     $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
+				                          $infoASI['reminder_timelag_days'] . ' ' .
+				                          $GLOBALS['lang']['survey_426'] . ' ' .
+				                          $infoASI['reminder_timelag_hours'] . ' ' .
+				                          $GLOBALS['lang']['survey_427'] . ' ' .
+				                          $infoASI['reminder_timelag_minutes'] . ' ' .
+				                          $GLOBALS['lang']['survey_428'] );
+			}
+			elseif ( $infoASI['reminder_type'] == 'EXACT_TIME' )
+			{
+				echo '<br>', $GLOBALS['lang']['survey_754'], ' (x',
+				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
+				     $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
+				     $module->escapeHTML( rtrim( rtrim( $infoASI['reminder_exact_time'],
+				                                        '0' ), ':' ) );
+			}
+			echo "</td>\n";
+
+			// Output the ASI sender and message.
+			$tblIdentical = true;
+			if ( ! $infoASI['asi_new'] && ! $infoASI['asi_deleted'] )
+			{
+				foreach ( [ 'email_sender_display', 'email_sender', 'email_subject',
+				            'email_content' ] as $key )
+				{
+					if ( $infoASI[ $key ] != $infoASI['asi_oldvals'][ $key ] )
+					{
+						$tblIdentical = false;
+						break;
+					}
+				}
+			}
+			echo '  <td style="', $tblStyle,
+			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
+			if ( $infoASI['email_sender'] != '' )
+			{
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
+				     $module->escapeHTML( $infoASI['email_sender_display'] ), ' &lt;',
+				     $module->escapeHTML( $infoASI['email_sender'] ), '&gt;<br>';
+			}
+			if ( $infoASI['email_subject'] != '' )
+			{
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
+				     $module->escapeHTML( $infoASI['email_subject'] ), '<br>';
+			}
+			echo '<br>', alertsEscape( $infoASI['email_content'] );
+			echo "  </td>\n </tr>\n";
+		}
 	}
 }
 ?>
