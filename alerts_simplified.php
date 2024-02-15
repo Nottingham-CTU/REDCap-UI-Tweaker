@@ -89,15 +89,31 @@ $queryASI = $module->query( "SELECT rss.*, rs.form_name, rem.descrip event_label
                             "LEFT JOIN redcap_events_metadata rem ON rss.event_id = rem.event_id " .
                             "LEFT JOIN redcap_events_metadata rem2 " .
                             "ON rss.condition_surveycomplete_event_id = rem2.event_id " .
-                            "WHERE rss.active = 1 AND rs.project_id = ? " .
+                            "WHERE rss.active = 1 AND rs.survey_enabled = 1 AND rs.project_id = ? " .
                             "ORDER BY ( SELECT field_order FROM redcap_metadata WHERE form_name =" .
                             " rs.form_name AND form_menu_description IS NOT NULL AND project_id =" .
                             " rs.project_id LIMIT 1 ), rem.day_offset",
                             [ $module->getProjectID() ] );
 
+$querySurvey = $module->query( "SELECT form_name, ( SELECT form_menu_description FROM " .
+                               "redcap_metadata WHERE form_name = rs.form_name AND " .
+                               "form_menu_description IS NOT NULL AND project_id = rs.project_id " .
+                               " LIMIT 1 ) form_menu_description, confirmation_email_from, " .
+                               "confirmation_email_from_display, confirmation_email_subject, " .
+                               "confirmation_email_content, confirmation_email_attach_pdf, " .
+                               "if( confirmation_email_attachment IS NULL, 0, 1) " .
+                               "confirmation_email_attachment FROM redcap_surveys rs " .
+                               "WHERE survey_enabled = 1 AND confirmation_email_subject IS NOT " .
+                               "NULL AND confirmation_email_content IS NOT NULL AND project_id = ? " .
+                               "ORDER BY ( SELECT field_order FROM redcap_metadata WHERE " .
+                               "form_name = rs.form_name AND form_menu_description IS NOT NULL " .
+                               "AND project_id = rs.project_id LIMIT 1 )",
+                               [ $module->getProjectID() ] );
+
 
 // Build the exportable data structure.
-$listExport = [ 'simplified_view' => 'alerts', 'alerts' => [], 'custom_alerts' => [], 'asi' => [] ];
+$listExport = [ 'simplified_view' => 'alerts', 'alerts' => [], 'custom_alerts' => [],
+                'asi' => [], 'survey' => [] ];
 
 while ( $infoAlert = $queryAlerts->fetch_assoc() )
 {
@@ -127,6 +143,11 @@ while ( $infoASI = $queryASI->fetch_assoc() )
 {
 	unset( $infoASI['ss_id'], $infoASI['survey_id'], $infoASI['event_id'], $infoASI['active'] );
 	$listExport['asi'][] = $infoASI;
+}
+
+while ( $infoSurvey = $querySurvey->fetch_assoc() )
+{
+	$listExport['survey'][] = $infoSurvey;
 }
 
 // Handle upload. Get old/new data structures.
@@ -178,11 +199,13 @@ if ( isset( $_POST['simp_view_diff_mode'] ) )
 $listAlerts = [];
 $listASIs = [];
 $listCustomAlerts = [];
+$listSurveys = [];
 
 // Determine whether the alerts match.
 $mapAlertsN2O = [];
 $mapCustomAlertsN2O = [];
 $mapASIsN2O = [];
+$mapSurveysN2O = [];
 foreach ( $listNew['alerts'] as $i => $itemNewAlert )
 {
 	if ( $itemNewAlert['alert_title'] == '' )
@@ -298,6 +321,21 @@ foreach ( $listNew['asi'] as $i => $itemNewASI )
 		}
 	}
 }
+foreach ( $listNew['survey'] as $i => $itemNewSurvey )
+{
+	foreach ( $listOld['survey'] as $j => $itemOldSurvey )
+	{
+		if ( in_array( $j, $mapSurveysN2O ) )
+		{
+			continue;
+		}
+		if ( $itemNewSurvey['form_name'] == $itemOldSurvey['form_name'] )
+		{
+			$mapSurveysN2O[ $i ] = $j;
+			continue 2;
+		}
+	}
+}
 
 // Add the alerts to the combined data structure.
 foreach ( $listNew['alerts'] as $i => $itemNewAlert )
@@ -355,6 +393,25 @@ foreach ( $listOld['asi'] as $i => $itemOldASI )
 		$itemOldASI['asi_new'] = false;
 		$itemOldASI['asi_deleted'] = true;
 		$listASIs[] = $itemOldASI;
+	}
+}
+foreach ( $listNew['survey'] as $i => $itemNewSurvey )
+{
+	$itemNewSurvey['survey_new'] = ( ! isset( $mapSurveysN2O[ $i ] ) );
+	$itemNewSurvey['survey_deleted'] = false;
+	if ( ! $itemNewSurvey['survey_new'] )
+	{
+		$itemNewSurvey['survey_oldvals'] = $listOld['survey'][ $mapSurveysN2O[ $i ] ];
+	}
+	$listSurveys[] = $itemNewSurvey;
+}
+foreach ( $listOld['survey'] as $i => $itemOldSurvey )
+{
+	if ( ! in_array( $i, $mapSurveysN2O ) )
+	{
+		$itemOldSurvey['survey_new'] = false;
+		$itemOldSurvey['survey_deleted'] = true;
+		$listSurveys[] = $itemOldSurvey;
 	}
 }
 
@@ -429,6 +486,10 @@ foreach ( [ true, false ] as $enabledAlerts )
 		elseif ( $infoAlert['alert_deleted'] )
 		{
 			$tblStyle .= ';background:' . REDCapUITweaker::BGC_DEL . ';' . REDCapUITweaker::STL_DEL;
+		}
+		elseif( $infoAlert['email_deleted'] != $infoAlert['alert_oldvals']['email_deleted'] )
+		{
+			$tblStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 		}
 		$tblStyle .= ( $enabledAlerts ? '' : ';text-decoration:line-through');
 		$alertAttachments = $infoAlert['email_attachment_variable'];
@@ -648,6 +709,10 @@ foreach ( [ true, false ] as $enabledAlerts )
 		{
 			$tblStyle .= ';background:' . REDCapUITweaker::BGC_DEL . ';' . REDCapUITweaker::STL_DEL;
 		}
+		elseif( $infoAlert['enabled'] != $infoAlert['alert_oldvals']['enabled'] )
+		{
+			$tblStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
+		}
 		$tblStyle .= ( $enabledAlerts ? '' : ';text-decoration:line-through');
 		echo " <tr>\n", '  <td style="', $tblStyle, '">',
 		     $module->escapeHTML( $infoAlert['title'] ), "</td>\n";
@@ -669,6 +734,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 		}
 		echo " </tr>\n";
 	}
+
 	if ( $enabledAlerts )
 	{
 		foreach ( $listASIs as $infoASI )
@@ -696,7 +762,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 			       ? ' <br>(' . $module->escapeHTML( $infoASI['event_label'] ) . ')' : '' ),
 			     "</td>\n";
 
-			// TODO: Output the ASI trigger.
+			// Output the ASI trigger.
 			$tblIdentical = true;
 			if ( ! $infoASI['asi_new'] && ! $infoASI['asi_deleted'] )
 			{
@@ -869,6 +935,93 @@ foreach ( [ true, false ] as $enabledAlerts )
 				     $module->escapeHTML( $infoASI['email_subject'] ), '<br>';
 			}
 			echo '<br>', alertsEscape( $infoASI['email_content'] );
+			echo "  </td>\n </tr>\n";
+		}
+
+		foreach ( $listSurveys as $infoSurvey )
+		{
+			$tblStyle = REDCapUITweaker::STL_CEL;
+			if ( $infoSurvey['survey_new'] )
+			{
+				$tblStyle .= ';background:' . REDCapUITweaker::BGC_NEW;
+			}
+			elseif ( $infoSurvey['survey_deleted'] )
+			{
+				$tblStyle .= ';background:' . REDCapUITweaker::BGC_DEL .
+				             ';' . REDCapUITweaker::STL_DEL;
+			}
+			echo " <tr>\n";
+
+			// Output the Survey Confirmation title, type and form.
+			echo '  <td style="', $tblStyle, '">', "</td>\n";
+			echo '  <td style="', $tblStyle, '">',
+			     $module->escapeHTML( str_replace( [ '[', ']', '(', ')', '{', '}' ], '',
+			                                       $GLOBALS['lang']['design_211'] ) ), ' <br>',
+			     $module->escapeHTML( $GLOBALS['lang']['global_33'] ), "</td>\n";
+			echo '  <td style="', $tblStyle, '">',
+			     $module->escapeHTML( $infoSurvey['form_menu_description'] ), "</td>\n";
+
+			// Output the Survey Confirmation trigger.
+			echo '  <td style="', $tblStyle, '">',
+			     '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_419'] ), '</b><br>',
+			     $module->escapeHTML( $infoSurvey['form_menu_description'] ),
+			     "</td>\n";
+
+			// Output the Survey Confirmation schedule.
+			echo '  <td style="', $tblStyle, '">',
+			     $module->escapeHTML( $GLOBALS['lang']['alerts_110']
+			                          ?? $GLOBALS['lang']['global_1540'] ), '<br>',
+			     $module->escapeHTML( $GLOBALS['lang']['alerts_61'] ),
+			     "</td>\n";
+
+			// Output the Survey Confirmation sender and message.
+			$tblIdentical = true;
+			if ( ! $infoSurvey['survey_new'] && ! $infoSurvey['survey_deleted'] )
+			{
+				foreach ( [ 'confirmation_email_from_display', 'confirmation_email_from',
+				            'confirmation_email_subject', 'confirmation_email_content',
+				            'confirmation_email_attach_pdf',
+				            'confirmation_email_attachment' ] as $key )
+				{
+					if ( $infoSurvey[ $key ] != $infoSurvey['survey_oldvals'][ $key ] )
+					{
+						$tblIdentical = false;
+						break;
+					}
+				}
+			}
+			echo '  <td style="', $tblStyle,
+			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
+			if ( $infoSurvey['confirmation_email_from'] != '' )
+			{
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
+				     $module->escapeHTML( $infoSurvey['confirmation_email_from_display'] ), ' &lt;',
+				     $module->escapeHTML( $infoSurvey['confirmation_email_from'] ), '&gt;<br>';
+			}
+			if ( $infoSurvey['confirmation_email_subject'] != '' )
+			{
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
+				     $module->escapeHTML( $infoSurvey['confirmation_email_subject'] ), '<br>';
+			}
+			echo '<br>', alertsEscape( $infoSurvey['confirmation_email_content'] );
+			if ( $infoSurvey['confirmation_email_attach_pdf'] == '1' ||
+			     $infoSurvey['confirmation_email_attachment'] == '1' )
+			{
+				echo '<br><br><b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ), ':</b> ';
+				if ( $infoSurvey['confirmation_email_attachment'] == '1' )
+				{
+					echo $module->escapeHTML( $GLOBALS['lang']['docs_22'] );
+				}
+				if ( $infoSurvey['confirmation_email_attach_pdf'] == '1' &&
+				     $infoSurvey['confirmation_email_attachment'] == '1' )
+				{
+					echo ' + ';
+				}
+				if ( $infoSurvey['confirmation_email_attach_pdf'] == '1' )
+				{
+					echo $module->escapeHTML( $GLOBALS['lang']['global_59'] );
+				}
+			}
 			echo "  </td>\n </tr>\n";
 		}
 	}
