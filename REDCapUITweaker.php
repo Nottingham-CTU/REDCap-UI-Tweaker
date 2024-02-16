@@ -799,7 +799,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 	// Allows a different module to supply its own report details for the reports simplified view.
-	// $infoReport should be an array containing the following keys (all fields as plain text):
+	// $infoReport should be an array containing the following keys (all fields as plain text unless
+	// the second $isHTML parameter is true, in which case HTML <b> and <i> tags can be used for the
+	// permissions, definition and options):
 	// 'title': title/name of the report
 	// 'type': type of the report (e.g. Gantt, SQL)
 	// 'description': description of the report
@@ -807,13 +809,40 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	// 'definition': e.g. report fields, SQL query
 	// 'options': any additonal report options which have been set
 
-	function addCustomReport( $infoReport )
+	function addCustomReport( $infoReport, $isHTML = false )
 	{
 		if ( ! is_array( $this->customReports ) )
 		{
 			$this->customReports = [];
 		}
+		if ( ! $isHTML )
+		{
+			foreach ( [ 'permissions', 'definition', 'options' ] as $key )
+			{
+				if ( isset( $infoReport[ $key ] ) )
+				{
+					$infoReport[ $key ] = $this->customReportsEscapeHTML( $infoReport[ $key ] );
+				}
+			}
+		}
 		$this->customReports[] = $infoReport;
+	}
+
+
+
+
+
+	// Escapes text which should not be rendered as HTML for use in the 'permissions', 'definition'
+	// and 'options' fields of the reports simplified view.
+
+	function customReportsEscapeHTML( $text )
+	{
+		$text = preg_replace( '/&(amp;)*lt;(b|i)&(amp;)*gt;/', '&$1amp;lt;$2&$3amp;gt;', $text );
+		$text = preg_replace( '/&(amp;)*lt;\\/(b|i)&(amp;)*gt;/',
+		                      '&$1amp;lt;/$2&$3amp;gt;', $text );
+		$text = str_replace( [ '<b>', '<i>', '</b>', '</i>' ],
+					         [ '&lt;b&gt;', '&lt;i&gt;', '&lt;/b&gt;', '&lt;/i&gt;'], $text );
+		return $text;
 	}
 
 
