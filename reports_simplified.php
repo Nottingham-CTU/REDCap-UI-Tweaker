@@ -9,15 +9,18 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('reports-simplified-v
 	exit;
 }
 
+$svbr = REDCapUITweaker::SVBR;
+
 function reportsEscape( $text )
 {
+	global $svbr;
 	$text = str_replace( [ "\r\n", "\r" ], "\n", $text );
 	$text = htmlspecialchars( $text, ENT_QUOTES );
 	$text = str_replace( [ '&lt;b&gt;', '&lt;/b&gt;', '&lt;i&gt;', '&lt;/i&gt;' ],
 	                     [ '<b>', '</b>', '<i>', '</i>' ], $text );
 	$text = preg_replace( '/&(amp;)*amp;lt;(b|i)&(amp;)*amp;gt;/', '&$1lt;$2&$3gt;', $text );
 	$text = preg_replace( '/&(amp;)*amp;lt;\\/(b|i)&(amp;)*amp;gt;/', '&$1lt;/$2&$3gt;', $text );
-	$text = str_replace( "\n", '<br>', $text );
+	$text = str_replace( "\n", $svbr, $text );
 	return $text;
 }
 
@@ -412,9 +415,9 @@ foreach ( $listReports as $infoReport )
 	}
 	echo '  <td style="', $tblStyle,
 	     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-	     '<b>', $module->escapeHTML( $GLOBALS['lang']['report_builder_153'] ), '</b><br>',
-	     $module->escapeHTML( $infoReport['user_access'] ), '<br><b>',
-	     $module->escapeHTML( $GLOBALS['lang']['report_builder_152'] ), '</b><br>',
+	     '<b>', $module->escapeHTML( $GLOBALS['lang']['report_builder_153'] ), '</b>', $svbr,
+	     $module->escapeHTML( $infoReport['user_access'] ), $svbr, '<b>',
+	     $module->escapeHTML( $GLOBALS['lang']['report_builder_152'] ), '</b>', $svbr,
 	     $module->escapeHTML( $infoReport['user_edit_access'] ), "</td>\n";
 
 	// Output the report definition.
@@ -433,11 +436,11 @@ foreach ( $listReports as $infoReport )
 	}
 	echo '  <td style="', $tblStyle,
 	     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-	     '<b>', $module->escapeHTML( $GLOBALS['lang']['home_32'] ), ':</b><br>',
+	     '<b>', $module->escapeHTML( $GLOBALS['lang']['home_32'] ), ':</b>', $svbr,
 	     $module->escapeHTML( $infoReport['fields'] );
 	if ( $infoReport['simple_logic'] != '' || $infoReport['advanced_logic'] != '' )
 	{
-		echo '<br><b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b><br>';
+		echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b>', $svbr;
 		if ( $infoReport['advanced_logic'] != '' )
 		{
 			echo $module->escapeHTML( $infoReport['advanced_logic'] );
@@ -449,8 +452,8 @@ foreach ( $listReports as $infoReport )
 	}
 	if ( $infoReport['orderby_field1'] != '' )
 	{
-		echo '<br><b>', $module->escapeHTML( $GLOBALS['lang']['report_builder_20'] ), ':</b><br>',
-		     $module->escapeHTML( $infoReport['orderby_field1'] ), ' ',
+		echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['report_builder_20'] ), ':</b>',
+		     $svbr, $module->escapeHTML( $infoReport['orderby_field1'] ), ' ',
 		     $module->escapeHTML( $infoReport['orderby_sort1'] );
 		if ( $infoReport['orderby_field2'] != '' )
 		{
@@ -468,7 +471,7 @@ foreach ( $listReports as $infoReport )
 	// Output the report options.
 	echo '  <td style="', $tblStyle,
 	     ( $optionsIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-	     implode( '<br>', $listOptions ), "</td>\n </tr>\n";
+	     implode( $svbr, $listOptions ), "</td>\n </tr>\n";
 }
 foreach ( $listCustomReports as $infoReport )
 {

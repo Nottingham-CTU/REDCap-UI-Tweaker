@@ -576,13 +576,14 @@ foreach ( $listForms as $formUniqueName => $infoForm )
 			$list = [];
 			if ( $dataEntry != '0' )
 			{
-				$list[] = $lookupDataEntry[ $dataEntry ];
+				$list[] = $module->escapeHTML( $lookupDataEntry[ $dataEntry ] );
 			}
 			if ( $dataExport != '0' )
 			{
-				$list[] = $GLOBALS['lang']['global_71'] . ' ' . $lookupExport[ $dataExport ];
+				$list[] = $module->escapeHTML( $GLOBALS['lang']['global_71'] . ' ' .
+				                               $lookupExport[ $dataExport ] );
 			}
-			echo $module->escapeHTML( empty( $list ) ? '' : implode( ', ', $list ) );
+			echo empty( $list ) ? '' : implode( REDCapUITweaker::SVBR, $list );
 		}
 		echo "</td>\n";
 	}

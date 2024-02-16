@@ -171,6 +171,19 @@ $tblHdrStyle = REDCapUITweaker::STL_CEL . ';' . REDCapUITweaker::STL_HDR .
 
 ?>
 <div class="projhdr"><i class="fas fa-clipboard-check"></i> Data Quality</div>
+<?php
+if ( $fileLoadError )
+{
+?>
+<p style="margin:15px 0px">
+ <span class="yellow">
+  <img src="<?php echo APP_PATH_WEBROOT; ?>Resources/images/exclamation_orange.png" alt="">
+  An error occurred while loading the file for difference highlighting.
+ </span>
+</p>
+<?php
+}
+?>
 <script type="text/javascript">
   $(function()
   {
@@ -263,7 +276,8 @@ foreach ( $listRules as $infoRule )
    <?php echo $module->escapeHTML( $infoRule['rule_name'] ), "\n"; ?>
   </td>
   <td style="<?php echo $tblLogicStyle; ?>">
-   <?php echo $module->escapeHTML( $infoRule['rule_logic'] ), "\n"; ?>
+   <?php echo str_replace( "\n", REDCapUITweaker::SVBR,
+                           $module->escapeHTML( $infoRule['rule_logic'] ) ), "\n"; ?>
   </td>
   <td style="<?php echo $tblRTEStyle; ?>">
    <?php echo $lookupYN[ $infoRule['real_time_execute'] ], "\n"; ?>

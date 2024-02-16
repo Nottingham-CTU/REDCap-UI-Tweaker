@@ -9,8 +9,11 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('alerts-simplified-vi
 	exit;
 }
 
+$svbr = REDCapUITweaker::SVBR;
+
 function alertsEscape( $text )
 {
+	global $svbr;
 	$text = str_replace( [ "\r\n", "\r" ], "\n", $text );
 	$text = preg_replace( "/<\\/p>( |\n|\t)*<p>/", '<br><br>', $text );
 	$text = str_replace( [ '<p>', '</p>' ], '', $text );
@@ -27,6 +30,7 @@ function alertsEscape( $text )
 	$text = str_replace( [ '&lt;', '&gt;', '&quot;', '&#039;', '&amp;' ], '', $text );
 	$text = str_replace( [ '&amp;lt;', '&amp;gt;', '&amp;quot;', '&amp;#039;', '&amp;amp;' ],
 	                     [ '&lt;', '&gt;', '&quot;', '&#039;', '&amp;' ], $text );
+	$text = str_replace( '<br>', $svbr, $text );
 	return $text;
 }
 
@@ -218,7 +222,8 @@ foreach ( $listNew['alerts'] as $i => $itemNewAlert )
 		{
 			continue;
 		}
-		if ( $itemNewAlert['alert_title'] == $itemOldAlert['alert_title'] )
+		if ( $itemNewAlert['alert_title'] == $itemOldAlert['alert_title'] &&
+		     $itemNewAlert['alert_type'] == $itemOldAlert['alert_type'] )
 		{
 			$mapAlertsN2O[ $i ] = $j;
 			continue 2;
@@ -270,7 +275,8 @@ foreach ( $listNew['custom_alerts'] as $i => $itemNewAlert )
 		{
 			continue;
 		}
-		if ( $itemNewAlert['title'] == $itemOldAlert['title'] )
+		if ( $itemNewAlert['title'] == $itemOldAlert['title'] &&
+		     $itemNewAlert['type'] == $itemOldAlert['type'] )
 		{
 			$mapCustomAlertsN2O[ $i ] = $j;
 			continue 2;
@@ -542,18 +548,17 @@ foreach ( [ true, false ] as $enabledAlerts )
 		     $lookupTriggered[ $infoAlert['alert_trigger'] ];
 		if ( $infoAlert['alert_trigger'] != 'logic' )
 		{
-			echo "<br>",
-			     $module->escapeHTML( $lookupFormStatus[ $infoAlert['email_incomplete'] ] );
+			echo $svbr, $module->escapeHTML( $lookupFormStatus[ $infoAlert['email_incomplete'] ] );
 		}
 		if ( $infoAlert['email_repetitive'] != 1 && $infoAlert['email_repetitive_change'] != 1 &&
 		     $infoAlert['email_repetitive_change_calcs'] != 1 )
 		{
-			echo "<br>",
+			echo $svbr,
 			     $module->escapeHTML( ucfirst( $lookupLimit[ $infoAlert['alert_stop_type'] ] ) );
 		}
 		if ( $infoAlert['alert_trigger'] != 'submit' )
 		{
-			echo '<br><b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b><br>',
+			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b>', $svbr,
 			     $module->escapeHTML( $infoAlert['alert_condition'] );
 		}
 		echo "</td>\n";
@@ -610,7 +615,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 			     $module->escapeHTML( rtrim( rtrim( $infoAlert['cron_send_email_on_date'],
 			                                        '0' ), ':' ) );
 		}
-		echo '<br>';
+		echo $svbr;
 		if ( $infoAlert['email_repetitive'] == 1 )
 		{
 			echo $module->escapeHTML( $GLOBALS['lang']['alerts_116']
@@ -630,10 +635,9 @@ foreach ( [ true, false ] as $enabledAlerts )
 			     $module->escapeHTML( $lookupUnits[ $infoAlert['cron_repeat_for_units'] ] ), ' ',
 			     $module->escapeHTML( $GLOBALS['lang']['alerts_152'] );
 			echo ( $infoAlert['cron_repeat_for_max'] == '' ? '' :
-			       ( "<br>" .
-			         $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
-			                              $infoAlert['cron_repeat_for_max'] . ' ' .
-			                              $GLOBALS['lang']['alerts_233'] ) ) );
+			       ( $svbr . $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
+			                                      $infoAlert['cron_repeat_for_max'] . ' ' .
+			                                      $GLOBALS['lang']['alerts_233'] ) ) );
 		}
 		else
 		{
@@ -661,36 +665,36 @@ foreach ( [ true, false ] as $enabledAlerts )
 		     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
 		if ( $infoAlert['prevent_piping_identifiers'] )
 		{
-			echo '<i>', $module->escapeHTML( $GLOBALS['lang']['alerts_12'] ), '</i><br>';
+			echo '<i>', $module->escapeHTML( $GLOBALS['lang']['alerts_12'] ), '</i>', $svbr;
 		}
 		if ( $infoAlert['email_from'] != '' )
 		{
 			echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
 			     $module->escapeHTML( $infoAlert['email_from_display'] ), ' &lt;',
-			     $module->escapeHTML( $infoAlert['email_from'] ), '&gt;<br>';
+			     $module->escapeHTML( $infoAlert['email_from'] ), '&gt;', $svbr;
 		}
 		echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_38'] ), '</b> ',
 		     $module->escapeHTML( $infoAlert['email_to'] . $infoAlert['phone_number_to'] );
 		if ( $infoAlert['email_cc'] != '' )
 		{
-			echo '<br><b>', $module->escapeHTML( $GLOBALS['lang']['alerts_191'] ), '</b> ',
+			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_191'] ), '</b> ',
 			     $module->escapeHTML( $infoAlert['email_cc'] );
 		}
 		if ( $infoAlert['email_bcc'] != '' )
 		{
-			echo '<br><b>', $module->escapeHTML( $GLOBALS['lang']['alerts_192'] ), '</b> ',
+			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_192'] ), '</b> ',
 			     $module->escapeHTML( $infoAlert['email_bcc'] );
 		}
 		if ( $infoAlert['email_subject'] != '' )
 		{
-			echo '<br><b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
+			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
 			     $module->escapeHTML( $infoAlert['email_subject'] );
 		}
-		echo '<br><br>', alertsEscape( $infoAlert['alert_message'] );
+		echo $svbr, $svbr, alertsEscape( $infoAlert['alert_message'] );
 		if ( $alertAttachments != '' )
 		{
-			echo '<br><br><b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ), ':</b> ',
-			     $module->escapeHTML( $alertAttachments );
+			echo $svbr, $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ),
+			     ':</b> ', $module->escapeHTML( $alertAttachments );
 		}
 		echo "  </td>\n </tr>\n";
 	}
@@ -714,9 +718,8 @@ foreach ( [ true, false ] as $enabledAlerts )
 			$tblStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 		}
 		$tblStyle .= ( $enabledAlerts ? '' : ';text-decoration:line-through');
-		echo " <tr>\n", '  <td style="', $tblStyle, '">',
-		     $module->escapeHTML( $infoAlert['title'] ), "</td>\n";
-		foreach ( [ 'type', 'form' ] as $key )
+		echo " <tr>\n";
+		foreach ( [ 'title', 'type', 'form' ] as $key )
 		{
 			echo '  <td style="', $tblStyle,
 			     ( $infoAlert['alert_new'] || $infoAlert['alert_deleted'] ||
@@ -754,12 +757,12 @@ foreach ( [ true, false ] as $enabledAlerts )
 			// Output the ASI title, type and form.
 			echo '  <td style="', $tblStyle, '">', "</td>\n";
 			echo '  <td style="', $tblStyle, '">',
-			     $module->escapeHTML( $GLOBALS['lang']['survey_1239'] ), ' <br>',
+			     $module->escapeHTML( $GLOBALS['lang']['survey_1239'] ), ' ', $svbr,
 			     $module->escapeHTML( $lookupAlertTypes[ $infoASI['delivery_type'] ] ), "</td>\n";
 			echo '  <td style="', $tblStyle, '">',
 			     $module->escapeHTML( $infoASI['form_menu_description'] ),
 			     ( \REDCap::isLongitudinal()
-			       ? ' <br>(' . $module->escapeHTML( $infoASI['event_label'] ) . ')' : '' ),
+			       ? $svbr . '(' . $module->escapeHTML( $infoASI['event_label'] ) . ')' : '' ),
 			     "</td>\n";
 
 			// Output the ASI trigger.
@@ -781,7 +784,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
 			if ( $infoASI['condition_surveycomplete_survey_id'] != '' )
 			{
-				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_419'] ), '</b><br>',
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_419'] ), '</b>', $svbr,
 				     $module->escapeHTML( $infoASI['condition_surveycomplete_form'] );
 				if ( \REDCap::isLongitudinal() &&
 				     $infoASI['condition_surveycomplete_event_id'] != '' )
@@ -794,11 +797,11 @@ foreach ( [ true, false ] as $enabledAlerts )
 			if ( $infoASI['condition_surveycomplete_survey_id'] != '' &&
 			     $infoASI['condition_logic'] != '' )
 			{
-				echo "<br><b>", $module->escapeHTML( $infoASI['condition_andor'] ), '</b> ';
+				echo $svbr, '<b>', $module->escapeHTML( $infoASI['condition_andor'] ), '</b> ';
 			}
 			if ( $infoASI['condition_logic'] != '' )
 			{
-				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_420'] ), '</b><br>',
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_420'] ), '</b>', $svbr,
 				     $module->escapeHTML( $infoASI['condition_logic'] );
 			}
 			echo "</td>\n";
@@ -858,7 +861,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 				     $module->escapeHTML( rtrim( rtrim( $infoASI['condition_send_time_exact'],
 				                                        '0' ), ':' ) );
 			}
-			echo '<br>';
+			echo $svbr;
 			if ( $infoASI['num_recurrence'] != 0 )
 			{
 				echo $module->escapeHTML( $GLOBALS['lang']['survey_735'] ), ' ',
@@ -866,10 +869,9 @@ foreach ( [ true, false ] as $enabledAlerts )
 				     $module->escapeHTML( $lookupUnits[ $infoASI['units_recurrence'] ] ), ' ',
 				     $module->escapeHTML( $GLOBALS['lang']['alerts_152'] );
 				echo ( $infoASI['max_recurrence'] == '' ? '' :
-				       ( "<br>" .
-				         $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
-				                              $infoASI['max_recurrence'] . ' ' .
-				                              $GLOBALS['lang']['alerts_233'] ) ) );
+				       ( $svbr . $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
+				                                      $infoASI['max_recurrence'] . ' ' .
+				                                      $GLOBALS['lang']['alerts_233'] ) ) );
 			}
 			else
 			{
@@ -877,7 +879,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 			}
 			if ( $infoASI['reminder_type'] == 'NEXT_OCCURRENCE' )
 			{
-				echo '<br>', $GLOBALS['lang']['survey_754'], ' (x',
+				echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
 				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
 				     $GLOBALS['lang']['survey_423'], ' ',
 				     $module->escapeHTML( $lookupDaysOfWeek[ $infoASI['reminder_nextday_type'] ] ),
@@ -887,7 +889,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 			}
 			elseif ( $infoASI['reminder_type'] == 'TIME_LAG' )
 			{
-				echo '<br>', $GLOBALS['lang']['survey_754'], ' (x',
+				echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
 				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
 				     $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
 				                          $infoASI['reminder_timelag_days'] . ' ' .
@@ -899,7 +901,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 			}
 			elseif ( $infoASI['reminder_type'] == 'EXACT_TIME' )
 			{
-				echo '<br>', $GLOBALS['lang']['survey_754'], ' (x',
+				echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
 				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
 				     $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
 				     $module->escapeHTML( rtrim( rtrim( $infoASI['reminder_exact_time'],
@@ -927,14 +929,14 @@ foreach ( [ true, false ] as $enabledAlerts )
 			{
 				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
 				     $module->escapeHTML( $infoASI['email_sender_display'] ), ' &lt;',
-				     $module->escapeHTML( $infoASI['email_sender'] ), '&gt;<br>';
+				     $module->escapeHTML( $infoASI['email_sender'] ), '&gt;', $svbr;
 			}
 			if ( $infoASI['email_subject'] != '' )
 			{
 				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
-				     $module->escapeHTML( $infoASI['email_subject'] ), '<br>';
+				     $module->escapeHTML( $infoASI['email_subject'] ), $svbr;
 			}
-			echo '<br>', alertsEscape( $infoASI['email_content'] );
+			echo $svbr, alertsEscape( $infoASI['email_content'] );
 			echo "  </td>\n </tr>\n";
 		}
 
@@ -956,21 +958,21 @@ foreach ( [ true, false ] as $enabledAlerts )
 			echo '  <td style="', $tblStyle, '">', "</td>\n";
 			echo '  <td style="', $tblStyle, '">',
 			     $module->escapeHTML( str_replace( [ '[', ']', '(', ')', '{', '}' ], '',
-			                                       $GLOBALS['lang']['design_211'] ) ), ' <br>',
+			                                       $GLOBALS['lang']['design_211'] ) ), ' ', $svbr,
 			     $module->escapeHTML( $GLOBALS['lang']['global_33'] ), "</td>\n";
 			echo '  <td style="', $tblStyle, '">',
 			     $module->escapeHTML( $infoSurvey['form_menu_description'] ), "</td>\n";
 
 			// Output the Survey Confirmation trigger.
 			echo '  <td style="', $tblStyle, '">',
-			     '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_419'] ), '</b><br>',
+			     '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_419'] ), '</b>', $svbr,
 			     $module->escapeHTML( $infoSurvey['form_menu_description'] ),
 			     "</td>\n";
 
 			// Output the Survey Confirmation schedule.
 			echo '  <td style="', $tblStyle, '">',
 			     $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-			                          ?? $GLOBALS['lang']['global_1540'] ), '<br>',
+			                          ?? $GLOBALS['lang']['global_1540'] ), $svbr,
 			     $module->escapeHTML( $GLOBALS['lang']['alerts_61'] ),
 			     "</td>\n";
 
@@ -996,18 +998,19 @@ foreach ( [ true, false ] as $enabledAlerts )
 			{
 				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
 				     $module->escapeHTML( $infoSurvey['confirmation_email_from_display'] ), ' &lt;',
-				     $module->escapeHTML( $infoSurvey['confirmation_email_from'] ), '&gt;<br>';
+				     $module->escapeHTML( $infoSurvey['confirmation_email_from'] ), '&gt;', $svbr;
 			}
 			if ( $infoSurvey['confirmation_email_subject'] != '' )
 			{
 				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
-				     $module->escapeHTML( $infoSurvey['confirmation_email_subject'] ), '<br>';
+				     $module->escapeHTML( $infoSurvey['confirmation_email_subject'] ), $svbr;
 			}
-			echo '<br>', alertsEscape( $infoSurvey['confirmation_email_content'] );
+			echo $svbr, alertsEscape( $infoSurvey['confirmation_email_content'] );
 			if ( $infoSurvey['confirmation_email_attach_pdf'] == '1' ||
 			     $infoSurvey['confirmation_email_attachment'] == '1' )
 			{
-				echo '<br><br><b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ), ':</b> ';
+				echo $svbr, $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ),
+				     ':</b> ';
 				if ( $infoSurvey['confirmation_email_attachment'] == '1' )
 				{
 					echo $module->escapeHTML( $GLOBALS['lang']['docs_22'] );

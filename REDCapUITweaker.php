@@ -21,6 +21,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	const BGC_CHG = '#ffa';
 	const BGC_DEL = '#b11';
 
+	// Simplified view <br> tag.
+	const SVBR = '<br style="mso-data-placement:same-cell">';
+
 	private $customAlerts;
 	private $customReports;
 	private $extModSettings;
