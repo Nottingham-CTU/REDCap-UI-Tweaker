@@ -2104,7 +2104,7 @@ $(function()
    </li>
 <?php
 		}
-		if ( $this->getSystemSetting( 'instrument-simplified-view' ) )
+		if ( \REDCap::isLongitudinal() && $this->getSystemSetting( 'instrument-simplified-view' ) )
 		{
 ?>
    <li<?php echo $active == 'instrument' ? ' class="active"' : ''; ?>>
