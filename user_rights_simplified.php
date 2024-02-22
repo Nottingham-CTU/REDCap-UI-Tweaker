@@ -523,7 +523,7 @@ foreach ( $listForms as $formUniqueName => $infoForm )
 		     strpos( $infoRole['data_export_instruments'], "[$formUniqueName," ) !== false )
 		{
 			preg_match( '/' . preg_quote("[$formUniqueName,", '/') . '([0-3])\\]/',
-			            $infoRole['data_entry'], $m );
+			            $infoRole['data_export_instruments'], $m );
 			$dataExport = $m[1];
 		}
 		elseif ( $infoRole['data_export_tool'] != '' )
