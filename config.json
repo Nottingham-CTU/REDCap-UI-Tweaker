@@ -320,6 +320,35 @@
 			"type" : "text"
 		},
 		{
+			"key" : "report-namespaces",
+			"name" : "Report namespaces for specific roles",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "report-namespace",
+			"name" : "Report namespace",
+			"type" : "sub_settings",
+			"sub_settings" : [
+				{
+					"key" : "report-namespace-name",
+					"name" : "Namespace name",
+					"type" : "text"
+				},
+				{
+					"key" : "report-namespace-roles",
+					"name" : "Roles with access to this namespace<br>(enter 1 role name per line)",
+					"type" : "textarea"
+				}
+			],
+			"branchingLogic" : { "field" : "report-namespaces", "value" : true },
+			"repeatable" : true
+		},
+		{
+			"key" : "pfmt1",
+			"name" : "<script type=\"text/javascript\">$('[field=hide-unverified-option] td').first().css('width','51%')</script>",
+			"type" : "descriptive"
+		},
+		{
 			"key" : "custom-logo-name-display",
 			"name" : "If custom logo/name is displayed",
 			"type" : "radio",

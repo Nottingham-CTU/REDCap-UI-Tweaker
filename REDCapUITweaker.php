@@ -27,6 +27,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	private $customAlerts;
 	private $customReports;
 	private $extModSettings;
+	private $reportNamespacing;
 
 
 
@@ -209,6 +210,26 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 			}
 
+		}
+
+
+		// If report namespaces are enabled and this is a report page.
+		$this->reportNamespacing = false;
+		if ( $this->getProjectSetting( 'report-namespaces' ) &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' )
+		{
+			if ( ! empty( $this->checkReportNamespaceAuth() ) )
+			{
+				$GLOBALS['user_rights']['reports'] = 1;
+				$this->reportNamespacing = true;
+			}
+			elseif ( $GLOBALS['user_rights']['reports'] != 1 &&
+			         isset( $_GET['report_id'] ) && isset( $_GET['addedit'] ) )
+			{
+				header( 'Location: ' . APP_PATH_WEBROOT . '/DataExport/index.php?pid=' .
+				        $this->getProjectId() );
+				$this->exitAfterHook();
+			}
 		}
 
 	}
@@ -603,6 +624,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+
+		// If report namespacing is in effect.
+		if ( $this->reportNamespacing )
+		{
+			echo '<script type="text/javascript">',
+			     '$(document).on(\'ajaxSend\',function(e,x,s){s.url=s.url.replace(\'DataExport' .
+			     '/report_edit_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=' .
+			     'ajax_reports_ns&rcpage=report_edit_ajax&\').replace(\'DataExport/report_delete' .
+			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=' .
+			     'ajax_reports_ns&rcpage=report_delete_ajax&\')})',
+			     "</script>\n";
+		}
+
+
 	}
 
 
@@ -891,6 +926,56 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	{
 		return $this->isPage( 'ExternalModules/' ) && $_GET['prefix'] == 'redcap_ui_tweaker' &&
 		       $_GET['page'] == 'extmod_simplified';
+	}
+
+
+
+
+
+	// Check if the user is authorised to edit a namespaced report.
+
+	function checkReportNamespaceAuth()
+	{
+		$userRights = $this->getUser()->getRights();
+		$roleName = ( isset( $userRights ) && isset( $userRights['role_name'] ) &&
+		              $userRights['role_name'] != '' ? $userRights['role_name'] : null );
+		if ( $roleName !== null )
+		{
+			$listNS = [];
+			$reportNSRoles = $this->getProjectSetting( 'report-namespace-roles' );
+			foreach ( $reportNSRoles as $i => $roleNames )
+			{
+				$roleNames = explode( "\n", str_replace( "\r\n", "\n", $roleNames ) );
+				if ( in_array( $roleName, $roleNames ) )
+				{
+					$listNS[] = [ 'name' => $this->getProjectSetting( 'report-namespace-name' )[$i],
+					              'roles' => $roleNames ];
+				}
+			}
+			if ( ! empty( $listNS ) && isset( $_GET['report_id'] ) && $_GET['report_id'] != 0 )
+			{
+				$queryReportFolders =
+					$this->query( 'SELECT rf.folder_id, rf.name FROM redcap_reports_folders_items' .
+					              ' rfi JOIN redcap_reports_folders rf ON rfi.folder_id = ' .
+					              'rf.folder_id WHERE rf.project_id = ? AND rfi.report_id = ?',
+					              [ $this->getProjectId(), $_GET['report_id'] ] );
+				$listReportFolders = [];
+				while ( $itemReportFolder = $queryReportFolders->fetch_assoc() )
+				{
+					$listReportFolders[] = $itemReportFolder['name'];
+				}
+				foreach ( $listNS as $i => $infoNS )
+				{
+					if ( ! in_array( $infoNS['name'], $listReportFolders ) )
+					{
+						unset( $listNS[$i] );
+					}
+				}
+				$listNS = array_values( $listNS );
+			}
+			return $listNS;
+		}
+		return [];
 	}
 
 
