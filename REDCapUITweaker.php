@@ -443,39 +443,50 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		// If an instrument designer page.
 
-		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) == 'Design/online_designer.php' &&
-			 isset( $_GET[ 'page' ] ) && $_GET[ 'page' ] != '' )
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) == 'Design/online_designer.php' )
 		{
 
-
-			// Provide the expanded field annotations.
-
-			if ( $this->getSystemSetting( 'expanded-annotations' ) )
+			if ( isset( $_GET[ 'page' ] ) && $_GET[ 'page' ] != '' )
 			{
-				$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
-				$listFieldAnnotations = [];
 
-				foreach ( $listFields as $fieldName => $infoField )
+				// Provide the expanded field annotations.
+
+				if ( $this->getSystemSetting( 'expanded-annotations' ) )
 				{
-					$listFieldAnnotations[ $fieldName ] = $infoField['field_annotation'];
+					$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+					$listFieldAnnotations = [];
+
+					foreach ( $listFields as $fieldName => $infoField )
+					{
+						$listFieldAnnotations[ $fieldName ] = $infoField['field_annotation'];
+					}
+					$this->provideExpandedAnnotations( $listFieldAnnotations );
 				}
-				$this->provideExpandedAnnotations( $listFieldAnnotations );
+
+
+				// Set field 'required' option on by default.
+
+				if ( $this->getSystemSetting( 'field-default-required' ) != '0' )
+				{
+					$this->provideDefaultRequired();
+				}
+
+
+				// Rearrange the list of field types.
+				$this->rearrangeFieldTypes( $this->getSystemSetting( 'field-types-order' ) );
+
+				// Provide the predefined field annotations.
+				$this->provideFieldAnnotations( $this->getSystemSetting( 'predefined-annotations' ) );
+
 			}
-
-
-			// Set field 'required' option on by default.
-
-			if ( $this->getSystemSetting( 'field-default-required' ) != '0' )
+			else
 			{
-				$this->provideDefaultRequired();
+				// Provide custom alert sender (for ASI) if enabled.
+				if ( $this->getSystemSetting( 'custom-alert-sender' ) )
+				{
+					$this->provideCustomAlertSender( 'ASI' );
+				}
 			}
-
-
-			// Rearrange the list of field types.
-			$this->rearrangeFieldTypes( $this->getSystemSetting( 'field-types-order' ) );
-
-			// Provide the predefined field annotations.
-			$this->provideFieldAnnotations( $this->getSystemSetting( 'predefined-annotations' ) );
 
 
 		} // end if instrument designer
@@ -1267,8 +1278,10 @@ $(function()
 
 	// Output JavaScript to allow a custom from address to be selected in alerts.
 
-	function provideCustomAlertSender()
+	function provideCustomAlertSender( $for = 'alerts' )
 	{
+		$selectFields = ( $for == 'alerts' ? 'select[name="email-from"], select[name="email-failed"]'
+		                                   : 'select[name="email_sender"]' );
 
 ?>
 <script type="text/javascript">
@@ -1277,7 +1290,7 @@ $(function()
     var vRegexValidate = /<?php echo $this->getSystemSetting('custom-alert-sender-regex'); ?>/
     var vDialog = $('<div><input type="text" style="width:100%"><br>' +
                     '<span style="color:#c00"></span></div>')
-    var vSelectFields = $('select[name="email-from"], select[name="email-failed"]')
+    var vSelectFields = $('<?php echo $selectFields; ?>')
     var vOldVal = null
     var vActiveSelect = null
     vDialog.find('input').on('keypress',function(e)
@@ -1314,6 +1327,12 @@ $(function()
       title:'Enter email address',
       width:400
     })
+<?php
+
+	if ( $for == 'alerts' )
+	{
+
+?>
     vSelectFields.append( '<option value="*">Enter a different email address...</option>' )
     vSelectFields.on('click',function()
     {
@@ -1347,6 +1366,43 @@ $(function()
       }
       vEditEmailAlert(vModal, vIndex, vAlertNum)
     }
+<?php
+
+	}
+	elseif ( $for == 'ASI' )
+	{
+
+?>
+    var vInitSurveyReminderSettings = initSurveyReminderSettings
+    initSurveyReminderSettings = function()
+    {
+      vInitSurveyReminderSettings()
+      vSelectFields = $('<?php echo $selectFields; ?>')
+      vSelectFields.find('[value="999"]').remove()
+      vSelectFields.append( '<option value="*">Enter a different email address...</option>' )
+      vSelectFields.on('click',function()
+      {
+        var vField = $(this)
+        vOldVal = vField.val()
+        vField.find('option[value="*"]').appendTo(vField)
+      })
+      vSelectFields.on('change',function()
+      {
+        if ( $(this).val() == '*' )
+        {
+          vActiveSelect = $(this)
+          vActiveSelect.val( vOldVal )
+          vDialog.find('input').val('')
+          vDialog.find('span').text('')
+          vDialog.dialog('open')
+        }
+      })
+    }
+<?php
+
+	}
+
+?>
 
   })
 </script>
