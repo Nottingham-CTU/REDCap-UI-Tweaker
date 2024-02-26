@@ -952,6 +952,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					              'roles' => $roleNames ];
 				}
 			}
+			if ( isset( $_POST['report_id'] ) )
+			{
+				if ( isset( $_GET['report_id'] ) )
+				{
+					return [];
+				}
+				$_GET['report_id'] = $_POST['report_id'];
+			}
 			if ( ! empty( $listNS ) && isset( $_GET['report_id'] ) && $_GET['report_id'] != 0 )
 			{
 				$queryReportFolders =
