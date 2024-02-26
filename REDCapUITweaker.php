@@ -695,6 +695,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		if ( $this->getProjectSetting( 'dq-notify-hide-eq' ) === true )
+		{
+			$this->provideDQHideEq();
+		}
+
+
 		// If the form navigation fix is enabled, amend the dataEntrySubmit function to perform a
 		// save and stay before performing the selected action. A session variable is set (by AJAX
 		// request) which triggers the selected action once the page reloads following the save
@@ -1397,6 +1403,53 @@ $(function()
 ?>
       $('#customizeprojectform').submit()
     }, 1000 )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to hide equations on the data quality notification popup.
+
+	function provideDQHideEq()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vEqChkCount = 0
+    var vEqChk = setInterval( function()
+    {
+      vEqChkCount++
+      if ( vEqChkCount > 30 )
+      {
+        clearInterval( vEqChk )
+        return
+      }
+      var vDQEq = $('div#dq_rules_table_single_record div.wrap div[style*="color:#555"]')
+      if ( vDQEq.length > 0 )
+      {
+        vDQEq.css( 'display', 'none' )
+        var vDQRuleHdr = $('div#dq_rules_table_single_record div.hDivBox th:eq(1) div')
+        var vShowLnk = $('<a href="#" style="font-size:0.8em">show/hide logic</a>').click(function()
+        {
+          if ( vDQEq.css( 'display' ) == 'none' )
+          {
+            vDQEq.css( 'display', '' )
+          }
+          else
+          {
+            vDQEq.css( 'display', 'none' )
+          }
+          return false
+        })
+        vDQRuleHdr.append( '&nbsp;&nbsp;' ).append( vShowLnk )
+        clearInterval( vEqChk )
+      }
+    }, 250)
   })
 </script>
 <?php

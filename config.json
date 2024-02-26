@@ -115,6 +115,11 @@
 			"type" : "textarea"
 		},
 		{
+			"key" : "dq-notify-hide-eq",
+			"name" : "Hide equations on the data quality notification",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-appr-proj",
 			"name" : "<b>Project appearance tweaks</b>",
 			"type" : "descriptive"
