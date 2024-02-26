@@ -25,6 +25,9 @@ function reportsEscape( $text )
 }
 
 
+$reportsNS = ( $module->getProjectSetting( 'report-namespaces' ) === true );
+
+
 $queryReports = $module->query( "SELECT r.*, ( SELECT group_concat( field_name ORDER BY " .
                                 "field_order SEPARATOR ', ' ) FROM redcap_reports_fields WHERE " .
                                 "report_id = r.report_id AND limiter_operator IS NULL ) fields, " .
@@ -54,6 +57,22 @@ $queryReports = $module->query( "SELECT r.*, ( SELECT group_concat( field_name O
                                 "WHERE project_id = ? ORDER BY report_order",
                                [ $module->getProjectID() ] );
 
+if ( $reportsNS )
+{
+	$queryNS = $module->query( 'SELECT rfi.report_id, rf.name ' .
+	                           'FROM redcap_reports_folders_items rfi ' .
+	                           'JOIN redcap_reports_folders rf ON rfi.folder_id = rf.folder_id ' .
+	                           'WHERE rf.project_id = ?', [ $module->getProjectId() ] );
+	$listNSReport = [];
+	$listNamespaces = $module->getProjectSetting( 'report-namespace-name' );
+	while ( $infoNS = $queryNS->fetch_assoc() )
+	{
+		if ( in_array( $infoNS['name'], $listNamespaces ) )
+		{
+			$listNSReport[] = $infoNS['report_id'];
+		}
+	}
+}
 
 // Build the exportable data structure.
 $listExport = [ 'simplified_view' => 'reports', 'reports' => [], 'custom_reports' => [] ];
@@ -88,6 +107,7 @@ while ( $infoReport = $queryReports->fetch_assoc() )
 					( $infoReport['user_edit_access'] == '' ? '' : ', ' ) . '+DAGs';
 		}
 	}
+	$infoReport['namespaced'] = $reportsNS && in_array( $infoReport['report_id'], $listNSReport );
 	unset( $infoReport['report_id'], $infoReport['project_id'], $infoReport['unique_report_name'],
 	       $infoReport['hash'], $infoReport['short_url'], $infoReport['report_order'] );
 	$listExport['reports'][] = $infoReport;
@@ -328,9 +348,40 @@ if ( $fileLoadError )
       vSel.addRange(vRange)
     }
     $('#selectTable').click(vFuncSelect)
+<?php
+if ( $reportsNS )
+{
+?>
+    var vFuncShowHideNS = function()
+    {
+      var vElems = $('.rptns')
+      if ( vElems.first().css('display') == 'none' )
+      {
+        vElems.css('display', '')
+      }
+      else
+      {
+        vElems.css('display', 'none')
+      }
+    }
+    $('#showHideNS').click(vFuncShowHideNS)
+    vFuncShowHideNS()
+<?php
+}
+?>
   })
 </script>
 <div style="margin-bottom:15px">
+<?php
+if ( $reportsNS )
+{
+?>
+ <button class="jqbuttonmed invisible_in_print ui-button ui-corner-all ui-widget"
+         id="showHideNS">Show/Hide namespaced reports</button>
+ &nbsp;
+<?php
+}
+?>
  <button class="jqbuttonmed invisible_in_print ui-button ui-corner-all ui-widget"
          id="selectTable">Select table</button>
  &nbsp;
@@ -379,18 +430,19 @@ foreach ( $listReports as $infoReport )
 		}
 	}
 
-	echo " <tr>\n";
+	echo ' <tr', ( $infoReport['namespaced'] ? ' class="rptns"' : '' ), '>', "\n";
 
 	// Output the report title, type and description.
 	foreach ( [ 'title', 'type', 'description' ] as $key )
 	{
+		$compareKey = ( $key == 'type' ? 'namespaced' : $key );
 		echo '  <td style="', $tblStyle,
 		     ( $infoReport['report_new'] || $infoReport['report_deleted'] ||
-		       ( $key == 'type' || $infoReport[ $key ] == $infoReport['report_oldvals'][ $key ] )
+		       $infoReport[ $compareKey ] == $infoReport['report_oldvals'][ $compareKey ]
 		       ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
 		if ( $key == 'type' )
 		{
-			echo 'REDCap';
+			echo 'REDCap', ( $infoReport['namespaced'] ? ' (NS)' : '' );
 		}
 		else
 		{
