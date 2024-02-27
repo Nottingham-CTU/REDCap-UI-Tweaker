@@ -46,11 +46,19 @@ If set, this will cause the *Project Home* page to redirect to the specified URL
 URL (starting with `http://` or `https://`) or a relative URL can be used. Relative URLs are
 relative to the REDCap version directory.
 
+* Example absolute URL: `https://example.com`
+* Example relative URL: `DataEntry/record_status_dashboard.php?pid=*`
+
 If the URL is a relative URL and it contains `pid=*`, the `*` will be replaced with the current
 project ID. This does not apply to absolute URLs.
 
 Only administrators can set the URL to an absolute URL or a relative URL for a different project
 (where `pid` has a value other than `*`).
+
+### Report namespaces for specific roles
+This setting allows namespaces or sandboxes to be set up for reports. User roles can be entered so
+that those roles can create, edit and delete reports *only in the namespace*. For this to work
+correctly, the specified roles *should not* have the reports privilege set in User Rights.
 
 ### If custom logo/name is displayed
 Within the project settings in the REDCap control center, there is an option to display the custom
@@ -63,7 +71,8 @@ This setting is only available to administrators.
 When submitting a form and navigating away from the form (e.g. *Save & Go To Next Form*), a
 *Save & Stay* will be performed first if this option is enabled. This can be used to work around
 issues in REDCap or other modules if data needs to be saved first for the form navigation to work
-correctly.
+correctly. This setting will not normally be required and should only be enabled if the next form
+loaded after saving a form is not the expected form.
 
 This setting is only available to administrators.
 
@@ -174,6 +183,11 @@ This option will enable the reason for change prompts on new projects. If enable
 using REDCap standard functionality (prompts for all changes), or only for forms which have
 previously been marked 'complete'.
 
+### Show the fields that have changed on the change reason popup
+This option will amend the reason for change prompt so that all the fields which have been changed
+will be listed along with the old and new values. This can be useful for reminding users of the
+changes they have made when writing the reason.
+
 ### Prevent the 'lock this instrument' option being treated as a data change
 This option will default new projects to not treat toggling the 'lock this instrument' checkbox as
 a data change. It can still be enabled/disabled on individual projects as required.
@@ -190,6 +204,11 @@ saved with data which violates data quality rules.
 This will override the text displayed within the popup notification when a record is saved with data
 which violates data quality rules. This can be set separately for when data resolution workflow is
 *not* enabled and when it *is* enabled.
+
+### Hide equations on the data quality notification
+When real-time execution of data quality rules triggers the popup notification of rule violations,
+the rule logic code will be hidden by default. The user will have to click a 'show/hide logic' link
+to toggle the visibility of logic code.
 
 ### Use alternate status icons
 Replaces some of the record status icons so they can be more easily distinguished by people with
@@ -239,6 +258,10 @@ If a user selects the 'all status types' option on the record status dashboard, 
 be remembered and auto-selected when they subsequently view the dashboard. This will apply per-user
 and across all projects.
 
+### Additional login page logo URL
+Specify the URL of an image file to include it as an additional logo on the login page (on the top
+right of the page, opposite the REDCap logo).
+
 ### Show 'My Projects' in alphabetical order
 If this option is enabled, the list of projects on the 'My Projects' page will be shown in
 alphabetical order by default. Any custom folders the user has defined will be retained, the
@@ -270,7 +293,7 @@ line. The portion of the URL which will be matched to the regular expression is 
 slash which follows the redcap version directory. Slashes do not need to be escaped in the regular
 expressions for this setting.
 
-### Allow custom from addresses in alerts
+### Allow custom from addresses in alerts/ASIs
 Provides an option when adding an alert to enter an email from address that is not provided in the
 dropdown list. If this option is enabled, use the *regular expression to validate custom from
 addresses* option to restrict the addresses which can be used (e.g. to limit to your own domain).
@@ -297,6 +320,10 @@ simplified view can be enabled only for administrators, so that if there are any
 sensitive settings these are not made available to regular users. Once the simplified view is shown,
 a button to select the table is displayed to make it easier to copy the table e.g. for use in
 documentation.
+
+If you are a module developer, you can adjust how your module settings are displayed in the external
+modules simplified view, see the [external module settings provider guide](README-ExtModProvider.md)
+for more information.
 
 ### Data quality rules simplified view
 If enabled, a button will be added to the data quality rules page to show a simplified view. This
