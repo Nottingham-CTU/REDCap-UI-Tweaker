@@ -1,7 +1,7 @@
 {
 	"name": "REDCap UI Tweaker",
 	"namespace": "Nottingham\\REDCapUITweaker",
-	"description": "Make adjustments to the REDCap user interface. Features include (each can be enabled as required): For the online designer, change order/placement of field types, set new fields required by default and configure predefined field annotations. Set the form submit options (system-wide setting and per-form action tag). Alternate status icons. Custom from addresses for alerts. 'Simplified views' for the alerts/codebook/user rights. Hide 'unverified' form status option.",
+	"description": "A selection of options to make adjustments to the REDCap user interface, which can each be enabled as required.<br>See the documentation for full details.",
 	"permissions": [
 		"redcap_every_page_before_render",
 		"redcap_project_home_page",
@@ -88,6 +88,11 @@
 				{ "value" : "1", "name" : "Yes, REDCap standard functionality" },
 				{ "value" : "2", "name" : "Yes, on forms previously marked 'complete' only" }
 			]
+		},
+		{
+			"key" : "change-reason-show-changes",
+			"name" : "Show the fields that have changed on the change reason popup",
+			"type" : "checkbox"
 		},
 		{
 			"key" : "default-prevent-lock-as-change",
@@ -366,7 +371,7 @@
 		},
 		{
 			"key" : "fix-form-navigation",
-			"name" : "Form navigation fix",
+			"name" : "Form navigation fix<br>(Refer to module documentation before using this option)",
 			"type" : "checkbox",
 			"super-users-only" : true
 		}

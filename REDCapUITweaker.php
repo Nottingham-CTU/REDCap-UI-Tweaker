@@ -697,6 +697,32 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If changed fields are to be listed on the change reason popup, list them.
+
+		if ( $this->getProjectSetting( 'change-reason-show-changes') )
+		{
+			$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+			foreach ( $listFields as $fieldName => $infoField )
+			{
+				if ( $fieldName == \REDCap::getRecordIdField() ||
+				     $infoField['field_type'] == 'descriptive' )
+				{
+					unset( $listFields[ $fieldName ] );
+					continue;
+				}
+				$infoField['field_label'] = strip_tags( $infoField['field_label'] );
+				$infoField['field_label'] = str_replace( [ "\r\n", "\n" ], ' ',
+				                                         $infoField['field_label'] );
+				if ( strlen( $infoField['field_label'] ) > 80 )
+				{
+					$infoField['field_label'] = substr( $infoField['field_label'], 0, 75 ) . '...';
+				}
+				$listFields[ $fieldName ] = $this->escapeHTML( $infoField['field_label'] );
+			}
+			$this->provideChangesList( array_keys( $listFields ), $listFields );
+		}
+
+
 		// If the 'lock this instrument' option is not to be treated as a data change, amend so the
 		// data changed flag is not set by ticking the option.
 
@@ -705,6 +731,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$this->providePreventLockAsChange();
 		}
 
+
+		// If equations on the data quality popup are to be hidden, hide them.
 
 		if ( $this->getProjectSetting( 'dq-notify-hide-eq' ) === true )
 		{
@@ -1265,6 +1293,59 @@ $(function()
     else
     {
       require_change_reason = 0
+    }
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to show the list of field changes on the change reason popup.
+
+	function provideChangesList( $fields, $labels )
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vListFields = <?php echo json_encode( $fields ), "\n"; ?>
+    var vListLabels = <?php echo json_encode( $labels ), "\n"; ?>
+    var vListValues = {}
+    $.each( vListFields, function()
+    {
+      vListValues[this] = $('[name="' + this + '"]').val()
+    })
+    var vDataEntrySubmit = dataEntrySubmit
+    dataEntrySubmit = function ( vOb )
+    {
+      if ( $('#change_reason_popup div.listchanges').length == 0 )
+      {
+        $('#change_reason_popup div:eq(0)').before('<div class="listchanges"></div>')
+        $('#change_reason_popup div.listchanges')
+          .css('max-height','100px').css('overflow-y','auto').css('border','solid 1px #ccc')
+          .before('<div style="font-weight:bold;padding:5px 0">' +
+                  '<?php echo $GLOBALS['lang']['data_history_03']; ?>:</div>')
+      }
+      $('#change_reason_popup div.listchanges').html('<ul style="margin-bottom:0"></ul>')
+      $.each( vListFields, function()
+      {
+        if ( vListValues[this] != $('[name="' + this + '"]').val() )
+        {
+          var vOldVal = $('<span></span>').text(vListValues[this]).html()
+          var vNewVal = $('<span></span>').text($('[name="' + this + '"]').val()).html()
+          $('#change_reason_popup div.listchanges ul')
+            .append('<li><b>' + vListLabels[this] + '</b><br><span style="font-size:0.9em">' +
+                    '<?php echo $GLOBALS['lang']['ws_152']; ?>: ' + vOldVal + '<br>' +
+                    '<?php echo $GLOBALS['lang']['data_comp_tool_32']; ?>: ' + vNewVal +
+                    '</span></li>')
+        }
+      })
+      vDataEntrySubmit( vOb )
     }
   })
 </script>
