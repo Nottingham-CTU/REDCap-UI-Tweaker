@@ -1035,6 +1035,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Echo plain text to output (without Psalm taints).
+	// Use only for e.g. JSON or CSV output.
+	function echoText( $text )
+	{
+		echo array_reduce( [ $text ], function( $c, $i ) { return $c . $i; }, '' );
+	}
+
+
+
+
+
 	// Escapes text for inclusion in HTML.
 
 	function escapeHTML( $text )

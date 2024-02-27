@@ -10,14 +10,25 @@ if ( ! $module->getProjectSetting( 'report-namespaces' ) )
 	exit;
 }
 
+// Set this variable explicitly to defined strings to avoid Psalm errors.
+$includePage = '';
+switch ( $_GET['rcpage'] )
+{
+	case 'report_edit_ajax':
+		$includePage = 'report_edit_ajax';
+		break;
+	case 'report_delete_ajax':
+		$includePage = 'report_delete_ajax';
+		break;
+}
+
 $listReportNS = $module->checkReportNamespaceAuth();
 
-if ( ! empty( $listReportNS ) &&
-     in_array( $_GET['rcpage'], [ 'report_edit_ajax', 'report_delete_ajax' ] ) )
+if ( ! empty( $listReportNS ) && $includePage != '' )
 {
 	$GLOBALS['user_rights']['reports'] = 1;
 
-	if ( $_GET['rcpage'] == 'report_edit_ajax' )
+	if ( $includePage == 'report_edit_ajax' )
 	{
 		$_POST['user_access_radio'] = 'SELECTED';
 		$_POST['user_edit_access_radio'] = 'SELECTED';
@@ -37,9 +48,9 @@ if ( ! empty( $listReportNS ) &&
 		       $_POST['user_edit_access_users'], $_POST['user_edit_access_dags'] );
 	}
 
-	require APP_PATH_DOCROOT . '/DataExport/' . $_GET['rcpage'] . '.php';
+	require APP_PATH_DOCROOT . '/DataExport/' . $includePage . '.php';
 
-	if ( $_GET['rcpage'] == 'report_edit_ajax' && $_GET['report_id'] == 0 )
+	if ( $includePage == 'report_edit_ajax' && $_GET['report_id'] == 0 )
 	{
 		// New report
 		$listReportFolders = \DataExport::getReportFolders( $module->getProjectId() );

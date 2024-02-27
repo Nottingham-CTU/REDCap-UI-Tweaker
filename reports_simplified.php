@@ -124,7 +124,7 @@ if ( isset( $_POST['simp_view_diff_mode'] ) && $_POST['simp_view_diff_mode'] == 
 {
 	header( 'Content-Type: application/json' );
 	header( 'Content-Disposition: attachment; filename="simplified_view.json"' );
-	echo json_encode( $listExport );
+	$module->echoText( json_encode( $listExport ) );
 	exit;
 }
 $listOld = $listExport;
