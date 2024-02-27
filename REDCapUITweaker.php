@@ -294,10 +294,18 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
-		// Exit the function here if no user is logged in.
+		// If no user is logged in, add the extra login page logo if set,
+		// then exit the function here.
 
 		if ( ! defined( 'USERID' ) || USERID == '' )
 		{
+			if ( $this->getSystemSetting( 'login-page-logo' ) != '' )
+			{
+				echo '<script type="text/javascript">$(function(){$(\'#container\')',
+				     '.css(\'background\',$(\'#container\').css(\'background\')+\',url("',
+				     $this->escapeHTML( $this->getSystemSetting( 'login-page-logo' ) ),
+				     '") top right no-repeat\')})</script>';
+			}
 			return;
 		}
 

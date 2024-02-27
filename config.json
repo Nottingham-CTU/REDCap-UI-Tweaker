@@ -188,6 +188,16 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "hdr-appr-sys",
+			"name" : "<b>System appearance tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "login-page-logo",
+			"name" : "Additional login page logo URL",
+			"type" : "text"
+		},
+		{
 			"key" : "hdr-nav-sys",
 			"name" : "<b>System navigation tweaks</b>",
 			"type" : "descriptive"
