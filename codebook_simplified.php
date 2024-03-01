@@ -432,7 +432,7 @@ foreach ( $listCodebook as $infoCodebook )
 		     '</i></span>', ( $infoForm['repeating'] ? ' &#10227;' : '' ), "</td>\n";
 		echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center',
 		     ( $hasSurveyRow || $hasFDLRow ? ';border-bottom:none' : '' ),
-		     '">&#8203;', $chgInd, "</td>\n";
+		     '">', $chgInd, "</td>\n";
 		echo " </tr>\n";
 		if ( $hasSurveyRow )
 		{
@@ -454,7 +454,7 @@ foreach ( $listCodebook as $infoCodebook )
 			}
 			echo "</td>\n";
 			echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center;border-top:none',
-			     ( $hasFDLRow ? ';border-bottom:none' : '' ), '">&#8203;', $chgInd, "</td>\n";
+			     ( $hasFDLRow ? ';border-bottom:none' : '' ), '">', $chgInd, "</td>\n";
 			echo " </tr>\n";
 		}
 		if ( $hasFDLRow )
@@ -493,12 +493,15 @@ foreach ( $listCodebook as $infoCodebook )
 			}
 			echo "</td>\n";
 			echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center;border-top:none',
-			     '">&#8203;', $chgInd, "</td>\n";
+			     '">', $chgInd, "</td>\n";
 			echo " </tr>\n";
 		}
 		$prevFormName = $infoCodebook['form_name'];
 	}
 	// If the field includes a section header, output a row for it.
+	$headerNew = false;
+	$headerDel = false;
+	$headerChg = false;
 	if ( $infoCodebook['element_preceding_header'] != '' ||
 	     ( isset( $infoCodebook['field_oldvals'] ) &&
 	       $infoCodebook['field_oldvals']['element_preceding_header'] != '' ) )
@@ -836,7 +839,8 @@ foreach ( $listCodebook as $infoCodebook )
 		$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 	}
 	echo '  <td colspan="2" style="', $cellStyle, '">',
-	     $GLOBALS['lang'][ $infoCodebook['field_req'] == '1' ? 'api_docs_063' : 'api_docs_064' ];
+	     ( $infoCodebook['element_type'] == 'descriptive' && $infoCodebook['field_req'] != '1' ? '' :
+	       $GLOBALS['lang'][ $infoCodebook['field_req'] == '1' ? 'api_docs_063' : 'api_docs_064' ] );
 	if ( $infoCodebook['field_phi'] == '1' )
 	{
 		echo ', ', preg_replace( '/[^A-Za-z]/', '', $GLOBALS['lang']['design_103'] );
@@ -896,14 +900,15 @@ foreach ( $listCodebook as $infoCodebook )
 					              ';' . REDCapUITweaker::STL_DEL;
 				}
 			}
-			echo '  <td style="', $cellStyle, ';border-right-style:dashed">',
-			     $module->escapeHTML( $infoCodebook['element_enum'][$i][0] ), "</td>\n";
+			echo '  <td style="', $cellStyle, ';border-right-style:dashed">&#8203;',
+			     $module->escapeHTML( str_replace( ',', '', $infoCodebook['element_enum'][$i][0] ) ),
+			     "</td>\n";
 			if ( isset( $infoCodebook['element_enum'][$i][2] ) &&
 			     $infoCodebook['element_enum'][$i][2] == 'chg' )
 			{
 				$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 			}
-			echo '  <td style="', $cellStyle, ';border-left-style:dashed">',
+			echo '  <td style="', $cellStyle, ';border-left-style:dashed">&#8203;',
 			     $module->escapeHTML( $infoCodebook['element_enum'][$i][1] ), "</td>\n";
 		}
 		// Output calculations/SQL.
@@ -914,8 +919,14 @@ foreach ( $listCodebook as $infoCodebook )
 			{
 				$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 			}
+			if ( $infoCodebook['element_type'] == 'sql' )
+			{
+				$cellStyle .= ';font-size:0.8em';
+			}
 			echo '  <td colspan="2" style="', $cellStyle, '">',
-			     $module->escapeHTML( $infoCodebook['element_enum'] ), "</td>\n";
+			     str_replace( [ "\r\n", "\n" ],
+			                  ( $infoCodebook['element_type'] == 'sql' ? ' ' : $svbr ),
+			                  $module->escapeHTML( $infoCodebook['element_enum'] ) ), "</td>\n";
 		}
 		// Output the change marker.
 		echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center;border-top:none',
