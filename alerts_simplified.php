@@ -499,6 +499,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 		}
 		$tblStyle .= ( $enabledAlerts ? '' : ';text-decoration:line-through');
 		$alertAttachments = $infoAlert['email_attachment_variable'];
+		$oldAlertAttachments = '';
 		if ( $infoAlert['email_attachments_num'] > 0 )
 		{
 			$alertAttachments .= ( $alertAttachments == '' ) ? '' : ' + ';
@@ -506,6 +507,18 @@ foreach ( [ true, false ] as $enabledAlerts )
 			$alertAttachments .= strtolower( $GLOBALS['lang'][
 			                                              ( $infoAlert['email_attachments_num'] == 1
 			                                                ? 'alerts_169' : 'alerts_128' )] );
+		}
+		if ( isset( $infoAlert['alert_oldvals'] ) )
+		{
+			$oldAlertAttachments = $infoAlert['alert_oldvals']['email_attachment_variable'];
+			if ( $infoAlert['alert_oldvals']['email_attachments_num'] > 0 )
+			{
+				$oldAlertAttachments .= ( $oldAlertAttachments == '' ) ? '' : ' + ';
+				$oldAlertAttachments .= $infoAlert['alert_oldvals']['email_attachments_num'] . ' ';
+				$oldAlertAttachments .= strtolower( $GLOBALS['lang'][
+				                         ( $infoAlert['alert_oldvals']['email_attachments_num'] == 1
+				                                                 ? 'alerts_169' : 'alerts_128' )] );
+			}
 		}
 		echo " <tr>\n";
 
@@ -524,6 +537,23 @@ foreach ( [ true, false ] as $enabledAlerts )
 			{
 				echo $module->escapeHTML( $infoAlert[ $key == 'form_name' ? 'form_menu_description'
 				                                                          : $key ] );
+			}
+			if ( isset( $infoAlert['alert_oldvals'] ) &&
+			     $infoAlert[ $key ] != $infoAlert['alert_oldvals'][ $key ] )
+			{
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+				if ( $key == 'alert_type' )
+				{
+					echo $module->escapeHTML( $lookupAlertTypes[
+					                                    $infoAlert['alert_oldvals'][ $key ] ] );
+				}
+				else
+				{
+					echo $module->escapeHTML( $infoAlert['alert_oldvals'][ $key == 'form_name'
+					                                                       ? 'form_menu_description'
+					                                                       : $key ] );
+				}
+				echo '</span>';
 			}
 			echo "</td>\n";
 		}
@@ -561,6 +591,30 @@ foreach ( [ true, false ] as $enabledAlerts )
 			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b>', $svbr,
 			     $module->escapeHTML( $infoAlert['alert_condition'] );
 		}
+		if ( ! $tblIdentical )
+		{
+			echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+			echo $lookupTriggered[ $infoAlert['alert_oldvals']['alert_trigger'] ];
+			if ( $infoAlert['alert_oldvals']['alert_trigger'] != 'logic' )
+			{
+				echo $svbr, $module->escapeHTML( $lookupFormStatus[
+				                                $infoAlert['alert_oldvals']['email_incomplete'] ] );
+			}
+			if ( $infoAlert['alert_oldvals']['email_repetitive'] != 1 &&
+			     $infoAlert['alert_oldvals']['email_repetitive_change'] != 1 &&
+			     $infoAlert['alert_oldvals']['email_repetitive_change_calcs'] != 1 )
+			{
+				echo $svbr,
+				     $module->escapeHTML( ucfirst( $lookupLimit[
+				                               $infoAlert['alert_oldvals']['alert_stop_type'] ] ) );
+			}
+			if ( $infoAlert['alert_oldvals']['alert_trigger'] != 'submit' )
+			{
+				echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b>',
+				     $svbr, $module->escapeHTML( $infoAlert['alert_oldvals']['alert_condition'] );
+			}
+			echo '</span>';
+		}
 		echo "</td>\n";
 
 		// Output the alert schedule and recurrence.
@@ -584,64 +638,83 @@ foreach ( [ true, false ] as $enabledAlerts )
 		}
 		echo '  <td style="', $tblStyle,
 		     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
-		if ( $infoAlert['cron_send_email_on'] == 'now' )
+		foreach ( [ false, true ] as $oldVals )
 		{
-			echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-			                          ?? $GLOBALS['lang']['global_1540'] );
-		}
-		elseif ( $infoAlert['cron_send_email_on'] == 'next_occurrence' )
-		{
-			echo $GLOBALS['lang']['survey_423'], ' ',
-			     $module->escapeHTML( $lookupDaysOfWeek[ $infoAlert['cron_send_email_on_next_day_type'] ] ),
-			     ' ', $GLOBALS['lang']['global_15'], ' ',
-			     $module->escapeHTML( rtrim( rtrim( $infoAlert['cron_send_email_on_next_time'],
-			                                        '0' ), ':' ) );
-		}
-		elseif ( $infoAlert['cron_send_email_on'] == 'time_lag' )
-		{
-			echo $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
-			                          $infoAlert['cron_send_email_on_time_lag_days'] . ' ' .
-			                          $GLOBALS['lang']['survey_426'] . ' ' .
-			                          $infoAlert['cron_send_email_on_time_lag_hours'] . ' ' .
-			                          $GLOBALS['lang']['survey_427'] . ' ' .
-			                          $infoAlert['cron_send_email_on_time_lag_minutes'] . ' ' .
-			                          $GLOBALS['lang']['survey_428'] . ' ' .
-			                          $lookupBeforeAfter[ $infoAlert['cron_send_email_on_field_after'] ] .
-			                          ' ' . $infoAlert['cron_send_email_on_field'] );
-		}
-		elseif ( $infoAlert['cron_send_email_on'] == 'date' )
-		{
-			echo $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
-			     $module->escapeHTML( rtrim( rtrim( $infoAlert['cron_send_email_on_date'],
-			                                        '0' ), ':' ) );
-		}
-		echo $svbr;
-		if ( $infoAlert['email_repetitive'] == 1 )
-		{
-			echo $module->escapeHTML( $GLOBALS['lang']['alerts_116']
-			                          ?? $GLOBALS['lang']['global_1546'] );
-		}
-		elseif ( $infoAlert['email_repetitive_change'] == 1 ||
-		         $infoAlert['email_repetitive_change_calcs'] == 1 )
-		{
-			echo $module->escapeHTML( $GLOBALS['lang']['alerts_226'] );
-			echo ( $infoAlert['email_repetitive_change_calcs'] == 0
-			       ? ( ' ' . $module->escapeHTML( $GLOBALS['lang']['alerts_231'] ) ) : '' );
-		}
-		elseif ( $infoAlert['cron_repeat_for'] != 0 )
-		{
-			echo $module->escapeHTML( $GLOBALS['lang']['survey_735'] ), ' ',
-			     $module->escapeHTML( $infoAlert['cron_repeat_for'] ), ' ',
-			     $module->escapeHTML( $lookupUnits[ $infoAlert['cron_repeat_for_units'] ] ), ' ',
-			     $module->escapeHTML( $GLOBALS['lang']['alerts_152'] );
-			echo ( $infoAlert['cron_repeat_for_max'] == '' ? '' :
-			       ( $svbr . $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
-			                                      $infoAlert['cron_repeat_for_max'] . ' ' .
-			                                      $GLOBALS['lang']['alerts_233'] ) ) );
-		}
-		else
-		{
-			echo $module->escapeHTML( $GLOBALS['lang']['alerts_61'] );
+			if ( $oldVals )
+			{
+				if ( $tblIdentical )
+				{
+					break;
+				}
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+			}
+			$infoTemp = $oldVals ? $infoAlert['alert_oldvals'] : $infoAlert;
+			if ( $infoTemp['cron_send_email_on'] == 'now' )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
+				                          ?? $GLOBALS['lang']['global_1540'] );
+			}
+			elseif ( $infoTemp['cron_send_email_on'] == 'next_occurrence' )
+			{
+				echo $GLOBALS['lang']['survey_423'], ' ',
+				     $module->escapeHTML( $lookupDaysOfWeek[
+				                                  $infoTemp['cron_send_email_on_next_day_type'] ] ),
+				     ' ', $GLOBALS['lang']['global_15'], ' ',
+				     $module->escapeHTML( rtrim( rtrim( $infoTemp['cron_send_email_on_next_time'],
+				                                        '0' ), ':' ) );
+			}
+			elseif ( $infoTemp['cron_send_email_on'] == 'time_lag' )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
+				                          $infoTemp['cron_send_email_on_time_lag_days'] . ' ' .
+				                          $GLOBALS['lang']['survey_426'] . ' ' .
+				                          $infoTemp['cron_send_email_on_time_lag_hours'] . ' ' .
+				                          $GLOBALS['lang']['survey_427'] . ' ' .
+				                          $infoTemp['cron_send_email_on_time_lag_minutes'] . ' ' .
+				                          $GLOBALS['lang']['survey_428'] . ' ' .
+				                          $lookupBeforeAfter[
+				                                     $infoTemp['cron_send_email_on_field_after'] ] .
+				                          ' ' . $infoTemp['cron_send_email_on_field'] );
+			}
+			elseif ( $infoTemp['cron_send_email_on'] == 'date' )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
+				     $module->escapeHTML( rtrim( rtrim( $infoTemp['cron_send_email_on_date'],
+				                                        '0' ), ':' ) );
+			}
+			echo $svbr;
+			if ( $infoTemp['email_repetitive'] == 1 )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['alerts_116']
+				                          ?? $GLOBALS['lang']['global_1546'] );
+			}
+			elseif ( $infoTemp['email_repetitive_change'] == 1 ||
+			         $infoTemp['email_repetitive_change_calcs'] == 1 )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['alerts_226'] );
+				echo ( $infoTemp['email_repetitive_change_calcs'] == 0
+				       ? ( ' ' . $module->escapeHTML( $GLOBALS['lang']['alerts_231'] ) ) : '' );
+			}
+			elseif ( $infoTemp['cron_repeat_for'] != 0 )
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['survey_735'] ), ' ',
+				     $module->escapeHTML( $infoTemp['cron_repeat_for'] ), ' ',
+				     $module->escapeHTML( $lookupUnits[ $infoTemp['cron_repeat_for_units'] ] ), ' ',
+				     $module->escapeHTML( $GLOBALS['lang']['alerts_152'] );
+				echo ( $infoAlert['cron_repeat_for_max'] == '' ? '' :
+				       ( $svbr . $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
+				                                      $infoTemp['cron_repeat_for_max'] . ' ' .
+				                                      $GLOBALS['lang']['alerts_233'] ) ) );
+			}
+			else
+			{
+				echo $module->escapeHTML( $GLOBALS['lang']['alerts_61'] );
+			}
+			if ( $oldVals )
+			{
+				echo '</span>';
+			}
+			unset( $infoTemp );
 		}
 		echo "</td>\n";
 
@@ -663,38 +736,56 @@ foreach ( [ true, false ] as $enabledAlerts )
 		}
 		echo '  <td style="', $tblStyle,
 		     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
-		if ( $infoAlert['prevent_piping_identifiers'] )
+		foreach ( [ false, true ] as $oldVals )
 		{
-			echo '<i>', $module->escapeHTML( $GLOBALS['lang']['alerts_12'] ), '</i>', $svbr;
-		}
-		if ( $infoAlert['email_from'] != '' )
-		{
-			echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
-			     $module->escapeHTML( $infoAlert['email_from_display'] ), ' &lt;',
-			     $module->escapeHTML( $infoAlert['email_from'] ), '&gt;', $svbr;
-		}
-		echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_38'] ), '</b> ',
-		     $module->escapeHTML( $infoAlert['email_to'] . $infoAlert['phone_number_to'] );
-		if ( $infoAlert['email_cc'] != '' )
-		{
-			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_191'] ), '</b> ',
-			     $module->escapeHTML( $infoAlert['email_cc'] );
-		}
-		if ( $infoAlert['email_bcc'] != '' )
-		{
-			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_192'] ), '</b> ',
-			     $module->escapeHTML( $infoAlert['email_bcc'] );
-		}
-		if ( $infoAlert['email_subject'] != '' )
-		{
-			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
-			     $module->escapeHTML( $infoAlert['email_subject'] );
-		}
-		echo $svbr, $svbr, alertsEscape( $infoAlert['alert_message'] );
-		if ( $alertAttachments != '' )
-		{
-			echo $svbr, $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ),
-			     ':</b> ', $module->escapeHTML( $alertAttachments );
+			if ( $oldVals )
+			{
+				if ( $tblIdentical )
+				{
+					break;
+				}
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+			}
+			$infoTemp = $oldVals ? $infoAlert['alert_oldvals'] : $infoAlert;
+			if ( $infoTemp['prevent_piping_identifiers'] )
+			{
+				echo '<i>', $module->escapeHTML( $GLOBALS['lang']['alerts_12'] ), '</i>', $svbr;
+			}
+			if ( $infoTemp['email_from'] != '' )
+			{
+				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
+				     $module->escapeHTML( $infoTemp['email_from_display'] ), ' &lt;',
+				     $module->escapeHTML( $infoTemp['email_from'] ), '&gt;', $svbr;
+			}
+			echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_38'] ), '</b> ',
+			     $module->escapeHTML( $infoTemp['email_to'] . $infoTemp['phone_number_to'] );
+			if ( $infoTemp['email_cc'] != '' )
+			{
+				echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_191'] ), '</b> ',
+				     $module->escapeHTML( $infoTemp['email_cc'] );
+			}
+			if ( $infoTemp['email_bcc'] != '' )
+			{
+				echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_192'] ), '</b> ',
+				     $module->escapeHTML( $infoTemp['email_bcc'] );
+			}
+			if ( $infoTemp['email_subject'] != '' )
+			{
+				echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
+				     $module->escapeHTML( $infoTemp['email_subject'] );
+			}
+			echo $svbr, $svbr, alertsEscape( $infoTemp['alert_message'] );
+			if ( $alertAttachments != '' )
+			{
+				echo $svbr, $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ),
+				     ':</b> ',
+				     $module->escapeHTML( $oldVals ? $oldAlertAttachments : $alertAttachments );
+			}
+			if ( $oldVals )
+			{
+				echo '</span>';
+			}
+			unset( $infoTemp );
 		}
 		echo "  </td>\n </tr>\n";
 	}
@@ -725,7 +816,14 @@ foreach ( [ true, false ] as $enabledAlerts )
 			     ( $infoAlert['alert_new'] || $infoAlert['alert_deleted'] ||
 			       $infoAlert[ $key ] == $infoAlert['alert_oldvals'][ $key ]
 			       ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-			     $module->escapeHTML( $infoAlert[ $key ] ), "</td>\n";
+			     $module->escapeHTML( $infoAlert[ $key ] );
+			if ( isset( $infoAlert['alert_oldvals'] ) &&
+			     $infoAlert[ $key ] != $infoAlert['alert_oldvals'][ $key ] )
+			{
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+				     $module->escapeHTML( $infoAlert['alert_oldvals'][ $key ] ), '</span>';
+			}
+			echo "</td>\n";
 		}
 		foreach ( [ 'trigger', 'schedule', 'message' ] as $key )
 		{
@@ -733,7 +831,14 @@ foreach ( [ true, false ] as $enabledAlerts )
 			     ( $infoAlert['alert_new'] || $infoAlert['alert_deleted'] ||
 			       $infoAlert[ $key ] == $infoAlert['alert_oldvals'][ $key ]
 			       ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-			     alertsEscape( $infoAlert[ $key ] ), "</td>\n";
+			     alertsEscape( $infoAlert[ $key ] );
+			if ( isset( $infoAlert['alert_oldvals'] ) &&
+			     $infoAlert[ $key ] != $infoAlert['alert_oldvals'][ $key ] )
+			{
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+				     alertsEscape( $infoAlert['alert_oldvals'][ $key ] ), '</span>';
+			}
+			echo "</td>\n";
 		}
 		echo " </tr>\n";
 	}
@@ -782,27 +887,44 @@ foreach ( [ true, false ] as $enabledAlerts )
 			}
 			echo '  <td style="', $tblStyle,
 			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
-			if ( $infoASI['condition_surveycomplete_survey_id'] != '' )
+			foreach ( [ false, true ] as $oldVals )
 			{
-				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_419'] ), '</b>', $svbr,
-				     $module->escapeHTML( $infoASI['condition_surveycomplete_form'] );
-				if ( \REDCap::isLongitudinal() &&
-				     $infoASI['condition_surveycomplete_event_id'] != '' )
+				if ( $oldVals )
 				{
-					echo ' (',
-					     $module->escapeHTML( $infoASI['condition_surveycomplete_event_label'] ),
-					     ')';
+					if ( $tblIdentical )
+					{
+						break;
+					}
+					echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
 				}
-			}
-			if ( $infoASI['condition_surveycomplete_survey_id'] != '' &&
-			     $infoASI['condition_logic'] != '' )
-			{
-				echo $svbr, '<b>', $module->escapeHTML( $infoASI['condition_andor'] ), '</b> ';
-			}
-			if ( $infoASI['condition_logic'] != '' )
-			{
-				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_420'] ), '</b>', $svbr,
-				     $module->escapeHTML( $infoASI['condition_logic'] );
+				$infoTemp = $oldVals ? $infoASI['asi_oldvals'] : $infoASI;
+				if ( $infoTemp['condition_surveycomplete_survey_id'] != '' )
+				{
+					echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_419'] ), '</b>',
+					     $svbr, $module->escapeHTML( $infoTemp['condition_surveycomplete_form'] );
+					if ( \REDCap::isLongitudinal() &&
+					     $infoTemp['condition_surveycomplete_event_id'] != '' )
+					{
+						echo ' (',
+						   $module->escapeHTML( $infoTemp['condition_surveycomplete_event_label'] ),
+						     ')';
+					}
+				}
+				if ( $infoTemp['condition_surveycomplete_survey_id'] != '' &&
+				     $infoTemp['condition_logic'] != '' )
+				{
+					echo $svbr, '<b>', $module->escapeHTML( $infoTemp['condition_andor'] ), '</b> ';
+				}
+				if ( $infoASI['condition_logic'] != '' )
+				{
+					echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_420'] ), '</b>',
+					     $svbr, $module->escapeHTML( $infoTemp['condition_logic'] );
+				}
+				if ( $oldVals )
+				{
+					echo '</span>';
+				}
+				unset( $infoTemp );
 			}
 			echo "</td>\n";
 
@@ -829,83 +951,102 @@ foreach ( [ true, false ] as $enabledAlerts )
 			}
 			echo '  <td style="', $tblStyle,
 			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
-			if ( $infoASI['condition_send_time_option'] == 'IMMEDIATELY' )
+			foreach ( [ false, true ] as $oldVals )
 			{
-				echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-				                          ?? $GLOBALS['lang']['global_1540'] );
-			}
-			elseif ( $infoASI['condition_send_time_option'] == 'NEXT_OCCURRENCE' )
-			{
-				echo $GLOBALS['lang']['survey_423'], ' ',
-				     $module->escapeHTML( $lookupDaysOfWeek[ $infoASI['condition_send_next_day_type'] ] ),
-				     ' ', $GLOBALS['lang']['global_15'], ' ',
-				     $module->escapeHTML( rtrim( rtrim( $infoASI['condition_send_next_time'],
-				                                        '0' ), ':' ) );
-			}
-			elseif ( $infoASI['condition_send_time_option'] == 'TIME_LAG' )
-			{
-				echo $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
-				                          $infoASI['condition_send_time_lag_days'] . ' ' .
-				                          $GLOBALS['lang']['survey_426'] . ' ' .
-				                          $infoASI['condition_send_time_lag_hours'] . ' ' .
-				                          $GLOBALS['lang']['survey_427'] . ' ' .
-				                          $infoASI['condition_send_time_lag_minutes'] . ' ' .
-				                          $GLOBALS['lang']['survey_428'] . ' ' .
-				                          $lookupBeforeAfter[
-				                               $infoASI['condition_send_time_lag_field_after'] ] .
-				                          ' ' . $infoASI['condition_send_time_lag_field'] );
-			}
-			elseif ( $infoASI['condition_send_time_option'] == 'EXACT_TIME' )
-			{
-				echo $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
-				     $module->escapeHTML( rtrim( rtrim( $infoASI['condition_send_time_exact'],
-				                                        '0' ), ':' ) );
-			}
-			echo $svbr;
-			if ( $infoASI['num_recurrence'] != 0 )
-			{
-				echo $module->escapeHTML( $GLOBALS['lang']['survey_735'] ), ' ',
-				     $module->escapeHTML( $infoASI['num_recurrence'] ), ' ',
-				     $module->escapeHTML( $lookupUnits[ $infoASI['units_recurrence'] ] ), ' ',
-				     $module->escapeHTML( $GLOBALS['lang']['alerts_152'] );
-				echo ( $infoASI['max_recurrence'] == '' ? '' :
-				       ( $svbr . $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
-				                                      $infoASI['max_recurrence'] . ' ' .
-				                                      $GLOBALS['lang']['alerts_233'] ) ) );
-			}
-			else
-			{
-				echo $module->escapeHTML( $GLOBALS['lang']['alerts_61'] );
-			}
-			if ( $infoASI['reminder_type'] == 'NEXT_OCCURRENCE' )
-			{
-				echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
-				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
-				     $GLOBALS['lang']['survey_423'], ' ',
-				     $module->escapeHTML( $lookupDaysOfWeek[ $infoASI['reminder_nextday_type'] ] ),
-				     ' ', $GLOBALS['lang']['global_15'], ' ',
-				     $module->escapeHTML( rtrim( rtrim( $infoASI['reminder_nexttime'],
-				                                        '0' ), ':' ) );
-			}
-			elseif ( $infoASI['reminder_type'] == 'TIME_LAG' )
-			{
-				echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
-				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
-				     $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
-				                          $infoASI['reminder_timelag_days'] . ' ' .
-				                          $GLOBALS['lang']['survey_426'] . ' ' .
-				                          $infoASI['reminder_timelag_hours'] . ' ' .
-				                          $GLOBALS['lang']['survey_427'] . ' ' .
-				                          $infoASI['reminder_timelag_minutes'] . ' ' .
-				                          $GLOBALS['lang']['survey_428'] );
-			}
-			elseif ( $infoASI['reminder_type'] == 'EXACT_TIME' )
-			{
-				echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
-				     $module->escapeHTML( $infoASI['reminder_num'] ), '): ',
-				     $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
-				     $module->escapeHTML( rtrim( rtrim( $infoASI['reminder_exact_time'],
-				                                        '0' ), ':' ) );
+				if ( $oldVals )
+				{
+					if ( $tblIdentical )
+					{
+						break;
+					}
+					echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+				}
+				$infoTemp = $oldVals ? $infoASI['asi_oldvals'] : $infoASI;
+				if ( $infoTemp['condition_send_time_option'] == 'IMMEDIATELY' )
+				{
+					echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
+					                          ?? $GLOBALS['lang']['global_1540'] );
+				}
+				elseif ( $infoTemp['condition_send_time_option'] == 'NEXT_OCCURRENCE' )
+				{
+					echo $GLOBALS['lang']['survey_423'], ' ',
+					     $module->escapeHTML( $lookupDaysOfWeek[
+					                                  $infoTemp['condition_send_next_day_type'] ] ),
+					     ' ', $GLOBALS['lang']['global_15'], ' ',
+					     $module->escapeHTML( rtrim( rtrim( $infoTemp['condition_send_next_time'],
+					                                        '0' ), ':' ) );
+				}
+				elseif ( $infoTemp['condition_send_time_option'] == 'TIME_LAG' )
+				{
+					echo $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
+					                          $infoTemp['condition_send_time_lag_days'] . ' ' .
+					                          $GLOBALS['lang']['survey_426'] . ' ' .
+					                          $infoTemp['condition_send_time_lag_hours'] . ' ' .
+					                          $GLOBALS['lang']['survey_427'] . ' ' .
+					                          $infoTemp['condition_send_time_lag_minutes'] . ' ' .
+					                          $GLOBALS['lang']['survey_428'] . ' ' .
+					                          $lookupBeforeAfter[
+					                            $infoTemp['condition_send_time_lag_field_after'] ] .
+					                          ' ' . $infoTemp['condition_send_time_lag_field'] );
+				}
+				elseif ( $infoTemp['condition_send_time_option'] == 'EXACT_TIME' )
+				{
+					echo $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
+					     $module->escapeHTML( rtrim( rtrim( $infoTemp['condition_send_time_exact'],
+					                                        '0' ), ':' ) );
+				}
+				echo $svbr;
+				if ( $infoTemp['num_recurrence'] != 0 )
+				{
+					echo $module->escapeHTML( $GLOBALS['lang']['survey_735'] ), ' ',
+					     $module->escapeHTML( $infoTemp['num_recurrence'] ), ' ',
+					     $module->escapeHTML( $lookupUnits[ $infoASI['units_recurrence'] ] ), ' ',
+					     $module->escapeHTML( $GLOBALS['lang']['alerts_152'] );
+					echo ( $infoASI['max_recurrence'] == '' ? '' :
+					       ( $svbr . $module->escapeHTML( $GLOBALS['lang']['survey_737'] . ' ' .
+					                                      $infoTemp['max_recurrence'] . ' ' .
+					                                      $GLOBALS['lang']['alerts_233'] ) ) );
+				}
+				else
+				{
+					echo $module->escapeHTML( $GLOBALS['lang']['alerts_61'] );
+				}
+				if ( $infoTemp['reminder_type'] == 'NEXT_OCCURRENCE' )
+				{
+					echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
+					     $module->escapeHTML( $infoTemp['reminder_num'] ), '): ',
+					     $GLOBALS['lang']['survey_423'], ' ',
+					     $module->escapeHTML( $lookupDaysOfWeek[
+					                                         $infoTemp['reminder_nextday_type'] ] ),
+					     ' ', $GLOBALS['lang']['global_15'], ' ',
+					     $module->escapeHTML( rtrim( rtrim( $infoTemp['reminder_nexttime'],
+					                                        '0' ), ':' ) );
+				}
+				elseif ( $infoTemp['reminder_type'] == 'TIME_LAG' )
+				{
+					echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
+					     $module->escapeHTML( $infoTemp['reminder_num'] ), '): ',
+					     $module->escapeHTML( $GLOBALS['lang']['alerts_239'] . ' ' .
+					                          $infoTemp['reminder_timelag_days'] . ' ' .
+					                          $GLOBALS['lang']['survey_426'] . ' ' .
+					                          $infoTemp['reminder_timelag_hours'] . ' ' .
+					                          $GLOBALS['lang']['survey_427'] . ' ' .
+					                          $infoTemp['reminder_timelag_minutes'] . ' ' .
+					                          $GLOBALS['lang']['survey_428'] );
+				}
+				elseif ( $infoTemp['reminder_type'] == 'EXACT_TIME' )
+				{
+					echo $svbr, $GLOBALS['lang']['survey_754'], ' (x',
+					     $module->escapeHTML( $infoTemp['reminder_num'] ), '): ',
+					     $module->escapeHTML( $GLOBALS['lang']['survey_429'] ), ' ',
+					     $module->escapeHTML( rtrim( rtrim( $infoTemp['reminder_exact_time'],
+					                                        '0' ), ':' ) );
+				}
+				if ( $oldVals )
+				{
+					echo '</span>';
+				}
+				unset( $infoTemp );
 			}
 			echo "</td>\n";
 
@@ -925,18 +1066,35 @@ foreach ( [ true, false ] as $enabledAlerts )
 			}
 			echo '  <td style="', $tblStyle,
 			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
-			if ( $infoASI['email_sender'] != '' )
+			foreach ( [ false, true ] as $oldVals )
 			{
-				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
-				     $module->escapeHTML( $infoASI['email_sender_display'] ), ' &lt;',
-				     $module->escapeHTML( $infoASI['email_sender'] ), '&gt;', $svbr;
+				if ( $oldVals )
+				{
+					if ( $tblIdentical )
+					{
+						break;
+					}
+					echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+				}
+				$infoTemp = $oldVals ? $infoASI['asi_oldvals'] : $infoASI;
+				if ( $infoTemp['email_sender'] != '' )
+				{
+					echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
+					     $module->escapeHTML( $infoTemp['email_sender_display'] ), ' &lt;',
+					     $module->escapeHTML( $infoTemp['email_sender'] ), '&gt;', $svbr;
+				}
+				if ( $infoTemp['email_subject'] != '' )
+				{
+					echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
+					     $module->escapeHTML( $infoTemp['email_subject'] ), $svbr;
+				}
+				echo $svbr, alertsEscape( $infoTemp['email_content'] );
+				if ( $oldVals )
+				{
+					echo '</span>';
+				}
+				unset( $infoTemp );
 			}
-			if ( $infoASI['email_subject'] != '' )
-			{
-				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
-				     $module->escapeHTML( $infoASI['email_subject'] ), $svbr;
-			}
-			echo $svbr, alertsEscape( $infoASI['email_content'] );
 			echo "  </td>\n </tr>\n";
 		}
 
@@ -994,36 +1152,53 @@ foreach ( [ true, false ] as $enabledAlerts )
 			}
 			echo '  <td style="', $tblStyle,
 			     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
-			if ( $infoSurvey['confirmation_email_from'] != '' )
+			foreach ( [ false, true ] as $oldVals )
 			{
-				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
-				     $module->escapeHTML( $infoSurvey['confirmation_email_from_display'] ), ' &lt;',
-				     $module->escapeHTML( $infoSurvey['confirmation_email_from'] ), '&gt;', $svbr;
-			}
-			if ( $infoSurvey['confirmation_email_subject'] != '' )
-			{
-				echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
-				     $module->escapeHTML( $infoSurvey['confirmation_email_subject'] ), $svbr;
-			}
-			echo $svbr, alertsEscape( $infoSurvey['confirmation_email_content'] );
-			if ( $infoSurvey['confirmation_email_attach_pdf'] == '1' ||
-			     $infoSurvey['confirmation_email_attachment'] == '1' )
-			{
-				echo $svbr, $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ),
-				     ':</b> ';
-				if ( $infoSurvey['confirmation_email_attachment'] == '1' )
+				if ( $oldVals )
 				{
-					echo $module->escapeHTML( $GLOBALS['lang']['docs_22'] );
+					if ( $tblIdentical )
+					{
+						break;
+					}
+					echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
 				}
-				if ( $infoSurvey['confirmation_email_attach_pdf'] == '1' &&
-				     $infoSurvey['confirmation_email_attachment'] == '1' )
+				$infoTemp = $oldVals ? $infoSurvey['survey_oldvals'] : $infoSurvey;
+				if ( $infoTemp['confirmation_email_from'] != '' )
 				{
-					echo ' + ';
+					echo '<b>', $module->escapeHTML( $GLOBALS['lang']['global_37'] ), '</b> ',
+					   $module->escapeHTML( $infoTemp['confirmation_email_from_display'] ), ' &lt;',
+					     $module->escapeHTML( $infoTemp['confirmation_email_from'] ), '&gt;', $svbr;
 				}
-				if ( $infoSurvey['confirmation_email_attach_pdf'] == '1' )
+				if ( $infoTemp['confirmation_email_subject'] != '' )
 				{
-					echo $module->escapeHTML( $GLOBALS['lang']['global_59'] );
+					echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_103'] ), '</b> ',
+					     $module->escapeHTML( $infoTemp['confirmation_email_subject'] ), $svbr;
 				}
+				echo $svbr, alertsEscape( $infoTemp['confirmation_email_content'] );
+				if ( $infoTemp['confirmation_email_attach_pdf'] == '1' ||
+				     $infoTemp['confirmation_email_attachment'] == '1' )
+				{
+					echo $svbr, $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['alerts_128'] ),
+					     ':</b> ';
+					if ( $infoTemp['confirmation_email_attachment'] == '1' )
+					{
+						echo $module->escapeHTML( $GLOBALS['lang']['docs_22'] );
+					}
+					if ( $infoTemp['confirmation_email_attach_pdf'] == '1' &&
+					     $infoTemp['confirmation_email_attachment'] == '1' )
+					{
+						echo ' + ';
+					}
+					if ( $infoTemp['confirmation_email_attach_pdf'] == '1' )
+					{
+						echo $module->escapeHTML( $GLOBALS['lang']['global_59'] );
+					}
+				}
+				if ( $oldVals )
+				{
+					echo '</span>';
+				}
+				unset( $infoTemp );
 			}
 			echo "  </td>\n </tr>\n";
 		}

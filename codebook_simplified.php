@@ -429,7 +429,16 @@ foreach ( $listCodebook as $infoCodebook )
 		echo '  <td colspan="5" style="', $cellStyle, ( $rowspan > 1 ? ';border-bottom:none' : '' ),
 		     '"><b>', $module->escapeHTML( $infoForm['label'] ), '</b>&nbsp;&nbsp; ',
 		     '<span style="font-size:0.9em"><i>', $module->escapeHTML( $infoCodebook['form_name'] ),
-		     '</i></span>', ( $infoForm['repeating'] ? ' &#10227;' : '' ), "</td>\n";
+		     '</i></span>', ( $infoForm['repeating'] ? ' &#10227;' : '' );
+		if ( $formNameChanged )
+		{
+			echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '"><b>',
+			     $module->escapeHTML( $infoForm['form_oldvals']['label'] ), '</b>&nbsp;&nbsp; ',
+			     '<span style="font-size:0.9em"><i>',
+			     $module->escapeHTML( $infoCodebook['form_oldvals']['form_name'] ), '</i></span>',
+			     ( $infoForm['form_oldvals']['repeating'] ? ' &#10227;' : '' ), '</span>';
+		}
+		echo "</td>\n";
 		echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center',
 		     ( $hasSurveyRow || $hasFDLRow ? ';border-bottom:none' : '' ),
 		     '">', $chgInd, "</td>\n";
@@ -451,6 +460,13 @@ foreach ( $listCodebook as $infoCodebook )
 			{
 				echo '<span style="font-size:0.9em">', $GLOBALS['lang']['design_789'],
 				     '&nbsp; (', $module->escapeHTML( $infoForm['survey_title'] ), ')</span>';
+			}
+			if ( $surveyChanged )
+			{
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '"><span ',
+				     'style="font-size:0.9em">', $GLOBALS['lang']['design_789'], '&nbsp; (',
+				     $module->escapeHTML( $infoForm['form_oldvals']['survey_title'] ),
+				     ')</span></span>';
 			}
 			echo "</td>\n";
 			echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center;border-top:none',
@@ -490,6 +506,36 @@ foreach ( $listCodebook as $infoCodebook )
 				}
 				echo '<span style="font-size:0.8em">', $GLOBALS['lang']['design_985'],
 				     ': ', $module->escapeHTML( $formDisplayLogic ), '</span>';
+			}
+			if ( $fdlChanged )
+			{
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+				if ( !empty( $infoForm['form_oldvals']['fdl'] ) )
+				{
+					$infoFDL =
+						array_map( function ( $i )
+						           {
+						               if ( $i['events'] === null )
+						               {
+						                   return $i['condition'];
+						               }
+						               return "([event-name] = '" .
+						                      implode( "' or [event-name] = '", $i['events'] ) .
+						                      "') and (" . $i['condition'] . ')';
+						           },
+						           $infoForm['form_oldvals']['fdl'] );
+					if ( count( $infoFDL ) == 1 )
+					{
+						$formDisplayLogic = $infoFDL[0];
+					}
+					else
+					{
+						$formDisplayLogic = '(' . implode( ') or (', $infoFDL ) . ')';
+					}
+					echo '<span style="font-size:0.8em">', $GLOBALS['lang']['design_985'],
+					     ': ', $module->escapeHTML( $formDisplayLogic ), '</span>';
+				}
+				echo '</span>';
 			}
 			echo "</td>\n";
 			echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center;border-top:none',
@@ -544,7 +590,14 @@ foreach ( $listCodebook as $infoCodebook )
 		echo '  <td colspan="3" style="', $cellStyle, '">',
 		     codebookEscape( $headerDel && ! $infoCodebook['field_deleted']
 		                     ? $infoCodebook['field_oldvals']['element_preceding_header']
-		                     : $infoCodebook['element_preceding_header'] ), "</td>\n";
+		                     : $infoCodebook['element_preceding_header'] );
+		if ( $headerChg )
+		{
+			echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+			     codebookEscape( $infoCodebook['field_oldvals']['element_preceding_header'] ),
+			     '</span>';
+		}
+		echo "</td>\n";
 		echo '  <td style="', $tblStyle, '">', "</td>\n";
 		echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center">', $chgInd, "</td>\n";
 		echo " </tr>\n";
@@ -566,6 +619,26 @@ foreach ( $listCodebook as $infoCodebook )
 				$GLOBALS['lang']['design_487'] . ' ' . $infoCodebook['element_validation_max'];
 	}
 	$fieldValidation = $fieldValidation == '' ? '' : ' (' . $fieldValidation . ')';
+	$oldFieldValidation = '';
+	if ( isset( $infoCodebook['field_oldvals'] ) )
+	{
+		$oldFieldValidation = $infoCodebook['field_oldvals']['element_validation_type'] ?? '';
+		if ( $infoCodebook['field_oldvals']['element_validation_min'] != '' )
+		{
+			$oldFieldValidation .=
+					( $oldFieldValidation == '' ? '' : ', ' ) .
+					$GLOBALS['lang']['design_486'] . ' ' .
+					$infoCodebook['field_oldvals']['element_validation_min'];
+		}
+		if ( $infoCodebook['field_oldvals']['element_validation_max'] != '' )
+		{
+			$oldFieldValidation .=
+					( $oldFieldValidation == '' ? '' : ', ') .
+					$GLOBALS['lang']['design_487'] . ' ' .
+					$infoCodebook['field_oldvals']['element_validation_max'];
+		}
+		$oldFieldValidation = $oldFieldValidation == '' ? '' : ' (' . $oldFieldValidation . ')';
+	}
 
 	// Set default field rowspan.
 	$rowspan = 2;
@@ -767,7 +840,13 @@ foreach ( $listCodebook as $infoCodebook )
 		$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 	}
 	echo '  <td class="colID" rowspan="', $rowspan, '" style="', $cellStyle, '">&#8203;',
-	     intval( $infoCodebook['field_order'] ), "</td>\n";
+	     intval( $infoCodebook['field_order'] );
+	if ( $fcMove )
+	{
+		echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+		     intval( $infoCodebook['field_oldvals']['field_order'] ), '</span>';
+	}
+	echo "</td>\n";
 	echo '  <td style="', $tblStyle, ';border-bottom-style:dashed">',
 	     $module->escapeHTML( $infoCodebook['field_name'] ), "</td>\n";
 	// - Output the field label.
@@ -777,7 +856,13 @@ foreach ( $listCodebook as $infoCodebook )
 		$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 	}
 	echo '  <td style="', $cellStyle, '" rowspan="', ( $rowspan > 3 ? $rowspan - 2 : $rowspan - 1 ),
-	     '">', codebookEscape( $infoCodebook['element_label'] ), "</td>\n";
+	     '">', codebookEscape( $infoCodebook['element_label'] );
+	if ( $fcLabel )
+	{
+		echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+		     codebookEscape( $infoCodebook['field_oldvals']['element_label'] ), '</span>';
+	}
+	echo "</td>\n";
 	// - Output the field type and validation.
 	$cellStyle = $tblStyle . ';border-bottom:none';
 	if ( $fcType )
@@ -785,7 +870,14 @@ foreach ( $listCodebook as $infoCodebook )
 		$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 	}
 	echo '  <td style="', $cellStyle, '" colspan="2">',
-	     $module->escapeHTML( $infoCodebook['element_type'] . $fieldValidation ), "</td>\n";
+	     $module->escapeHTML( $infoCodebook['element_type'] . $fieldValidation );
+	if ( $fcType )
+	{
+		echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+		     $module->escapeHTML( $infoCodebook['field_oldvals']['element_type'] .
+		                          $oldFieldValidation ), '</span>';
+	}
+	echo "</td>\n";
 	// - Output the field annotation.
 	$cellStyle = $tblStyle;
 	if ( $fcAnnotation )
@@ -793,7 +885,13 @@ foreach ( $listCodebook as $infoCodebook )
 		$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 	}
 	echo '  <td rowspan="', $rowspan, '" style="', $cellStyle, '">',
-	     codebookEscape( $infoCodebook['misc'] ), "</td>\n";
+	     codebookEscape( $infoCodebook['misc'] );
+	if ( $fcAnnotation )
+	{
+		echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+		     codebookEscape( $infoCodebook['field_oldvals']['misc'] ), '</span>';
+	}
+	echo "</td>\n";
 	// - Output the change marker.
 	echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center;border-bottom:none">',
 	     $chgInd, "</td>\n";
@@ -811,6 +909,13 @@ foreach ( $listCodebook as $infoCodebook )
 		     str_replace( [ "\r\n", "\n" ], $svbr,
 		                  $module->escapeHTML( $infoCodebook['branching_logic'] ) );
 	}
+	if ( $fcLogic )
+	{
+		echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+		     str_replace( [ "\r\n", "\n" ], $svbr,
+		                 $module->escapeHTML( $infoCodebook['field_oldvals']['branching_logic'] ) ),
+		     '</span>';
+	}
 	echo "</td>\n";
 	// - Prepare the field note.
 	$cellStyle = $tblStyle . ';font-size:0.9em;border-top-style:dashed';
@@ -821,8 +926,16 @@ foreach ( $listCodebook as $infoCodebook )
 	$fieldNoteCell = '  <td' . ( $rowspan > 3 ? ' rowspan="2"' : '' ) . ' style="' . $cellStyle .
 	                 '">' . str_replace( "\n", $svbr,
 	                                     $module->escapeHTML( str_replace( '<br>', "\n",
-	                                                           $infoCodebook['element_note'] ) ) ) .
-	                 "</td>\n";
+	                                                           $infoCodebook['element_note'] ) ) );
+	if ( $fcNote )
+	{
+		$fieldNoteCell .= $svbr . '<span style="' . REDCapUITweaker::STL_OLD . '">' .
+		                  str_replace( "\n", $svbr,
+	                                   $module->escapeHTML( str_replace( '<br>', "\n",
+	                                          $infoCodebook['field_oldvals']['element_note'] ) ) ) .
+	                      '</span>';
+	}
+	$fieldNoteCell .= "</td>\n";
 	// - If this is the final row for the field, output the field note here.
 	if ( $rowspan == 2 )
 	{
@@ -838,29 +951,47 @@ foreach ( $listCodebook as $infoCodebook )
 	{
 		$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 	}
-	echo '  <td colspan="2" style="', $cellStyle, '">',
-	     ( $infoCodebook['element_type'] == 'descriptive' && $infoCodebook['field_req'] != '1' ? '' :
-	       $GLOBALS['lang'][ $infoCodebook['field_req'] == '1' ? 'api_docs_063' : 'api_docs_064' ] );
-	if ( $infoCodebook['field_phi'] == '1' )
+	echo '  <td colspan="2" style="', $cellStyle, '">';
+	foreach ( [ false, true ] as $oldVals )
 	{
-		echo ', ', preg_replace( '/[^A-Za-z]/', '', $GLOBALS['lang']['design_103'] );
-	}
-	if ( $infoCodebook['custom_alignment'] != '' )
-	{
-		echo $svbr, $module->escapeHTML( $GLOBALS['lang']['design_490'] . ' ' .
-		                                 $infoCodebook['custom_alignment'] );
-	}
-	if ( $infoCodebook['question_num'] != '' )
-	{
-		echo $svbr, $GLOBALS['lang']['survey_437'], ' ',
-		     strtolower( $GLOBALS['lang']['design_491'] ),
-		     $module->escapeHTML( $infoCodebook['question_num'] );
-	}
-	if ( $infoCodebook['stop_actions'] != '' )
-	{
-		echo $svbr,  $GLOBALS['lang']['survey_437'], ' ',
-		     strtolower( $GLOBALS['lang']['database_mods_108'] ), ': ',
-		     $module->escapeHTML( $infoCodebook['stop_actions'] );
+		if ( $oldVals )
+		{
+			if ( ! $fcAttributes )
+			{
+				break;
+			}
+			echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+		}
+		$infoTemp = $oldVals ? $infoCodebook['field_oldvals'] : $infoCodebook;
+		echo ( $infoTemp['element_type'] == 'descriptive' && $infoTemp['field_req'] != '1'
+		       ? ''
+		       : ( $GLOBALS['lang'][ $infoTemp['field_req'] == '1' ? 'api_docs_063' : 'api_docs_064' ] ) );
+		if ( $infoTemp['field_phi'] == '1' )
+		{
+			echo ', ', preg_replace( '/[^A-Za-z]/', '', $GLOBALS['lang']['design_103'] );
+		}
+		if ( $infoTemp['custom_alignment'] != '' )
+		{
+			echo $svbr, $module->escapeHTML( $GLOBALS['lang']['design_490'] . ' ' .
+			                                 $infoTemp['custom_alignment'] );
+		}
+		if ( $infoTemp['question_num'] != '' )
+		{
+			echo $svbr, $GLOBALS['lang']['survey_437'], ' ',
+			     strtolower( $GLOBALS['lang']['design_491'] ),
+			     $module->escapeHTML( $infoTemp['question_num'] );
+		}
+		if ( $infoTemp['stop_actions'] != '' )
+		{
+			echo $svbr,  $GLOBALS['lang']['survey_437'], ' ',
+			     strtolower( $GLOBALS['lang']['database_mods_108'] ), ': ',
+			     $module->escapeHTML( $infoTemp['stop_actions'] );
+		}
+		if ( $oldVals )
+		{
+			echo '</span>';
+		}
+		unset( $infoTemp );
 	}
 	echo "</td>\n";
 	// - Output the change marker.
@@ -926,7 +1057,17 @@ foreach ( $listCodebook as $infoCodebook )
 			echo '  <td colspan="2" style="', $cellStyle, '">',
 			     str_replace( [ "\r\n", "\n" ],
 			                  ( $infoCodebook['element_type'] == 'sql' ? ' ' : $svbr ),
-			                  $module->escapeHTML( $infoCodebook['element_enum'] ) ), "</td>\n";
+			                  $module->escapeHTML( $infoCodebook['element_enum'] ) );
+			if ( $fcChoiceCalc )
+			{
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+				     str_replace(
+				         [ "\r\n", "\n" ],
+				         ( $infoCodebook['field_oldvals']['element_type'] == 'sql' ? ' ' : $svbr ),
+				         $module->escapeHTML( $infoCodebook['field_oldvals']['element_enum'] ) ),
+				     '</span>';
+			}
+			echo "</td>\n";
 		}
 		// Output the change marker.
 		echo '  <td class="chgInd" style="', $tblStyle, ';text-align:center;border-top:none',

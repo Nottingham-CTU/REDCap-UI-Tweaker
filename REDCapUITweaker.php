@@ -13,6 +13,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	const STL_HDR = 'font-size:1.1em';
 	const STL_CEL = 'border:solid 1px #000;padding:5px;vertical-align:top';
 	const STL_DEL = 'color:#fdd';
+	const STL_OLD = 'font-size:0.9em;color:#bbb';
 	const BGC_HDR = '#ddd';
 	const BGC_HDR_NEW = '#1dc';
 	const BGC_HDR_CHG = '#dd8';
