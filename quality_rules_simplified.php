@@ -9,6 +9,8 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('quality-rules-simpli
 	exit;
 }
 
+$svbr = REDCapUITweaker::SVBR;
+
 $lookupYN = [ '1' => $GLOBALS['lang']['design_100'], '0' => $GLOBALS['lang']['design_99'] ];
 
 
@@ -127,16 +129,20 @@ foreach ( $listNew['rules'] as $i => $itemNewRule )
 	$itemNewRule['changed_rte'] = false;
 	$itemNewRule['deleted'] = false;
 	$itemNewRule['old_rule_id'] = '';
+	$itemNewRule['old_name'] = '';
+	$itemNewRule['old_logic'] = '';
 	if ( ! $itemNewRule['new'] )
 	{
 		$itemOldRule = $listOld['rules'][ $mapRulesN2O[ $i ] ];
 		if ( $itemNewRule['rule_name'] != $itemOldRule['rule_name'] )
 		{
 			$itemNewRule['changed_name'] = true;
+			$itemNewRule['old_logic'] = $itemOldRule['rule_name'];
 		}
 		if ( $itemNewRule['rule_logic'] != $itemOldRule['rule_logic'] )
 		{
 			$itemNewRule['changed_logic'] = true;
+			$itemNewRule['old_logic'] = $itemOldRule['rule_logic'];
 		}
 		if ( $itemNewRule['real_time_execute'] != $itemOldRule['real_time_execute'] )
 		{
@@ -264,6 +270,19 @@ foreach ( $listRules as $infoRule )
 		$tblRTEStyle = REDCapUITweaker::STL_CEL .
 		              ( $infoRule['changed_rte'] ? ';background:' . REDCapUITweaker::BGC_CHG : '' );
 	}
+	$nameStr = $module->escapeHTML( $infoRule['rule_name'] );
+	$logicStr = str_replace( "\n", $svbr, $module->escapeHTML( $infoRule['rule_logic'] ) );
+	if ( $infoRule['changed_name'] )
+	{
+		$nameStr .= $svbr . '<span style="', REDCapUITweaker::STL_OLD, '">' .
+		            $module->escapeHTML( $infoRule['old_name'] ) . '</span>';
+	}
+	if ( $infoRule['changed_logic'] )
+	{
+		$logicStr .= $svbr . '<span style="', REDCapUITweaker::STL_OLD, '">' .
+		             str_replace( "\n", $svbr, $module->escapeHTML( $infoRule['old_logic'] ) ) .
+		             '</span>';
+	}
 ?>
  <tr>
   <td style="<?php echo $tblIDStyle; ?>" class="colID">
@@ -273,11 +292,10 @@ foreach ( $listRules as $infoRule )
                  ( '(' . intval( $infoRule['old_rule_id'] ) . ')' ) ), "\n"; ?>
   </td>
   <td style="<?php echo $tblNameStyle; ?>">
-   <?php echo $module->escapeHTML( $infoRule['rule_name'] ), "\n"; ?>
+   <?php echo $nameStr, "\n"; ?>
   </td>
   <td style="<?php echo $tblLogicStyle; ?>">
-   <?php echo str_replace( "\n", REDCapUITweaker::SVBR,
-                           $module->escapeHTML( $infoRule['rule_logic'] ) ), "\n"; ?>
+   <?php echo $logicStr, "\n"; ?>
   </td>
   <td style="<?php echo $tblRTEStyle; ?>">
    <?php echo $lookupYN[ $infoRule['real_time_execute'] ], "\n"; ?>

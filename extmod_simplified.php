@@ -11,6 +11,8 @@ if ( !isset( $_GET['pid'] ) ||
 	exit;
 }
 
+$svbr = REDCapUITweaker::SVBR;
+
 
 
 // Get the external modules settings. This will get the settings using the following methods from
@@ -180,6 +182,7 @@ foreach ( $listNew['module_settings'] as $i => $itemNewMS )
 		if ( $itemNewMS['value'] != $listOld['module_settings'][ $mapModulesN2O[ $i ] ]['value'] )
 		{
 			$itemNewMS['changed'] = true;
+			$itemNewMS['oldvalue'] = $listOld['module_settings'][ $mapModulesN2O[ $i ] ]['value'];
 		}
 	}
 	$listModules[] = $itemNewMS;
@@ -262,6 +265,12 @@ foreach ( $listModules as $infoModule )
 	                                       REDCapUITweaker::STL_DEL : '' );
 	$tblValStyle = $tblStyle .
 	               ( $infoModule['changed'] ? ';background:' . REDCapUITweaker::BGC_CHG : '' );
+	$valueStr = $module->escapeHTML( $infoModule['value'] );
+	if ( $infoModule['changed'] )
+	{
+		$valueStr .= $svbr . '<span style="', REDCapUITweaker::STL_OLD, '">' .
+		             $module->escapeHTML( $infoModule['oldvalue'] ) . '</span>';
+	}
 ?>
  <tr>
 <?php
@@ -274,7 +283,7 @@ foreach ( $listModules as $infoModule )
    <?php echo $module->escapeHTML( $infoModule['setting'] ), "\n"; ?>
   </td>
   <td style="<?php echo $tblValStyle; ?>">
-   <?php echo $module->escapeHTML( $infoModule['value'] ), "\n"; ?>
+   <?php echo $valueStr, "\n"; ?>
   </td>
  </tr>
 <?php
