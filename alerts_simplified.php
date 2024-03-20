@@ -16,6 +16,8 @@ function alertsEscape( $text )
 	global $svbr;
 	$text = str_replace( [ "\r\n", "\r" ], "\n", $text );
 	$text = preg_replace( "/<\\/p>( |\n|\t)*<p>/", '<br><br>', $text );
+	$text = preg_replace( "/<\\/p>( |\n|\t)*<[ou]l>/", '<br>', $text );
+	$text = preg_replace( '/<li[^>]*>/', '<br>', $text );
 	$text = str_replace( [ '<p>', '</p>' ], '', $text );
 	$text = htmlspecialchars( $text, ENT_QUOTES );
 	$text = preg_replace( '/&lt;(b|i|u|strong|em|span|br)&gt;/', '<$1>', $text );
