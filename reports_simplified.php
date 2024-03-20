@@ -412,6 +412,7 @@ foreach ( $listReports as $infoReport )
 
 	// Get the options for the report.
 	$listOptions = [];
+	$listOldOptions = [];
 	$optionsIdentical = true;
 	foreach ( [ 'combine_checkbox_values' => 'Combine checkbox values',
 	            'output_dags' => 'Output DAGs',
@@ -423,10 +424,16 @@ foreach ( $listReports as $infoReport )
 		{
 			$listOptions[] = $desc;
 		}
-		if ( ! $infoReport['report_new'] && ! $infoReport['report_deleted'] &&
-		     $infoReport[ $field ] != $infoReport['report_oldvals'][ $field ] )
+		if ( ! $infoReport['report_new'] && ! $infoReport['report_deleted'] )
 		{
-			$optionsIdentical = false;
+			if ( $infoReport['report_oldvals'][ $field ] == '1' )
+			{
+				$listOldOptions[] = $desc;
+			}
+			if ( $infoReport[ $field ] != $infoReport['report_oldvals'][ $field ] )
+			{
+				$optionsIdentical = false;
+			}
 		}
 	}
 
@@ -448,6 +455,15 @@ foreach ( $listReports as $infoReport )
 		{
 			echo $module->escapeHTML( $key == 'description' ? strip_tags( $infoReport[ $key ] )
 			                                                : $infoReport[ $key ] );
+			if ( isset( $infoReport['report_oldvals'] ) &&
+			     $infoReport[ $compareKey ] != $infoReport['report_oldvals'][ $compareKey ] )
+			{
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+				     $module->escapeHTML( $key == 'description'
+				                          ? strip_tags( $infoReport['report_oldvals'][ $key ] )
+				                          : $infoReport['report_oldvals'][ $key ] ),
+				     '</span>';
+			}
 		}
 		echo "</td>\n";
 	}
@@ -470,7 +486,16 @@ foreach ( $listReports as $infoReport )
 	     '<b>', $module->escapeHTML( $GLOBALS['lang']['report_builder_153'] ), '</b>', $svbr,
 	     $module->escapeHTML( $infoReport['user_access'] ), $svbr, '<b>',
 	     $module->escapeHTML( $GLOBALS['lang']['report_builder_152'] ), '</b>', $svbr,
-	     $module->escapeHTML( $infoReport['user_edit_access'] ), "</td>\n";
+	     $module->escapeHTML( $infoReport['user_edit_access'] );
+	if ( ! $tblIdentical )
+	{
+		echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+		     '<b>', $module->escapeHTML( $GLOBALS['lang']['report_builder_153'] ), '</b>', $svbr,
+		     $module->escapeHTML( $infoReport['report_oldvals']['user_access'] ), $svbr, '<b>',
+		     $module->escapeHTML( $GLOBALS['lang']['report_builder_152'] ), '</b>', $svbr,
+		     $module->escapeHTML( $infoReport['report_oldvals']['user_edit_access'] ), '</span>';
+	}
+	echo "</td>\n";
 
 	// Output the report definition.
 	$tblIdentical = true;
@@ -487,43 +512,67 @@ foreach ( $listReports as $infoReport )
 		}
 	}
 	echo '  <td style="', $tblStyle,
-	     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-	     '<b>', $module->escapeHTML( $GLOBALS['lang']['home_32'] ), ':</b>', $svbr,
-	     $module->escapeHTML( $infoReport['fields'] );
-	if ( $infoReport['simple_logic'] != '' || $infoReport['advanced_logic'] != '' )
+	     ( $tblIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">';
+	foreach ( [ false, true ] as $oldVals )
 	{
-		echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b>', $svbr;
-		if ( $infoReport['advanced_logic'] != '' )
+		if ( $oldVals )
 		{
-			echo $module->escapeHTML( $infoReport['advanced_logic'] );
+			if ( $tblIdentical )
+			{
+				break;
+			}
+			echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
 		}
-		else
+		$infoTemp = $oldVals ? $infoReport['report_oldvals'] : $infoReport;
+		echo '<b>', $module->escapeHTML( $GLOBALS['lang']['home_32'] ), ':</b>', $svbr,
+		     $module->escapeHTML( $infoTemp['fields'] );
+		if ( $infoTemp['simple_logic'] != '' || $infoTemp['advanced_logic'] != '' )
 		{
-			echo $module->escapeHTML( $infoReport['simple_logic'] );
+			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b>', $svbr;
+			if ( $infoTemp['advanced_logic'] != '' )
+			{
+				echo $module->escapeHTML( $infoTemp['advanced_logic'] );
+			}
+			else
+			{
+				echo $module->escapeHTML( $infoTemp['simple_logic'] );
+			}
 		}
-	}
-	if ( $infoReport['orderby_field1'] != '' )
-	{
-		echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['report_builder_20'] ), ':</b>',
-		     $svbr, $module->escapeHTML( $infoReport['orderby_field1'] ), ' ',
-		     $module->escapeHTML( $infoReport['orderby_sort1'] );
-		if ( $infoReport['orderby_field2'] != '' )
+		if ( $infoTemp['orderby_field1'] != '' )
 		{
-			echo ', ', $module->escapeHTML( $infoReport['orderby_field2'] ), ' ',
-			     $module->escapeHTML( $infoReport['orderby_sort2'] );
+			echo $svbr, '<b>',
+			     $module->escapeHTML( $GLOBALS['lang']['report_builder_20'] ), ':</b>',
+			     $svbr, $module->escapeHTML( $infoTemp['orderby_field1'] ), ' ',
+			     $module->escapeHTML( $infoTemp['orderby_sort1'] );
+			if ( $infoTemp['orderby_field2'] != '' )
+			{
+				echo ', ', $module->escapeHTML( $infoTemp['orderby_field2'] ), ' ',
+				     $module->escapeHTML( $infoTemp['orderby_sort2'] );
+			}
+			if ( $infoTemp['orderby_field3'] != '' )
+			{
+				echo ', ', $module->escapeHTML( $infoTemp['orderby_field3'] ), ' ',
+				     $module->escapeHTML( $infoTemp['orderby_sort3'] );
+			}
 		}
-		if ( $infoReport['orderby_field3'] != '' )
+		if ( $oldVals )
 		{
-			echo ', ', $module->escapeHTML( $infoReport['orderby_field3'] ), ' ',
-			     $module->escapeHTML( $infoReport['orderby_sort3'] );
+			echo '</span>';
 		}
+		unset( $infoTemp );
 	}
 	echo "</td>\n";
 
 	// Output the report options.
 	echo '  <td style="', $tblStyle,
 	     ( $optionsIdentical ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-	     implode( $svbr, $listOptions ), "</td>\n </tr>\n";
+	     implode( $svbr, $listOptions );
+	if ( ! $optionsIdentical )
+	{
+		echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+		     implode( $svbr, $listOldOptions ), '</span>';
+	}
+	echo "</td>\n </tr>\n";
 }
 foreach ( $listCustomReports as $infoReport )
 {
@@ -540,10 +589,17 @@ foreach ( $listCustomReports as $infoReport )
 	foreach ( ['title', 'type', 'description' ] as $key )
 	{
 		echo '  <td style="', $tblStyle,
-			     ( $infoReport['report_new'] || $infoReport['report_deleted'] ||
-			       $infoReport[ $key ] == $infoReport['report_oldvals'][ $key ]
-			       ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-			     $module->escapeHTML( $infoReport[ $key ] ), "</td>\n";
+		     ( $infoReport['report_new'] || $infoReport['report_deleted'] ||
+		       $infoReport[ $key ] == $infoReport['report_oldvals'][ $key ]
+		       ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
+		     $module->escapeHTML( $infoReport[ $key ] );
+		if ( isset( $infoReport['report_oldvals'] ) &&
+		     $infoReport[ $key ] != $infoReport['report_oldvals'][ $key ] )
+		{
+			echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+			     $module->escapeHTML( $infoReport['report_oldvals'][ $key ] ), '</span>';
+		}
+		echo "</td>\n";
 	}
 	foreach ( [ 'permissions', 'definition', 'options' ] as $key )
 	{
@@ -551,7 +607,14 @@ foreach ( $listCustomReports as $infoReport )
 		     ( $infoReport['report_new'] || $infoReport['report_deleted'] ||
 		       $infoReport[ $key ] == $infoReport['report_oldvals'][ $key ]
 		       ? '' : ';background:' . REDCapUITweaker::BGC_CHG ), '">',
-		     reportsEscape( $infoReport[ $key ] ), "</td>\n";
+		     reportsEscape( $infoReport[ $key ] );
+		if ( isset( $infoReport['report_oldvals'] ) &&
+		     $infoReport[ $key ] != $infoReport['report_oldvals'][ $key ] )
+		{
+			echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
+			     reportsEscape( $infoReport['report_oldvals'][ $key ] ), '</span>';
+		}
+		echo "</td>\n";
 	}
 	echo " </tr>\n";
 }
