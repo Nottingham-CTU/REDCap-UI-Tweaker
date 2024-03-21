@@ -319,11 +319,12 @@ foreach ( $listModules as $infoModule )
 	                                       REDCapUITweaker::STL_DEL : '' );
 	$tblValStyle = $tblStyle .
 	               ( $infoModule['changed'] ? ';background:' . REDCapUITweaker::BGC_CHG : '' );
-	$valueStr = $module->escapeHTML( $infoModule['value'] );
+	$valueStr = str_replace( "\n", $svbr, $module->escapeHTML( $infoModule['value'] ) );
 	if ( $infoModule['changed'] )
 	{
 		$valueStr .= $svbr . '<span style="' . REDCapUITweaker::STL_OLD . '">' .
-		             $module->escapeHTML( $infoModule['oldvalue'] ) . '</span>';
+		             str_replace( "\n", $svbr, $module->escapeHTML( $infoModule['oldvalue'] ) ) .
+		             '</span>';
 	}
 ?>
  <tr>
