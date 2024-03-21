@@ -30,10 +30,14 @@ function getAllModSettings( $listSettings )
 		}
 		if ( isset( $val['sub_settings'] ) )
 		{
-			array_walk( $val['sub_settings'], $fnWalk );
+			$subSettings = $val['sub_settings'];
 			unset( $val['sub_settings'] );
 		}
 		$list[ $val['key'] ] = $val;
+		if ( isset( $subSettings ) )
+		{
+			array_walk( $subSettings, $fnWalk );
+		}
 	};
 	array_walk( $listSettings, $fnWalk );
 	return $list;
@@ -77,6 +81,16 @@ $listModuleSettings = [];
 $listIgnoreExport = [];
 while ( $infoModule = $queryModules->fetch_assoc() )
 {
+	$fetchedModuleInstance = false;
+	if ( ! isset( $listModuleInstances[ $infoModule['module'] ] ) )
+	{
+		$listModuleInstances[ $infoModule['module'] ] =
+				\ExternalModules\ExternalModules::getModuleInstance( $infoModule['module'] );
+		$fetchedModuleInstance = true;
+		$listModuleSettings[ $infoModule['module'] ] =
+				getAllModSettings( $listModuleInstances[ $infoModule['module'] ]
+				                                            ->getConfig()['project-settings'] );
+	}
 	if ( array_key_exists( $infoModule['module'], $settingsFunctions ) )
 	{
 		$infoAmended = [ 'setting' => $infoModule['setting'], 'value' => $infoModule['value'] ];
@@ -94,10 +108,8 @@ while ( $infoModule = $queryModules->fetch_assoc() )
 	}
 	else
 	{
-		if ( ! isset( $listModuleInstances[ $infoModule['module'] ] ) )
+		if ( $fetchedModuleInstance )
 		{
-			$listModuleInstances[ $infoModule['module'] ] =
-				\ExternalModules\ExternalModules::getModuleInstance( $infoModule['module'] );
 			if ( method_exists( $listModuleInstances[ $infoModule['module'] ],
 			                    'exportProjectSettings' ) )
 			{
@@ -126,12 +138,6 @@ while ( $infoModule = $queryModules->fetch_assoc() )
 		     ! method_exists( $listModuleInstances[ $infoModule['module'] ],
 		                      'exportProjectSettings' ) )
 		{
-			if ( ! isset( $listModuleSettings[ $infoModule['module'] ] ) )
-			{
-				$listModuleSettings[ $infoModule['module'] ] =
-						getAllModSettings( $listModuleInstances[ $infoModule['module'] ]
-						                                    ->getConfig()['project-settings'] );
-			}
 			$settingConfig = $listModuleSettings[ $infoModule['module'] ][ $infoModule['setting'] ]
 			                 ?? [ 'type' => '' ];
 			if ( $settingConfig['type'] == 'event-list' )
@@ -252,11 +258,31 @@ foreach ( $listOld['module_settings'] as $i => $itemOldMS )
 	}
 }
 
-usort( $listModules, function( $a, $b )
+usort( $listModules, function( $a, $b ) use ( $listModuleSettings )
 {
 	$cmp1 = strcasecmp( $a['module'], $b['module'] );
 	if ( $cmp1 == 0 )
 	{
+		$ordA = -1;
+		$ordB = -1;
+		if ( isset( $listModuleSettings[ $a['module'] ][ $a['setting'] ] ) )
+		{
+			$ordA = array_search( $a['setting'],
+			                      array_keys( $listModuleSettings[ $a['module'] ] ) );
+		}
+		if ( isset( $listModuleSettings[ $b['module'] ][ $b['setting'] ] ) )
+		{
+			$ordB = array_search( $b['setting'],
+			                      array_keys( $listModuleSettings[ $b['module'] ] ) );
+		}
+		if ( $ordA < $ordB )
+		{
+			return -1;
+		}
+		if ( $ordA > $ordB )
+		{
+			return 1;
+		}
 		return strcasecmp( $a['setting'], $b['setting'] );
 	}
 	return $cmp1;
