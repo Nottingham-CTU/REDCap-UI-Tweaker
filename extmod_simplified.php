@@ -13,6 +13,32 @@ if ( !isset( $_GET['pid'] ) ||
 
 $svbr = REDCapUITweaker::SVBR;
 
+$listEvents = [];
+if ( \REDCap::isLongitudinal() )
+{
+	$listEvents = \REDCap::getEventNames( true );
+}
+
+function getAllModSettings( $listSettings )
+{
+	$list = [];
+	$fnWalk = function ( $val ) use ( &$list, &$fnWalk )
+	{
+		if ( $val['type'] == 'descriptive' )
+		{
+			return;
+		}
+		if ( isset( $val['sub_settings'] ) )
+		{
+			array_walk( $val['sub_settings'], $fnWalk );
+			unset( $val['sub_settings'] );
+		}
+		$list[ $val['key'] ] = $val;
+	};
+	array_walk( $listSettings, $fnWalk );
+	return $list;
+}
+
 
 
 // Get the external modules settings. This will get the settings using the following methods from
@@ -47,6 +73,7 @@ $queryModules = $module->query( "SELECT em.directory_prefix module, if( project_
                                  $module->getProjectID(), $module->getProjectID() ] );
 $listModules = [];
 $listModuleInstances = [];
+$listModuleSettings = [];
 $listIgnoreExport = [];
 while ( $infoModule = $queryModules->fetch_assoc() )
 {
@@ -99,6 +126,33 @@ while ( $infoModule = $queryModules->fetch_assoc() )
 		     ! method_exists( $listModuleInstances[ $infoModule['module'] ],
 		                      'exportProjectSettings' ) )
 		{
+			if ( ! isset( $listModuleSettings[ $infoModule['module'] ] ) )
+			{
+				$listModuleSettings[ $infoModule['module'] ] =
+						getAllModSettings( $listModuleInstances[ $infoModule['module'] ]
+						                                    ->getConfig()['project-settings'] );
+			}
+			$settingConfig = $listModuleSettings[ $infoModule['module'] ][ $infoModule['setting'] ]
+			                 ?? [ 'type' => '' ];
+			if ( $settingConfig['type'] == 'event-list' )
+			{
+				if ( ! \REDCap::isLongitudinal() )
+				{
+					continue;
+				}
+				if ( substr( $infoModule['value'], 0, 1 ) == '[' )
+				{
+					$infoModule['value'] = json_decode( $infoModule['value'], true );
+					array_walk_recursive( $infoModule['value'],
+					                      function(&$v) use ( $listEvents )
+					                      { $v = $listEvents[ $v ]; } );
+					$infoModule['value'] = json_encode( $infoModule['value'] );
+				}
+				else
+				{
+					$infoModule['value'] = $listEvents[ $infoModule['value'] ];
+				}
+			}
 			$listModules[] = $infoModule;
 		}
 	}
@@ -268,7 +322,7 @@ foreach ( $listModules as $infoModule )
 	$valueStr = $module->escapeHTML( $infoModule['value'] );
 	if ( $infoModule['changed'] )
 	{
-		$valueStr .= $svbr . '<span style="', REDCapUITweaker::STL_OLD, '">' .
+		$valueStr .= $svbr . '<span style="' . REDCapUITweaker::STL_OLD . '">' .
 		             $module->escapeHTML( $infoModule['oldvalue'] ) . '</span>';
 	}
 ?>
