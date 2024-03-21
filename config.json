@@ -65,6 +65,17 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "static-form-names",
+			"name" : "Static form variable names",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "version-fields",
+			"name" : "Use version fields",
+			"type" : "checkbox",
+			"branchingLogic" : { "field" : "static-form-names", "value" : true }
+		},
+		{
 			"key" : "hdr-data-qual",
 			"name" : "<b>Data quality tweaks</b>",
 			"type" : "descriptive"

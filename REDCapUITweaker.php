@@ -214,6 +214,52 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If static form names enabled.
+
+		if ( $this->getSystemSetting( 'static-form-names' ) )
+		{
+			if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'Design/create_form.php' )
+			{
+				$formDisplayName = $_POST['form_name'];
+				$projectDesigner = new \Vanderbilt\REDCap\Classes\ProjectDesigner($GLOBALS['Proj']);
+				// Create the form using the form variable name.
+				$formCreated = $projectDesigner->createForm( $_POST['form_var_name'],
+				                                             $_POST['after_form'] );
+				$createdFormName = $projectDesigner->form;
+				unset( $projectDesigner );
+				echo $formCreated ? '1' : '0';
+				if ( $formCreated )
+				{
+					// If form created successfully, rename to the chosen display name.
+					$this->renameForm( $createdFormName, $formDisplayName, false );
+					// Add the version field if required.
+					if ( $this->getSystemSetting( 'version-fields' ) )
+					{
+						// Must use a new Project object here.
+						$projObj = new \Project( $this->getProjectId(), true );
+						$projectDesigner = new \Vanderbilt\REDCap\Classes\ProjectDesigner($projObj);
+						$versionField = [ 'field_label' => 'Form Version',
+						                  'field_type' => 'select',
+						                  'element_enum' => '1.0, 1.0',
+						                  'field_annotation' => "@DEFAULT='1.0' @HIDDEN",
+						                  'field_name' => $createdFormName . '_version',
+						                  'field_req' => '1'
+						                ];
+						$projectDesigner->createField( $createdFormName, $versionField );
+					}
+				}
+				$this->exitAfterHook();
+			}
+			elseif ( isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
+			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
+			{
+				$this->renameForm( $_POST['page'], $_POST['menu_description'] );
+				echo $_POST['page'], "\n", $_POST['menu_description'];
+				$this->exitAfterHook();
+			}
+		}
+
+
 		// If report namespaces are enabled and this is a report page.
 		$this->reportNamespacing = false;
 		if ( $this->getProjectSetting( 'report-namespaces' ) &&
@@ -462,7 +508,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 				if ( $this->getSystemSetting( 'expanded-annotations' ) )
 				{
-					$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+					$listFields = \REDCap::getDataDictionary( 'array', false, null, $_GET['page'] );
 					$listFieldAnnotations = [];
 
 					foreach ( $listFields as $fieldName => $infoField )
@@ -487,6 +533,13 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				// Provide the predefined field annotations.
 				$this->provideFieldAnnotations( $this->getSystemSetting( 'predefined-annotations' ) );
 
+				// Hide the first 'add field' buttons above a form version field.
+				if ( $this->getSystemSetting( 'static-form-names' ) &&
+				     $this->getSystemSetting( 'version-fields' ) )
+				{
+					$this->provideHideFirstAddField( $this->escapeHTML( $_GET['page'] ) );
+				}
+
 			}
 			else
 			{
@@ -494,6 +547,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				if ( $this->getSystemSetting( 'custom-alert-sender' ) )
 				{
 					$this->provideCustomAlertSender( 'ASI' );
+				}
+
+				// Provide static form variable names.
+				if ( $this->getSystemSetting( 'static-form-names' ) )
+				{
+					$this->provideStaticFormVarName();
 				}
 			}
 
@@ -1888,6 +1947,29 @@ $(function()
 
 
 
+	// Output JavaScript to hide the first 'add field' buttons on the designer if a form version
+	// field is present.
+
+	function provideHideFirstAddField( $instrument )
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFirstAddField = $('div.frmedit').first()
+    if ( vFirstAddField.next().attr('id') == 'design-<?php echo $instrument; ?>_version' )
+    {
+      vFirstAddField.css( 'display', 'none' )
+    }
+  })
+</script>
+<?php
+	}
+
+
+
+
+
 	// Output JavaScript to hide the 'suggest a new feature' link.
 
 	function provideHideSuggestFeature()
@@ -2593,6 +2675,69 @@ $(function()
 
 
 
+	// Provide the options for choosing a form variable name.
+
+	function provideStaticFormVarName()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vAddNewFormReveal = addNewFormReveal
+    var vAddNewForm = addNewForm
+    var vClickedBtnName = ''
+    addNewFormReveal = function ( vFormName )
+    {
+      vAddNewFormReveal( vFormName )
+      var vCreateBtn = $( '#new-' + vFormName + ' [type="button"]' )
+      vCreateBtn.before( '<br><span style="margin:0 5px 0 25px;font-weight:bold">' +
+                         'Instrument variable name:</span>' )
+      var vFormVarField = $( '<input type="text" class="x-form-text x-form-field" ' +
+                             'style="font-size:13px;" id="new_form_var-' + vFormName + '">' )
+      vFormVarField.keyup( function()
+      {
+        var vVal = $(this).val()
+        vVal = vVal.replace( /[^a-z0-9_]/, '' )
+        vVal = vVal.replace( /_+/, '_' )
+        vVal = vVal.replace( /^[0-9_]+/, '' )
+        $(this).val( vVal )
+      })
+      vFormVarField.change( function()
+      {
+        var vVal = $(this).val()
+        vVal = vVal.replace( /[^a-z0-9_]/, '' )
+        vVal = vVal.replace( /_+/, '_' )
+        vVal = vVal.replace( /^[0-9_]+/, '' )
+        vVal = vVal.replace( /_$/, '' )
+        $(this).val( vVal )
+      })
+      vCreateBtn.before( vFormVarField )
+      vCreateBtn.before( ' ' )
+    }
+    addNewForm = function ( vFormName )
+    {
+      vClickedBtnName = vFormName
+      if ( $('#new_form_var-' + vFormName).val() != '' )
+      {
+        vAddNewForm( vFormName )
+      }
+    }
+    $(document).on( 'ajaxSend', function(e,x,s)
+    {
+      if ( s.url == app_path_webroot + 'Design/create_form.php?pid=' + pid )
+      {
+        s.data += '&form_var_name=' + $( '#new_form_var-' + vClickedBtnName ).val()
+      }
+    } )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
 	// Output the current user role name
 
 	function provideUserRoleName()
@@ -2902,6 +3047,37 @@ $(function()
 <?php
 
 		return true;
+	}
+
+
+
+
+
+	// Rename a form display name, without changing its underlying variable name.
+
+	function renameForm( $formName, $newFormName, $log = true )
+	{
+		$projectID = $this->getProjectId();
+		$newFormName = strip_tags( \label_decode( $newFormName ) );
+		$status = \REDCap::getProjectStatus( $projectID );
+
+		// Use temp metadata table if project is in production.
+		$metadataTable = ($status > 0) ? "redcap_metadata_temp" : "redcap_metadata";
+		// Clear old form display name.
+		$this->query( "UPDATE $metadataTable SET form_menu_description = NULL " .
+		              "WHERE form_name = ? AND project_id = ?",
+		              [ $formName, $projectID ] );
+		// Set new form display name.
+		$this->query( "UPDATE $metadataTable SET form_menu_description = ? WHERE form_name = ? " .
+		              "AND project_id = ? ORDER BY field_order LIMIT 1",
+		              [ $newFormName, $formName, $projectID ] );
+		// Log the rename.
+		if ( $log )
+		{
+			\Logging::logEvent( "", $metadataTable, "MANAGE", $formName,
+			                    "form_name = '" . \db_escape($formName) . "'",
+			                    "Rename data collection instrument");
+		}
 	}
 
 
