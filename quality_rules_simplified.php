@@ -274,12 +274,12 @@ foreach ( $listRules as $infoRule )
 	$logicStr = str_replace( "\n", $svbr, $module->escapeHTML( $infoRule['rule_logic'] ) );
 	if ( $infoRule['changed_name'] )
 	{
-		$nameStr .= $svbr . '<span style="', REDCapUITweaker::STL_OLD, '">' .
+		$nameStr .= $svbr . '<span style="' . REDCapUITweaker::STL_OLD . '">' .
 		            $module->escapeHTML( $infoRule['old_name'] ) . '</span>';
 	}
 	if ( $infoRule['changed_logic'] )
 	{
-		$logicStr .= $svbr . '<span style="', REDCapUITweaker::STL_OLD, '">' .
+		$logicStr .= $svbr . '<span style="' . REDCapUITweaker::STL_OLD . '">' .
 		             str_replace( "\n", $svbr, $module->escapeHTML( $infoRule['old_logic'] ) ) .
 		             '</span>';
 	}
