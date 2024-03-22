@@ -171,6 +171,24 @@ in order to align the checkbox options with those from the SQL field.*
 For best results, the SQL query should return all possible options outside of a record context<br>
 (where \[record-name\] = '') and only limit to a subset (if required) within a record context.
 
+### Static form variable names
+This option will allow the form variable name (as used in the \*_complete variable) to be set
+explicitly when forms are created, and remain unchanged even when projects are in development
+status.
+
+### Use version fields
+When a form is created, automatically place a form version field at the top of the form. This will
+be a multiple choice field with a default value of `1.0`.
+
+Static form variable names must be enabled in order to use this feature.
+
+### Version field default annotation/action tags
+Set the default action tags used on version fields when they are created. If this has not been set,
+it will default to `@HIDDEN-SURVEY`.
+
+The action tags `@DEFAULT='1.0' @NOMISSING` will always be appended to these action tags and don't
+need to be included.
+
 ### Enable the Data Resolution Workflow on new projects
 This option will enable the Data Resolution Workflow instead of the Field Comment Log on new
 projects.
