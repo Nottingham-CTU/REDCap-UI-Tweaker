@@ -235,13 +235,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					// Add the version field if required.
 					if ( $this->getSystemSetting( 'version-fields' ) )
 					{
+						$versionAnnotation =
+								$this->getSystemSetting( 'version-fields-default-annotation' );
+						if ( trim( $versionAnnotation ) == '' )
+						{
+							$versionAnnotation = '@HIDDEN-SURVEY';
+						}
+						$versionAnnotation .= " @DEFAULT='1.0' @NOMISSING";
 						// Must use a new Project object here.
 						$projObj = new \Project( $this->getProjectId(), true );
 						$projectDesigner = new \Vanderbilt\REDCap\Classes\ProjectDesigner($projObj);
 						$versionField = [ 'field_label' => 'Form Version',
 						                  'field_type' => 'select',
 						                  'element_enum' => '1.0, 1.0',
-						                  'field_annotation' => "@DEFAULT='1.0' @HIDDEN",
+						                  'field_annotation' => $versionAnnotation,
 						                  'field_name' => $createdFormName . '_version',
 						                  'field_req' => '1'
 						                ];
@@ -279,6 +286,37 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 		}
 
+	}
+
+
+
+
+
+	// PDF hook. Handles the display of the form version fields on PDFs.
+
+	function redcap_pdf( $project_id, $metadata, $data, $instrument = null, $record = null,
+	                     $event_id = null, $instance = 1 )
+	{
+		if ( $this->getSystemSetting( 'static-form-names' ) &&
+		     $this->getSystemSetting( 'version-fields' ) )
+		{
+			for ( $i = 0; $i < count( $metadata ); $i++ )
+			{
+				if ( $metadata[$i]['field_name'] == $metadata[$i]['form_name'] . '_version' )
+				{
+					if ( $record == null )
+					{
+						$metadata[$i]['element_enum'] =
+								array_reverse( explode( '\n', $metadata[$i]['element_enum'] ) )[0];
+					}
+					else
+					{
+						$metadata[$i]['element_type'] = 'text';
+					}
+				}
+			}
+			return [ 'metadata' => $metadata, 'data' => $data ];
+		}
 	}
 
 

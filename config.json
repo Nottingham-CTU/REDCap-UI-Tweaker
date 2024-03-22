@@ -68,6 +68,18 @@
 			"branchingLogic" : { "field" : "static-form-names", "value" : true }
 		},
 		{
+			"key" : "version-fields-default-annotation",
+			"name" : "Version field default annotaton/action tags",
+			"type" : "text",
+			"branchingLogic" : {
+				"type" : "and",
+				"conditions" : [
+					{ "field" : "static-form-names", "value" : true },
+					{ "field" : "version-fields", "value" : true }
+				]
+			}
+		},
+		{
 			"key" : "hdr-data-qual",
 			"name" : "<b>Data quality tweaks</b>",
 			"type" : "descriptive"
