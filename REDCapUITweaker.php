@@ -2721,6 +2721,13 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
+    $('#table-forms_surveys tr').find('td:eq(1)').each(function()
+    {
+      var vFormLink = $(this).find('a.formLink')
+      var vFormName = vFormLink.find('span[id^="formlabel-"]').attr('id').substring(10)
+      vFormLink.after( ' <i>(' + vFormName + ')</i>' )
+      vFormLink.css('display', 'inline-block')
+    })
     var vAddNewFormReveal = addNewFormReveal
     var vAddNewForm = addNewForm
     var vClickedBtnName = ''
