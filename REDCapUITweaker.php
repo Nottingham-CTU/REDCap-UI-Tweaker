@@ -258,6 +258,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				$this->exitAfterHook();
 			}
 			elseif ( isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
+			         ! isset( $_GET['internal_name'] ) &&
 			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
 			{
 				$this->renameForm( $_POST['page'], $_POST['menu_description'] );
@@ -2721,13 +2722,43 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
-    $('#table-forms_surveys tr').find('td:eq(1)').each(function()
+    if ( status == '0' )
     {
-      var vFormLink = $(this).find('a.formLink')
-      var vFormName = vFormLink.find('span[id^="formlabel-"]').attr('id').substring(10)
-      vFormLink.after( ' <i>(' + vFormName + ')</i>' )
-      vFormLink.css('display', 'inline-block')
-    })
+      $('#table-forms_surveys tr').find('td:eq(1)').each(function()
+      {
+        var vFormLink = $(this).find('a.formLink')
+        var vFormName = vFormLink.find('span[id^="formlabel-"]').attr('id').substring(10)
+        vFormLink.after( ' <i>(' + vFormName + ')</i>' )
+        vFormLink.css('display', 'inline-block')
+        var vSaveBtn = $(this).find( '#form_menu_save_btn-' + vFormName )
+        var vChgName = $('<a href="#"><i class="fas fa-pencil-alt fs8"></i></a>')
+        vChgName.attr('title', 'Edit instrument variable name')
+        vChgName.click(function()
+        {
+          var vNewFormName = prompt( 'New instrument variable name for ' + vFormName, vFormName )
+          if ( vNewFormName !== null && vNewFormName !== '' )
+          {
+            $.post( app_path_webroot + 'Design/set_form_name.php?internal_name=1&pid=' + pid,
+                    { page: vFormName, action: 'set_menu_name', menu_description: vNewFormName },
+                    function ( vResult )
+                    {
+                      var vUpdatedFormName = vResult.replace( /\n.*$/s, '' )
+                      var vNewFormLabel = $( '#form_menu_description_input-' + vFormName ).val()
+                      $.post( app_path_webroot + 'Design/set_form_name.php?pid=' + pid,
+                              { page: vUpdatedFormName, action: 'set_menu_name',
+                                menu_description: vNewFormLabel },
+                              function ()
+                              {
+                                window.location.reload()
+                              })
+                    } )
+          }
+          return false
+        })
+        vSaveBtn.after( vChgName )
+        vSaveBtn.after( ' &nbsp;&nbsp;' )
+      })
+    }
     var vAddNewFormReveal = addNewFormReveal
     var vAddNewForm = addNewForm
     var vClickedBtnName = ''
