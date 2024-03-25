@@ -189,6 +189,11 @@ it will default to `@HIDDEN-SURVEY`.
 The action tags `@DEFAULT='1.0' @NOMISSING` will always be appended to these action tags and don't
 need to be included.
 
+### Use form name prefix when creating fields
+This will populate field names with a prefix based on the form name when new fields are created.
+
+Static form variable names must be enabled in order to use this feature.
+
 ### Enable the Data Resolution Workflow on new projects
 This option will enable the Data Resolution Workflow instead of the Field Comment Log on new
 projects.

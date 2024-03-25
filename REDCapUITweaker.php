@@ -573,10 +573,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				$this->provideFieldAnnotations( $this->getSystemSetting( 'predefined-annotations' ) );
 
 				// Hide the first 'add field' buttons above a form version field.
-				if ( $this->getSystemSetting( 'static-form-names' ) &&
-				     $this->getSystemSetting( 'version-fields' ) )
+				if ( $this->getSystemSetting( 'static-form-names' ) )
 				{
-					$this->provideHideFirstAddField( $this->escapeHTML( $_GET['page'] ) );
+					if ( $this->getSystemSetting( 'version-fields' ) )
+					{
+						$this->provideHideFirstAddField( $this->escapeHTML( $_GET['page'] ) );
+					}
+					if ( $this->getSystemSetting( 'fields-form-name-prefix' ) )
+					{
+						$this->provideDefaultFormVarName();
+					}
 				}
 
 			}
@@ -1738,6 +1744,49 @@ $(function()
 
 
 
+	// Output JavaScript to set field names to be prefixed by the form name by default.
+
+	function provideDefaultFormVarName()
+	{
+
+?>
+<script type="text/javascript">
+  $(function() {
+    setInterval(function() {
+      var vEditID = $('#sq_id')
+      if ( vEditID.length > 0 && vEditID.val() == '' && $('#field_name').val() == '' )
+      {
+        $('#field_name').val( form_name + '_' )
+      }
+      var vMEditID = $('#old_grid_name')
+      if ( vMEditID.length > 0 )
+      {
+        var vMInputReq = $('.field_req_matrix')
+        var vMInputLab = $('.field_labelmatrix')
+        var vMInputNam = $('.field_name_matrix')
+        if ( vMInputReq.length == vMInputLab.length &&
+             vMInputReq.length == vMInputNam.length )
+        {
+          for ( var i = 0; i < vMInputReq.length; i++ )
+          {
+            if ( vMInputLab[ i ].value == '' && vMInputNam[ i ].value == '' )
+            {
+              vMInputNam[ i ].value = form_name + '_'
+            }
+          }
+        }
+      }
+    }, 500 )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to set fields to be required by default.
 
 	function provideDefaultRequired()
@@ -1752,7 +1801,8 @@ $(function()
       var vEditID = $('#sq_id')
       if ( vEditID.length > 0 && vEditID.val() == '' )
       {
-        if ( $('#field_name').val() == '' && $('#field_label').val() == '' )
+        if ( $('#field_label').val() == '' &&
+             ( $('#field_name').val() == '' || $('#field_name').val() == form_name + '_' ) )
         {
           vEditReqChanged = false
           $('#field_req0, #field_req1').off('click.reqdefault')
@@ -1785,7 +1835,8 @@ $(function()
         {
           for ( var i = 0; i < vMInputReq.length; i++ )
           {
-            if ( ( vMInputLab[ i ].value == '' && vMInputNam[ i ].value == '' ) )
+            if ( vMInputLab[ i ].value == '' &&
+                 ( vMInputNam[ i ].value == '' || vMInputNam[ i ].value == form_name + '_' ) )
             {
               vMInputReq[ i ].checked = true
             }
@@ -1995,11 +2046,17 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
-    var vFirstAddField = $('div.frmedit').first()
-    if ( vFirstAddField.next().attr('id') == 'design-<?php echo $instrument; ?>_version' )
+    var vFuncHideAddField = function()
     {
-      vFirstAddField.css( 'display', 'none' )
+      var vFirstAddField = $('div.frmedit').first()
+      if ( vFirstAddField.length == 1 &&
+           vFirstAddField.next().attr('id') == 'design-<?php echo $instrument; ?>_version' )
+      {
+        vFirstAddField.css( 'display', 'none' )
+      }
     }
+    vFuncHideAddField()
+    setInterval( vFuncHideAddField, 2000 )
   })
 </script>
 <?php
