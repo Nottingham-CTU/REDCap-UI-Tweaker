@@ -2499,7 +2499,7 @@ $(function()
 
 	// Output JavaScript for the simplified view diff highlighting popup.
 
-	function provideSimplifiedViewDiff()
+	function provideSimplifiedViewDiff( $ext = '' )
 	{
 ?>
 <div id="simplifiedViewDiff" style="display:none">
@@ -2514,7 +2514,10 @@ $(function()
   </form>
   <hr>
   <form method="post" enctype="multipart/form-data">
-   <p>File to import:&nbsp; <input type="file" name="simp_view_diff_file" required></p>
+   <p>
+    File to import:&nbsp;
+    <input type="file" name="simp_view_diff_file" accept="<?php echo $ext; ?>.json" required>
+   </p>
    <p>
     This file contains the:&nbsp;
     <label>

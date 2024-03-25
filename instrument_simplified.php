@@ -100,7 +100,9 @@ $fileLoadError = false;
 if ( isset( $_POST['simp_view_diff_mode'] ) && $_POST['simp_view_diff_mode'] == 'export' )
 {
 	header( 'Content-Type: application/json' );
-	header( 'Content-Disposition: attachment; filename="simplified_view.json"' );
+	header( 'Content-Disposition: attachment; filename="' .
+	        trim( preg_replace( '/[^A-Za-z0-9-]+/', '_', \REDCap::getProjectTitle() ), '_-' ) .
+	        '_' . date( 'Ymd' ) . '.svi.json"' );
 	$module->echoText( json_encode( $listExport ) );
 	exit;
 }
@@ -391,7 +393,7 @@ foreach ( $listData['arms'] as $infoArm )
 ?>
 </table>
 <?php
-$module->provideSimplifiedViewDiff();
+$module->provideSimplifiedViewDiff( '.svi' );
 
 // Display the project footer
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
