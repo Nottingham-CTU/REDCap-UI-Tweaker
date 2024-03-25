@@ -9,6 +9,8 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('user-rights-simplifi
 	exit;
 }
 
+$svbr = REDCapUITweaker::SVBR;
+
 $lookupYN = [ '1' => $GLOBALS['lang']['design_100'], '0' => '' ];
 $lookupDRW = [ '0' => '',
                '1' => $GLOBALS['lang']['dataqueries_143'],
@@ -28,15 +30,20 @@ $lookupExport = [ '1' => $GLOBALS['lang']['rights_49'],
                   '3' => $GLOBALS['lang']['data_export_tool_182']
                             ?? $GLOBALS['lang']['data_export_tool_290'] ];
 
+$infoProject = $module->query( 'SELECT data_resolution_enabled, surveys_enabled, mycap_enabled ' .
+                               'FROM redcap_projects WHERE project_id = ?',
+                               [ $module->getProjectId() ] )->fetch_assoc();
+
 
 $listForms = \REDCap::getInstrumentNames();
 
 $queryRoles = $module->query( "SELECT * " .
                               "FROM redcap_user_roles WHERE project_id = ? ORDER BY role_name",
-                              [ $module->getProjectID() ] );
+                              [ $module->getProjectId() ] );
 $listRoles = [];
 while ( $infoRole = $queryRoles->fetch_assoc() )
 {
+	// Format the external module permissions.
 	if ( $infoRole['external_module_config'] == null )
 	{
 		$infoRole['external_module_config'] = [];
@@ -45,6 +52,19 @@ while ( $infoRole = $queryRoles->fetch_assoc() )
 	{
 		$infoRole['external_module_config'] =
 			json_decode( $infoRole['external_module_config'], true );
+	}
+	// Unset DRW/survey/mycap permissions if those features are not enabled.
+	if ( $infoProject['data_resolution_enabled'] != 2 )
+	{
+		$infoRole['data_quality_resolution'] = 0;
+	}
+	if ( $infoProject['surveys_enabled'] != 1 )
+	{
+		$infoRole['participants'] = 0;
+	}
+	if ( $infoProject['mycap_enabled'] != 1 )
+	{
+		$infoRole['mycap_participants'] = 0;
 	}
 	unset( $infoRole['role_id'], $infoRole['project_id'],
 	       $infoRole['unique_role_name'], $infoRole['dts'] );
@@ -583,7 +603,24 @@ foreach ( $listForms as $formUniqueName => $infoForm )
 				$list[] = $module->escapeHTML( $GLOBALS['lang']['global_71'] . ' ' .
 				                               $lookupExport[ $dataExport ] );
 			}
-			echo empty( $list ) ? '' : implode( REDCapUITweaker::SVBR, $list );
+			echo empty( $list ) ? '' : implode( $svbr, $list );
+			if ( ( $dataEntryOld != '' || $dataExportOld != '' ) &&
+			     ( $dataEntry !== $dataEntryOld || $dataExport !== $dataExportOld ) )
+			{
+				echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">';
+				$list = [];
+				if ( $dataEntryOld != '0' )
+				{
+					$list[] = $module->escapeHTML( $lookupDataEntry[ $dataEntryOld ] );
+				}
+				if ( $dataExportOld != '0' )
+				{
+					$list[] = $module->escapeHTML( $GLOBALS['lang']['global_71'] . ' ' .
+					                               $lookupExport[ $dataExportOld ] );
+				}
+				echo empty( $list ) ? '' : implode( $svbr, $list );
+				echo '</span>';
+			}
 		}
 		echo "</td>\n";
 	}
