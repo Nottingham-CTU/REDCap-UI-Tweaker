@@ -38,8 +38,17 @@ while ( $infoCodebook = $queryCodebook->fetch_assoc() )
 				[ 'label' => $infoCodebook['form_menu_description'], 'survey' => false,
 				  'survey_title' => null, 'fdl' => [], 'repeating' => false ];
 	}
-	// Remove newlines from field note.
-	$infoCodebook['element_note'] = str_replace( '<br>', ' ', $infoCodebook['element_note'] ?? '' );
+	// Normalise newlines.
+	$infoCodebook['element_preceding_header'] =
+			str_replace( [ "\r\n", '<br>', '<br />' ], "\n",
+			             $infoCodebook['element_preceding_header'] ?? '' );
+	$infoCodebook['element_note'] =
+			str_replace( [ "\r\n", '<br>', '<br />' ], "\n", $infoCodebook['element_note'] ?? '' );
+	$infoCodebook['element_label'] =
+			str_replace( [ "\r\n", '<br>', '<br />' ], "\n", $infoCodebook['element_label'] ?? '' );
+	$infoCodebook['element_enum'] =
+			str_replace( [ "\r\n", '<br>', '<br />' ], "\n", $infoCodebook['element_enum'] ?? '' );
+	$infoCodebook['misc'] = str_replace( "\r\n", "\n", $infoCodebook['misc'] ?? '' );
 	// Update legacy field type validation names.
 	if ( $infoCodebook['element_validation_type'] == 'int' )
 	{
@@ -673,7 +682,7 @@ foreach ( $listCodebook as $infoCodebook )
 			{
 				$infoTemp['element_enum'] =
 					array_map( function( $i )
-					           { return array_merge( explode( ', ', trim( $i ), 2 ), [''] ); },
+					           { return array_merge( explode( ',', trim( $i ), 2 ), [''] ); },
 					           explode( '\n', $infoTemp['element_enum'] ) );
 				if ( $r == 0 )
 				{
@@ -684,6 +693,8 @@ foreach ( $listCodebook as $infoCodebook )
 				{
 					foreach ( $infoCodebook['element_enum'] as $i => $itemEnum )
 					{
+						$infoCodebook['element_enum'][ $i ][1] =
+								trim( $infoCodebook['element_enum'][ $i ][1] );
 						$foundEnum = false;
 						foreach ( $infoTemp['element_enum'] as $itemOldEnum )
 						{
@@ -704,6 +715,8 @@ foreach ( $listCodebook as $infoCodebook )
 					}
 					foreach ( $infoTemp['element_enum'] as $i => $itemEnum )
 					{
+						$infoTemp['element_enum'][ $i ][1] =
+								trim( $infoTemp['element_enum'][ $i ][1] );
 						$foundEnum = false;
 						foreach ( $infoCodebook['element_enum'] as $itemNewEnum )
 						{
@@ -887,11 +900,12 @@ foreach ( $listCodebook as $infoCodebook )
 		$cellStyle .= ';background:' . REDCapUITweaker::BGC_CHG;
 	}
 	echo '  <td rowspan="', $rowspan, '" style="', $cellStyle, '">',
-	     codebookEscape( $infoCodebook['misc'] );
+	     str_replace( "\n", $svbr, $module->escapeHTML( $infoCodebook['misc'] ) );
 	if ( $fcAnnotation )
 	{
 		echo $svbr, '<span style="', REDCapUITweaker::STL_OLD, '">',
-		     codebookEscape( $infoCodebook['field_oldvals']['misc'] ), '</span>';
+		     str_replace( "\n", $svbr,
+		                 $module->escapeHTML( $infoCodebook['field_oldvals']['misc'] ) ), '</span>';
 	}
 	echo "</td>\n";
 	// - Output the change marker.
