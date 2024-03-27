@@ -593,7 +593,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 		if ( $infoAlert['alert_trigger'] != 'submit' )
 		{
 			echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b>', $svbr,
-			     $module->escapeHTML( $infoAlert['alert_condition'] );
+			     str_replace( "\n", $svbr, $module->escapeHTML( $infoAlert['alert_condition'] ) );
 		}
 		if ( ! $tblIdentical )
 		{
@@ -615,7 +615,8 @@ foreach ( [ true, false ] as $enabledAlerts )
 			if ( $infoAlert['alert_oldvals']['alert_trigger'] != 'submit' )
 			{
 				echo $svbr, '<b>', $module->escapeHTML( $GLOBALS['lang']['asi_012'] ), ':</b>',
-				     $svbr, $module->escapeHTML( $infoAlert['alert_oldvals']['alert_condition'] );
+				     $svbr, str_replace( "\n", $svbr,
+				            $module->escapeHTML( $infoAlert['alert_oldvals']['alert_condition'] ) );
 			}
 			echo '</span>';
 		}
@@ -922,7 +923,8 @@ foreach ( [ true, false ] as $enabledAlerts )
 				if ( $infoASI['condition_logic'] != '' )
 				{
 					echo '<b>', $module->escapeHTML( $GLOBALS['lang']['survey_420'] ), '</b>',
-					     $svbr, $module->escapeHTML( $infoTemp['condition_logic'] );
+					     $svbr, str_replace( "\n", $svbr,
+					                         $module->escapeHTML( $infoTemp['condition_logic'] ) );
 				}
 				if ( $oldVals )
 				{
