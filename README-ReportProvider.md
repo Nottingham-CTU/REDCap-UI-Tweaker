@@ -18,6 +18,11 @@ The code to supply report details should be placed within the `redcap_every_page
 function. Call the `addCustomReport` function once per report. It is recommended that you use the
 `areCustomReportsExpected` function to test for when the report details need to be supplied.
 
+If the second parameter of the `addCustomReport` function is set to true (default = false), it will
+allow HTML `<b>` and `<i>` tags to be used in the permissions, definition and options. If using
+HTML, you can use the `customReportsEscapeHTML` function to escape HTML `<b>` and `<i>` tags as
+required in the data being supplied.
+
 ```php
 if ( $this->isModuleEnabled('redcap_ui_tweaker') )
 {
@@ -31,7 +36,7 @@ if ( $this->isModuleEnabled('redcap_ui_tweaker') )
 		                              'permissions' => "View: Admin\nDownload: Admin",
 		                              'definition' => "SELECT 'test'",
 		                              'options' => 'Result type: Normal dataset'
-		                            ] );
+		                            ], false );
 	}
 }
 ```
