@@ -137,6 +137,7 @@ while ( $infoAlert = $queryAlerts->fetch_assoc() )
 			unset( $infoAlert[ $key ] );
 		}
 	}
+	$infoAlert['alert_message'] = str_replace( "\r\n", "\n", $infoAlert['alert_message'] );
 	$listExport['alerts'][] = $infoAlert;
 }
 
