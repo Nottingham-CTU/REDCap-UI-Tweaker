@@ -1,15 +1,7 @@
 {
 	"name": "REDCap UI Tweaker",
 	"namespace": "Nottingham\\REDCapUITweaker",
-	"description": "Make adjustments to the REDCap user interface. Features include (each can be enabled as required): For the online designer, change order/placement of field types, set new fields required by default and configure predefined field annotations. Set the form submit options (system-wide setting and per-form action tag). Alternate status icons. Custom from addresses for alerts. 'Simplified views' for the alerts/codebook/user rights. Hide 'unverified' form status option.",
-	"permissions": [
-		"redcap_every_page_before_render",
-		"redcap_project_home_page",
-		"redcap_every_page_top",
-		"redcap_data_entry_form",
-		"redcap_user_rights",
-		"redcap_module_system_enable"
-	],
+	"description": "A selection of options to make adjustments to the REDCap user interface, which can each be enabled as required.<br>See the documentation for full details.",
 	"enable-every-page-hooks-on-system-pages" : true,
 	"authors": [
 		{
@@ -18,10 +10,10 @@
 			"institution": "University of Nottingham"
 		}
 	],
-	"framework-version" : 6,
+	"framework-version" : 12,
 	"compatibility" : {
-		"redcap-version-min" : "10.6.0",
-		"php-version-min" : "7.4.0"
+		"redcap-version-min" : "13.1.0",
+		"php-version-min" : "8.0.0"
 	},
 	"system-settings" : [
 		{
@@ -65,6 +57,35 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "static-form-names",
+			"name" : "Static form variable names",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "version-fields",
+			"name" : "Use version fields",
+			"type" : "checkbox",
+			"branchingLogic" : { "field" : "static-form-names", "value" : true }
+		},
+		{
+			"key" : "version-fields-default-annotation",
+			"name" : "Version field default annotaton/action tags",
+			"type" : "text",
+			"branchingLogic" : {
+				"type" : "and",
+				"conditions" : [
+					{ "field" : "static-form-names", "value" : true },
+					{ "field" : "version-fields", "value" : true }
+				]
+			}
+		},
+		{
+			"key" : "fields-form-name-prefix",
+			"name" : "Use form name prefix when creating fields",
+			"type" : "checkbox",
+			"branchingLogic" : { "field" : "static-form-names", "value" : true }
+		},
+		{
 			"key" : "hdr-data-qual",
 			"name" : "<b>Data quality tweaks</b>",
 			"type" : "descriptive"
@@ -90,6 +111,11 @@
 			]
 		},
 		{
+			"key" : "change-reason-show-changes",
+			"name" : "Show the fields that have changed on the change reason popup",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "default-prevent-lock-as-change",
 			"name" : "Prevent the 'lock this instrument' option being treated as a data change",
 			"type" : "checkbox"
@@ -113,6 +139,11 @@
 			"key" : "dq-notify-body-drw",
 			"name" : "Custom data quality notification text (data resolution workflow)",
 			"type" : "textarea"
+		},
+		{
+			"key" : "dq-notify-hide-eq",
+			"name" : "Hide equations on the data quality notification",
+			"type" : "checkbox"
 		},
 		{
 			"key" : "hdr-appr-proj",
@@ -178,6 +209,16 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "hdr-appr-sys",
+			"name" : "<b>System appearance tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "login-page-logo",
+			"name" : "Additional login page logo URL",
+			"type" : "text"
+		},
+		{
 			"key" : "hdr-nav-sys",
 			"name" : "<b>System navigation tweaks</b>",
 			"type" : "descriptive"
@@ -222,7 +263,7 @@
 		},
 		{
 			"key" : "custom-alert-sender",
-			"name" : "Allow custom from addresses in alerts",
+			"name" : "Allow custom from addresses in alerts/ASIs",
 			"type" : "checkbox"
 		},
 		{
@@ -320,6 +361,35 @@
 			"type" : "text"
 		},
 		{
+			"key" : "report-namespaces",
+			"name" : "Report namespaces for specific roles",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "report-namespace",
+			"name" : "Report namespace",
+			"type" : "sub_settings",
+			"sub_settings" : [
+				{
+					"key" : "report-namespace-name",
+					"name" : "Namespace name",
+					"type" : "text"
+				},
+				{
+					"key" : "report-namespace-roles",
+					"name" : "Roles with access to this namespace<br>(enter 1 role name per line)",
+					"type" : "textarea"
+				}
+			],
+			"branchingLogic" : { "field" : "report-namespaces", "value" : true },
+			"repeatable" : true
+		},
+		{
+			"key" : "pfmt1",
+			"name" : "<script type=\"text/javascript\">$('[field=hide-unverified-option] td').first().css('width','51%')</script>",
+			"type" : "descriptive"
+		},
+		{
 			"key" : "custom-logo-name-display",
 			"name" : "If custom logo/name is displayed",
 			"type" : "radio",
@@ -332,7 +402,7 @@
 		},
 		{
 			"key" : "fix-form-navigation",
-			"name" : "Form navigation fix",
+			"name" : "Form navigation fix<br>(Refer to module documentation before using this option)",
 			"type" : "checkbox",
 			"super-users-only" : true
 		}

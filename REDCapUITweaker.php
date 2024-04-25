@@ -9,9 +9,26 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	                       'nextform', 'nextrecord', 'exitrecord', 'compresp' ];
 	const SUBMIT_DEFINE = 'record,nextinstance,nextform,continue';
 
+	// Simplified view table styles.
+	const STL_HDR = 'font-size:1.1em';
+	const STL_CEL = 'border:solid 1px #000;padding:5px;vertical-align:top';
+	const STL_DEL = 'color:#fdd';
+	const STL_OLD = 'font-size:0.9em;color:#bbb';
+	const BGC_HDR = '#ddd';
+	const BGC_HDR_NEW = '#1dc';
+	const BGC_HDR_CHG = '#dd8';
+	const BGC_HDR_DEL = '#600';
+	const BGC_NEW = '#4fe';
+	const BGC_CHG = '#ffa';
+	const BGC_DEL = '#b11';
+
+	// Simplified view <br> tag.
+	const SVBR = '<br style="mso-data-placement:same-cell">';
+
 	private $customAlerts;
 	private $customReports;
 	private $extModSettings;
+	private $reportNamespacing;
 
 
 
@@ -74,11 +91,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// IMPORTANT: This function runs in all contexts, when adding code ensure that it will only
 		// run in the desired contexts (system or project).
 
+
+		// Exit the function here if no user is logged in.
+
+		if ( ! defined( 'USERID' ) || USERID == '' )
+		{
+			return;
+		}
+
+
 		// If the option to redirect users with one project to that project is enabled, perform the
 		// redirect from the my projects page the first time that page is loaded in that session.
 
 		if ( $project_id === null && !isset( $_SESSION['module_uitweaker_single_proj_redirect'] ) &&
-		     defined( 'USERID' ) && $this->getSystemSetting( 'single-project-redirect' ) &&
+		     $this->getSystemSetting( 'single-project-redirect' ) &&
 		     in_array( $_GET['action'], [ '', 'myprojects' ] ) &&
 		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
 		{
@@ -187,6 +213,111 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		}
 
+
+		// If static form names enabled.
+
+		if ( $this->getSystemSetting( 'static-form-names' ) )
+		{
+			if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'Design/create_form.php' )
+			{
+				$formDisplayName = $_POST['form_name'];
+				$projectDesigner = new \Vanderbilt\REDCap\Classes\ProjectDesigner($GLOBALS['Proj']);
+				// Create the form using the form variable name.
+				$formCreated = $projectDesigner->createForm( $_POST['form_var_name'],
+				                                             $_POST['after_form'] );
+				$createdFormName = $projectDesigner->form;
+				unset( $projectDesigner );
+				echo $formCreated ? '1' : '0';
+				if ( $formCreated )
+				{
+					// If form created successfully, rename to the chosen display name.
+					$this->renameForm( $createdFormName, $formDisplayName, false );
+					// Add the version field if required.
+					if ( $this->getSystemSetting( 'version-fields' ) )
+					{
+						$versionAnnotation =
+								$this->getSystemSetting( 'version-fields-default-annotation' );
+						if ( trim( $versionAnnotation ) == '' )
+						{
+							$versionAnnotation = '@HIDDEN-SURVEY';
+						}
+						$versionAnnotation .= " @DEFAULT='1.0' @NOMISSING";
+						// Must use a new Project object here.
+						$projObj = new \Project( $this->getProjectId(), true );
+						$projectDesigner = new \Vanderbilt\REDCap\Classes\ProjectDesigner($projObj);
+						$versionField = [ 'field_label' => 'Form Version',
+						                  'field_type' => 'select',
+						                  'element_enum' => '1.0, 1.0',
+						                  'field_annotation' => $versionAnnotation,
+						                  'field_name' => $createdFormName . '_version',
+						                  'field_req' => '1'
+						                ];
+						$projectDesigner->createField( $createdFormName, $versionField );
+					}
+				}
+				$this->exitAfterHook();
+			}
+			elseif ( isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
+			         ! isset( $_GET['internal_name'] ) &&
+			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
+			{
+				$this->renameForm( $_POST['page'], $_POST['menu_description'] );
+				echo $_POST['page'], "\n", $_POST['menu_description'];
+				$this->exitAfterHook();
+			}
+		}
+
+
+		// If report namespaces are enabled and this is a report page.
+		$this->reportNamespacing = false;
+		if ( $this->getProjectSetting( 'report-namespaces' ) &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' )
+		{
+			if ( ! empty( $this->checkReportNamespaceAuth() ) )
+			{
+				$GLOBALS['user_rights']['reports'] = 1;
+				$this->reportNamespacing = true;
+			}
+			elseif ( $GLOBALS['user_rights']['reports'] != 1 &&
+			         isset( $_GET['report_id'] ) && isset( $_GET['addedit'] ) )
+			{
+				header( 'Location: ' . APP_PATH_WEBROOT . '/DataExport/index.php?pid=' .
+				        $this->getProjectId() );
+				$this->exitAfterHook();
+			}
+		}
+
+	}
+
+
+
+
+
+	// PDF hook. Handles the display of the form version fields on PDFs.
+
+	function redcap_pdf( $project_id, $metadata, $data, $instrument = null, $record = null,
+	                     $event_id = null, $instance = 1 )
+	{
+		if ( $this->getSystemSetting( 'static-form-names' ) &&
+		     $this->getSystemSetting( 'version-fields' ) )
+		{
+			for ( $i = 0; $i < count( $metadata ); $i++ )
+			{
+				if ( $metadata[$i]['field_name'] == $metadata[$i]['form_name'] . '_version' )
+				{
+					if ( $record == null )
+					{
+						$metadata[$i]['element_enum'] =
+								array_reverse( explode( '\n', $metadata[$i]['element_enum'] ) )[0];
+					}
+					else
+					{
+						$metadata[$i]['element_type'] = 'text';
+					}
+				}
+			}
+			return [ 'metadata' => $metadata, 'data' => $data ];
+		}
 	}
 
 
@@ -217,23 +348,6 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		// IMPORTANT: This function runs in all contexts, when adding code ensure that it will only
 		// run in the desired contexts (system or project).
-
-		// Provide sorting for the my projects page.
-
-		if ( $project_id === null && $this->getSystemSetting( 'my-projects-alphabetical' ) &&
-		     $_GET['action'] == 'myprojects' &&
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
-		{
-			$this->provideProjectSorting();
-		}
-
-
-		// Provide the initial configuration dialog.
-
-		if ( isset( $_SESSION['module_uitweak_system_enable'] ) )
-		{
-			$this->provideInitialConfig();
-		}
 
 
 		// Provide the versionless URLs.
@@ -266,13 +380,46 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If no user is logged in, add the extra login page logo if set,
+		// then exit the function here.
+
+		if ( ! defined( 'USERID' ) || USERID == '' )
+		{
+			if ( $this->getSystemSetting( 'login-page-logo' ) != '' )
+			{
+				echo '<script type="text/javascript">$(function(){$(\'#container\')',
+				     '.css(\'background\',$(\'#container\').css(\'background\')+\',url("',
+				     $this->escapeHTML( $this->getSystemSetting( 'login-page-logo' ) ),
+				     '") top right no-repeat\')})</script>';
+			}
+			return;
+		}
+
+
+		// Provide sorting for the my projects page.
+
+		if ( $project_id === null && $this->getSystemSetting( 'my-projects-alphabetical' ) &&
+		     $_GET['action'] == 'myprojects' &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT_PARENT ), 9 ) == 'index.php' )
+		{
+			$this->provideProjectSorting();
+		}
+
+
+		// Provide the initial configuration dialog.
+
+		if ( isset( $_SESSION['module_uitweak_system_enable'] ) )
+		{
+			$this->provideInitialConfig();
+		}
+
+
 		// Exit the function here if a system level page.
 
 		if ( $project_id === null )
 		{
 			return;
 		}
-
 
 
 		// All pages, if the option to show the role name is enabled.
@@ -359,7 +506,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 35 ) ==
 		                                                   'ExternalModules/manager/project.php' &&
 		     ( $enableExtModSimplifiedView == 'E' ||
-		       ( $enableExtModSimplifiedView == 'A' && SUPER_USER == 1 ) ) )
+		       ( $enableExtModSimplifiedView == 'A' &&
+		         defined( 'SUPER_USER' ) && SUPER_USER == 1 ) ) )
 		{
 			$this->provideSimplifiedExternalModules();
 		}
@@ -389,39 +537,69 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		// If an instrument designer page.
 
-		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) == 'Design/online_designer.php' &&
-			 isset( $_GET[ 'page' ] ) && $_GET[ 'page' ] != '' )
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) == 'Design/online_designer.php' )
 		{
 
-
-			// Provide the expanded field annotations.
-
-			if ( $this->getSystemSetting( 'expanded-annotations' ) )
+			if ( isset( $_GET[ 'page' ] ) && $_GET[ 'page' ] != '' )
 			{
-				$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
-				$listFieldAnnotations = [];
 
-				foreach ( $listFields as $fieldName => $infoField )
+				// Provide the expanded field annotations.
+
+				if ( $this->getSystemSetting( 'expanded-annotations' ) )
 				{
-					$listFieldAnnotations[ $fieldName ] = $infoField['field_annotation'];
+					$listFields = \REDCap::getDataDictionary( 'array', false, null, $_GET['page'] );
+					$listFieldAnnotations = [];
+
+					foreach ( $listFields as $fieldName => $infoField )
+					{
+						$listFieldAnnotations[ $fieldName ] = $infoField['field_annotation'];
+					}
+					$this->provideExpandedAnnotations( $listFieldAnnotations );
 				}
-				$this->provideExpandedAnnotations( $listFieldAnnotations );
+
+
+				// Set field 'required' option on by default.
+
+				if ( $this->getSystemSetting( 'field-default-required' ) != '0' )
+				{
+					$this->provideDefaultRequired();
+				}
+
+
+				// Rearrange the list of field types.
+				$this->rearrangeFieldTypes( $this->getSystemSetting( 'field-types-order' ) );
+
+				// Provide the predefined field annotations.
+				$this->provideFieldAnnotations( $this->getSystemSetting( 'predefined-annotations' ) );
+
+				// Hide the first 'add field' buttons above a form version field.
+				if ( $this->getSystemSetting( 'static-form-names' ) )
+				{
+					if ( $this->getSystemSetting( 'version-fields' ) )
+					{
+						$this->provideHideFirstAddField( $this->escapeHTML( $_GET['page'] ) );
+					}
+					if ( $this->getSystemSetting( 'fields-form-name-prefix' ) )
+					{
+						$this->provideDefaultFormVarName();
+					}
+				}
+
 			}
-
-
-			// Set field 'required' option on by default.
-
-			if ( $this->getSystemSetting( 'field-default-required' ) != '0' )
+			else
 			{
-				$this->provideDefaultRequired();
+				// Provide custom alert sender (for ASI) if enabled.
+				if ( $this->getSystemSetting( 'custom-alert-sender' ) )
+				{
+					$this->provideCustomAlertSender( 'ASI' );
+				}
+
+				// Provide static form variable names.
+				if ( $this->getSystemSetting( 'static-form-names' ) )
+				{
+					$this->provideStaticFormVarName();
+				}
 			}
-
-
-			// Rearrange the list of field types.
-			$this->rearrangeFieldTypes( $this->getSystemSetting( 'field-types-order' ) );
-
-			// Provide the predefined field annotations.
-			$this->provideFieldAnnotations( $this->getSystemSetting( 'predefined-annotations' ) );
 
 
 		} // end if instrument designer
@@ -570,6 +748,20 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+
+		// If report namespacing is in effect.
+		if ( $this->reportNamespacing )
+		{
+			echo '<script type="text/javascript">',
+			     '$(document).on(\'ajaxSend\',function(e,x,s){s.url=s.url.replace(\'DataExport' .
+			     '/report_edit_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=' .
+			     'ajax_reports_ns&rcpage=report_edit_ajax&\').replace(\'DataExport/report_delete' .
+			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=' .
+			     'ajax_reports_ns&rcpage=report_delete_ajax&\')})',
+			     "</script>\n";
+		}
+
+
 	}
 
 
@@ -618,12 +810,46 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If changed fields are to be listed on the change reason popup, list them.
+
+		if ( $this->getProjectSetting( 'change-reason-show-changes') )
+		{
+			$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+			foreach ( $listFields as $fieldName => $infoField )
+			{
+				if ( $fieldName == \REDCap::getRecordIdField() ||
+				     $infoField['field_type'] == 'descriptive' )
+				{
+					unset( $listFields[ $fieldName ] );
+					continue;
+				}
+				$infoField['field_label'] = strip_tags( $infoField['field_label'] );
+				$infoField['field_label'] = str_replace( [ "\r\n", "\n" ], ' ',
+				                                         $infoField['field_label'] );
+				if ( strlen( $infoField['field_label'] ) > 80 )
+				{
+					$infoField['field_label'] = substr( $infoField['field_label'], 0, 75 ) . '...';
+				}
+				$listFields[ $fieldName ] = $this->escapeHTML( $infoField['field_label'] );
+			}
+			$this->provideChangesList( array_keys( $listFields ), $listFields );
+		}
+
+
 		// If the 'lock this instrument' option is not to be treated as a data change, amend so the
 		// data changed flag is not set by ticking the option.
 
 		if ( $this->getProjectSetting( 'prevent-lock-as-change' ) === true )
 		{
 			$this->providePreventLockAsChange();
+		}
+
+
+		// If equations on the data quality popup are to be hidden, hide them.
+
+		if ( $this->getProjectSetting( 'dq-notify-hide-eq' ) === true )
+		{
+			$this->provideDQHideEq();
 		}
 
 
@@ -766,7 +992,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 	// Allows a different module to supply its own report details for the reports simplified view.
-	// $infoReport should be an array containing the following keys (all fields as plain text):
+	// $infoReport should be an array containing the following keys (all fields as plain text unless
+	// the second $isHTML parameter is true, in which case HTML <b> and <i> tags can be used for the
+	// permissions, definition and options):
 	// 'title': title/name of the report
 	// 'type': type of the report (e.g. Gantt, SQL)
 	// 'description': description of the report
@@ -774,13 +1002,40 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	// 'definition': e.g. report fields, SQL query
 	// 'options': any additonal report options which have been set
 
-	function addCustomReport( $infoReport )
+	function addCustomReport( $infoReport, $isHTML = false )
 	{
 		if ( ! is_array( $this->customReports ) )
 		{
 			$this->customReports = [];
 		}
+		if ( ! $isHTML )
+		{
+			foreach ( [ 'permissions', 'definition', 'options' ] as $key )
+			{
+				if ( isset( $infoReport[ $key ] ) )
+				{
+					$infoReport[ $key ] = $this->customReportsEscapeHTML( $infoReport[ $key ] );
+				}
+			}
+		}
 		$this->customReports[] = $infoReport;
+	}
+
+
+
+
+
+	// Escapes text which should not be rendered as HTML for use in the 'permissions', 'definition'
+	// and 'options' fields of the reports simplified view.
+
+	function customReportsEscapeHTML( $text )
+	{
+		$text = preg_replace( '/&(amp;)*lt;(b|i)&(amp;)*gt;/', '&$1amp;lt;$2&$3amp;gt;', $text );
+		$text = preg_replace( '/&(amp;)*lt;\\/(b|i)&(amp;)*gt;/',
+		                      '&$1amp;lt;/$2&$3amp;gt;', $text );
+		$text = str_replace( [ '<b>', '<i>', '</b>', '</i>' ],
+					         [ '&lt;b&gt;', '&lt;i&gt;', '&lt;/b&gt;', '&lt;/i&gt;'], $text );
+		return $text;
 	}
 
 
@@ -835,54 +1090,80 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-	// Escapes text for inclusion in HTML.
+	// Check if the user is authorised to edit a namespaced report.
 
-	function escapeHTML( $text )
+	function checkReportNamespaceAuth()
 	{
-		return htmlspecialchars( $text, ENT_QUOTES );
+		$userRights = $this->getUser()->getRights();
+		$roleName = ( isset( $userRights ) && isset( $userRights['role_name'] ) &&
+		              $userRights['role_name'] != '' ? $userRights['role_name'] : null );
+		if ( $roleName !== null )
+		{
+			$listNS = [];
+			$reportNSRoles = $this->getProjectSetting( 'report-namespace-roles' );
+			foreach ( $reportNSRoles as $i => $roleNames )
+			{
+				$roleNames = explode( "\n", str_replace( "\r\n", "\n", $roleNames ) );
+				if ( in_array( $roleName, $roleNames ) )
+				{
+					$listNS[] = [ 'name' => $this->getProjectSetting( 'report-namespace-name' )[$i],
+					              'roles' => $roleNames ];
+				}
+			}
+			if ( isset( $_POST['report_id'] ) )
+			{
+				if ( isset( $_GET['report_id'] ) )
+				{
+					return [];
+				}
+				$_GET['report_id'] = $_POST['report_id'];
+			}
+			if ( ! empty( $listNS ) && isset( $_GET['report_id'] ) && $_GET['report_id'] != 0 )
+			{
+				$queryReportFolders =
+					$this->query( 'SELECT rf.folder_id, rf.name FROM redcap_reports_folders_items' .
+					              ' rfi JOIN redcap_reports_folders rf ON rfi.folder_id = ' .
+					              'rf.folder_id WHERE rf.project_id = ? AND rfi.report_id = ?',
+					              [ $this->getProjectId(), $_GET['report_id'] ] );
+				$listReportFolders = [];
+				while ( $itemReportFolder = $queryReportFolders->fetch_assoc() )
+				{
+					$listReportFolders[] = $itemReportFolder['name'];
+				}
+				foreach ( $listNS as $i => $infoNS )
+				{
+					if ( ! in_array( $infoNS['name'], $listReportFolders ) )
+					{
+						unset( $listNS[$i] );
+					}
+				}
+				$listNS = array_values( $listNS );
+			}
+			return $listNS;
+		}
+		return [];
 	}
 
 
 
 
 
-	// Outputs JavaScript to fix table on Firefox so formatting is included on copy/paste.
-
-	function ffFormattingFix( $table )
+	// Echo plain text to output (without Psalm taints).
+	// Use only for e.g. JSON or CSV output.
+	function echoText( $text )
 	{
-		if ( ! isset( $_SERVER['HTTP_USER_AGENT'] ) ||
-		     strpos( $_SERVER['HTTP_USER_AGENT'], 'Firefox' ) === false )
-		{
-			return;
-		}
+		echo array_reduce( [ $text ], function( $c, $i ) { return $c . $i; }, '' );
+	}
 
-?>
-<script type="text/javascript">
-$( function()
-{
-  var vTblCS = getComputedStyle($('<?php echo $table; ?>')[0])
-  $('<?php echo $table; ?>')[0].style.borderCollapse = vTblCS.getPropertyValue('border-collapse')
-  $('<?php echo $table; ?>')[0].style.fontFamily = vTblCS.getPropertyValue('font-family')
-  $('<?php echo $table; ?>').find('*').each( function()
-  {
-    var vCS = getComputedStyle(this)
-    this.style.background = vCS.getPropertyValue('background')
-    this.style.borderTop = vCS.getPropertyValue('border-top')
-    this.style.borderRight = vCS.getPropertyValue('border-right')
-    this.style.borderBottom = vCS.getPropertyValue('border-bottom')
-    this.style.borderLeft = vCS.getPropertyValue('border-left')
-    this.style.paddingTop = vCS.getPropertyValue('padding-top')
-    this.style.paddingRight = vCS.getPropertyValue('padding-right')
-    this.style.paddingBottom = vCS.getPropertyValue('padding-bottom')
-    this.style.paddingLeft = vCS.getPropertyValue('padding-left')
-    this.style.fontWeight = vCS.getPropertyValue('font-weight')
-    this.style.fontSize = vCS.getPropertyValue('font-size')
-    this.style.color = vCS.getPropertyValue('color')
-  } )
-} )
-</script>
-<?php
 
+
+
+
+	// Escapes text for inclusion in HTML.
+
+	function escapeHTML( $text )
+	{
+		return htmlspecialchars( $text, ENT_QUOTES );
 	}
 
 
@@ -1147,10 +1428,65 @@ $(function()
 
 
 
+	// Output JavaScript to show the list of field changes on the change reason popup.
+
+	function provideChangesList( $fields, $labels )
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vListFields = <?php echo json_encode( $fields ), "\n"; ?>
+    var vListLabels = <?php echo json_encode( $labels ), "\n"; ?>
+    var vListValues = {}
+    $.each( vListFields, function()
+    {
+      vListValues[this] = $('[name="' + this + '"]').val()
+    })
+    var vDataEntrySubmit = dataEntrySubmit
+    dataEntrySubmit = function ( vOb )
+    {
+      if ( $('#change_reason_popup div.listchanges').length == 0 )
+      {
+        $('#change_reason_popup div:eq(0)').before('<div class="listchanges"></div>')
+        $('#change_reason_popup div.listchanges')
+          .css('max-height','100px').css('overflow-y','auto').css('border','solid 1px #ccc')
+          .before('<div style="font-weight:bold;padding:5px 0">' +
+                  '<?php echo $GLOBALS['lang']['data_history_03']; ?>:</div>')
+      }
+      $('#change_reason_popup div.listchanges').html('<ul style="margin-bottom:0"></ul>')
+      $.each( vListFields, function()
+      {
+        if ( vListValues[this] != $('[name="' + this + '"]').val() )
+        {
+          var vOldVal = $('<span></span>').text(vListValues[this]).html()
+          var vNewVal = $('<span></span>').text($('[name="' + this + '"]').val()).html()
+          $('#change_reason_popup div.listchanges ul')
+            .append('<li><b>' + vListLabels[this] + '</b><br><span style="font-size:0.9em">' +
+                    '<?php echo $GLOBALS['lang']['ws_152']; ?>: ' + vOldVal + '<br>' +
+                    '<?php echo $GLOBALS['lang']['data_comp_tool_32']; ?>: ' + vNewVal +
+                    '</span></li>')
+        }
+      })
+      vDataEntrySubmit( vOb )
+    }
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to allow a custom from address to be selected in alerts.
 
-	function provideCustomAlertSender()
+	function provideCustomAlertSender( $for = 'alerts' )
 	{
+		$selectFields = ( $for == 'alerts' ? 'select[name="email-from"], select[name="email-failed"]'
+		                                   : 'select[name="email_sender"]' );
 
 ?>
 <script type="text/javascript">
@@ -1159,7 +1495,7 @@ $(function()
     var vRegexValidate = /<?php echo $this->getSystemSetting('custom-alert-sender-regex'); ?>/
     var vDialog = $('<div><input type="text" style="width:100%"><br>' +
                     '<span style="color:#c00"></span></div>')
-    var vSelectFields = $('select[name="email-from"], select[name="email-failed"]')
+    var vSelectFields = $('<?php echo $selectFields; ?>')
     var vOldVal = null
     var vActiveSelect = null
     vDialog.find('input').on('keypress',function(e)
@@ -1196,6 +1532,12 @@ $(function()
       title:'Enter email address',
       width:400
     })
+<?php
+
+	if ( $for == 'alerts' )
+	{
+
+?>
     vSelectFields.append( '<option value="*">Enter a different email address...</option>' )
     vSelectFields.on('click',function()
     {
@@ -1229,6 +1571,43 @@ $(function()
       }
       vEditEmailAlert(vModal, vIndex, vAlertNum)
     }
+<?php
+
+	}
+	elseif ( $for == 'ASI' )
+	{
+
+?>
+    var vInitSurveyReminderSettings = initSurveyReminderSettings
+    initSurveyReminderSettings = function()
+    {
+      vInitSurveyReminderSettings()
+      vSelectFields = $('<?php echo $selectFields; ?>')
+      vSelectFields.find('[value="999"]').remove()
+      vSelectFields.append( '<option value="*">Enter a different email address...</option>' )
+      vSelectFields.on('click',function()
+      {
+        var vField = $(this)
+        vOldVal = vField.val()
+        vField.find('option[value="*"]').appendTo(vField)
+      })
+      vSelectFields.on('change',function()
+      {
+        if ( $(this).val() == '*' )
+        {
+          vActiveSelect = $(this)
+          vActiveSelect.val( vOldVal )
+          vDialog.find('input').val('')
+          vDialog.find('span').text('')
+          vDialog.dialog('open')
+        }
+      })
+    }
+<?php
+
+	}
+
+?>
 
   })
 </script>
@@ -1294,6 +1673,53 @@ $(function()
 
 
 
+	// Output JavaScript to hide equations on the data quality notification popup.
+
+	function provideDQHideEq()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vEqChkCount = 0
+    var vEqChk = setInterval( function()
+    {
+      vEqChkCount++
+      if ( vEqChkCount > 30 )
+      {
+        clearInterval( vEqChk )
+        return
+      }
+      var vDQEq = $('div#dq_rules_table_single_record div.wrap div[style*="color:#555"]')
+      if ( vDQEq.length > 0 )
+      {
+        vDQEq.css( 'display', 'none' )
+        var vDQRuleHdr = $('div#dq_rules_table_single_record div.hDivBox th:eq(1) div')
+        var vShowLnk = $('<a href="#" style="font-size:0.8em">show/hide logic</a>').click(function()
+        {
+          if ( vDQEq.css( 'display' ) == 'none' )
+          {
+            vDQEq.css( 'display', '' )
+          }
+          else
+          {
+            vDQEq.css( 'display', 'none' )
+          }
+          return false
+        })
+        vDQRuleHdr.append( '&nbsp;&nbsp;' ).append( vShowLnk )
+        clearInterval( vEqChk )
+      }
+    }, 250)
+  })
+</script>
+<?php
+	}
+
+
+
+
+
 	// Output JavaScript to enable real time execution of data quality rules by default.
 
 	function provideDQRealTime()
@@ -1318,6 +1744,49 @@ $(function()
 
 
 
+	// Output JavaScript to set field names to be prefixed by the form name by default.
+
+	function provideDefaultFormVarName()
+	{
+
+?>
+<script type="text/javascript">
+  $(function() {
+    setInterval(function() {
+      var vEditID = $('#sq_id')
+      if ( vEditID.length > 0 && vEditID.val() == '' && $('#field_name').val() == '' )
+      {
+        $('#field_name').val( form_name + '_' )
+      }
+      var vMEditID = $('#old_grid_name')
+      if ( vMEditID.length > 0 )
+      {
+        var vMInputReq = $('.field_req_matrix')
+        var vMInputLab = $('.field_labelmatrix')
+        var vMInputNam = $('.field_name_matrix')
+        if ( vMInputReq.length == vMInputLab.length &&
+             vMInputReq.length == vMInputNam.length )
+        {
+          for ( var i = 0; i < vMInputReq.length; i++ )
+          {
+            if ( vMInputLab[ i ].value == '' && vMInputNam[ i ].value == '' )
+            {
+              vMInputNam[ i ].value = form_name + '_'
+            }
+          }
+        }
+      }
+    }, 500 )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to set fields to be required by default.
 
 	function provideDefaultRequired()
@@ -1332,7 +1801,8 @@ $(function()
       var vEditID = $('#sq_id')
       if ( vEditID.length > 0 && vEditID.val() == '' )
       {
-        if ( $('#field_name').val() == '' && $('#field_label').val() == '' )
+        if ( $('#field_label').val() == '' &&
+             ( $('#field_name').val() == '' || $('#field_name').val() == form_name + '_' ) )
         {
           vEditReqChanged = false
           $('#field_req0, #field_req1').off('click.reqdefault')
@@ -1365,7 +1835,8 @@ $(function()
         {
           for ( var i = 0; i < vMInputReq.length; i++ )
           {
-            if ( ( vMInputLab[ i ].value == '' && vMInputNam[ i ].value == '' ) )
+            if ( vMInputLab[ i ].value == '' &&
+                 ( vMInputNam[ i ].value == '' || vMInputNam[ i ].value == form_name + '_' ) )
             {
               vMInputReq[ i ].checked = true
             }
@@ -1557,6 +2028,35 @@ $(function()
   $(function()
   {
     $('.btn-contact-admin')<?php echo $function; ?>.parent().css('display','none')
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to hide the first 'add field' buttons on the designer if a form version
+	// field is present.
+
+	function provideHideFirstAddField( $instrument )
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vFuncHideAddField = function()
+    {
+      var vFirstAddField = $('div.frmedit').first()
+      if ( vFirstAddField.length == 1 &&
+           vFirstAddField.next().attr('id') == 'design-<?php echo $instrument; ?>_version' )
+      {
+        vFirstAddField.css( 'display', 'none' )
+      }
+    }
+    vFuncHideAddField()
+    setInterval( vFuncHideAddField, 2000 )
   })
 </script>
 <?php
@@ -1831,7 +2331,8 @@ $(function()
     vBtnSimplify.click(vFuncSimplify)
     var vButtons = $('<p> </p>')
     vButtons.prepend(vBtnSimplify)
-    $('.jqbuttonmed[onclick="window.print();"]').closest('table').after(vButtons)
+    $('.jqbuttonmed[onclick="window.print();"],' +
+      ' .jqbuttonmed[onclick="printCodebook();"]').closest('table').before(vButtons)
   })
 </script>
 <?php
@@ -1996,6 +2497,134 @@ $(function()
 
 
 
+	// Output JavaScript for the simplified view diff highlighting popup.
+
+	function provideSimplifiedViewDiff( $ext = '' )
+	{
+?>
+<div id="simplifiedViewDiff" style="display:none">
+  <form method="post">
+    <p>
+     To perform difference highlighting, export the simplified view data from a project and load
+     the data into another project.
+    <p>
+     <input type="hidden" name="simp_view_diff_mode" value="export">
+     <input type="submit" value="Export Data">
+    </p>
+  </form>
+  <hr>
+  <form method="post" enctype="multipart/form-data">
+   <p>
+    File to import:&nbsp;
+    <input type="file" name="simp_view_diff_file" accept="<?php echo $ext; ?>.json" required>
+   </p>
+   <p>
+    This file contains the:&nbsp;
+    <label>
+     &nbsp;<input type="radio" name="simp_view_diff_mode" value="new" required> New version
+    </label>
+    <label>
+     &nbsp;<input type="radio" name="simp_view_diff_mode" value="old" required> Old version
+    </label>
+   </p>
+   <p><input type="submit" value="Load Data and Perform Highlighting"></p>
+  </form>
+</div>
+<script type="text/javascript">
+  $('#simplifiedViewDiffBtn').click( function()
+  {
+    simpleDialog( null, 'Difference highlight', 'simplifiedViewDiff', 500 )
+    $('#simplifiedViewDiff').attr('title','')
+  } )
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output tabs for navigating between the simplified views.
+
+	function provideSimplifiedViewTabs( $active = '' )
+	{
+
+?>
+<div class="clearfix">
+ <div id="sub-nav" class="d-none d-sm-block" style="margin:5px 0 15px;width:98%">
+  <ul>
+<?php
+		if ( $this->getSystemSetting( 'alerts-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'alerts' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('alerts_simplified.php'); ?>">Alerts</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'codebook-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'codebook' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('codebook_simplified.php'); ?>">Codebook</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'quality-rules-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'quality_rules' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('quality_rules_simplified.php'); ?>">Data Quality</a>
+   </li>
+<?php
+		}
+		$enableExtModSimplifiedView = $this->getSystemSetting( 'extmod-simplified-view' );
+		if ( $enableExtModSimplifiedView == 'E' ||
+		     ( $enableExtModSimplifiedView == 'A' && defined( 'SUPER_USER' ) && SUPER_USER == 1 ) )
+		{
+?>
+   <li<?php echo $active == 'extmod' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('extmod_simplified.php'); ?>">External Modules</a>
+   </li>
+<?php
+		}
+		if ( \REDCap::isLongitudinal() && $this->getSystemSetting( 'instrument-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'instrument' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('instrument_simplified.php'); ?>">Instruments and Events</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'reports-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'reports' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('reports_simplified.php'); ?>">Reports</a>
+   </li>
+<?php
+		}
+		if ( $this->getSystemSetting( 'user-rights-simplified-view' ) )
+		{
+?>
+   <li<?php echo $active == 'user_rights' ? ' class="active"' : ''; ?>>
+    <a href="<?php echo $this->getUrl('user_rights_simplified.php'); ?>">User Rights</a>
+   </li>
+<?php
+		}
+?>
+  </ul>
+ </div>
+</div>
+<script type="text/javascript">$('#sub-nav .active a').css('color','#393733')</script>
+<?php
+
+	}
+
+
+
+
+
 	// Logic to run before page render to provide the SQL checkbox field functionality.
 
 	function provideSQLCheckBox( $listFields, $project_id, $record,
@@ -2139,6 +2768,106 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Provide the options for choosing a form variable name.
+
+	function provideStaticFormVarName()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( status == '0' )
+    {
+      $('#table-forms_surveys tr').find('td:eq(1)').each(function()
+      {
+        var vFormLink = $(this).find('a.formLink')
+        var vFormName = vFormLink.find('span[id^="formlabel-"]').attr('id').substring(10)
+        vFormLink.after( ' <i>(' + vFormName + ')</i>' )
+        vFormLink.css('display', 'inline-block')
+        var vSaveBtn = $(this).find( '#form_menu_save_btn-' + vFormName )
+        var vChgName = $('<a href="#"><i class="fas fa-pencil-alt fs8"></i></a>')
+        vChgName.attr('title', 'Edit instrument variable name')
+        vChgName.click(function()
+        {
+          var vNewFormName = prompt( 'New instrument variable name for ' + vFormName, vFormName )
+          if ( vNewFormName !== null && vNewFormName !== '' )
+          {
+            $.post( app_path_webroot + 'Design/set_form_name.php?internal_name=1&pid=' + pid,
+                    { page: vFormName, action: 'set_menu_name', menu_description: vNewFormName },
+                    function ( vResult )
+                    {
+                      var vUpdatedFormName = vResult.replace( /\n.*$/s, '' )
+                      var vNewFormLabel = $( '#form_menu_description_input-' + vFormName ).val()
+                      $.post( app_path_webroot + 'Design/set_form_name.php?pid=' + pid,
+                              { page: vUpdatedFormName, action: 'set_menu_name',
+                                menu_description: vNewFormLabel },
+                              function ()
+                              {
+                                window.location.reload()
+                              })
+                    } )
+          }
+          return false
+        })
+        vSaveBtn.after( vChgName )
+        vSaveBtn.after( ' &nbsp;&nbsp;' )
+      })
+    }
+    var vAddNewFormReveal = addNewFormReveal
+    var vAddNewForm = addNewForm
+    var vClickedBtnName = ''
+    addNewFormReveal = function ( vFormName )
+    {
+      vAddNewFormReveal( vFormName )
+      var vCreateBtn = $( '#new-' + vFormName + ' [type="button"]' )
+      vCreateBtn.before( '<br><span style="margin:0 5px 0 25px;font-weight:bold">' +
+                         'Instrument variable name:</span>' )
+      var vFormVarField = $( '<input type="text" class="x-form-text x-form-field" ' +
+                             'style="font-size:13px;" id="new_form_var-' + vFormName + '">' )
+      vFormVarField.keyup( function()
+      {
+        var vVal = $(this).val()
+        vVal = vVal.replace( /[^a-z0-9_]/, '' )
+        vVal = vVal.replace( /_+/, '_' )
+        vVal = vVal.replace( /^[0-9_]+/, '' )
+        $(this).val( vVal )
+      })
+      vFormVarField.change( function()
+      {
+        var vVal = $(this).val()
+        vVal = vVal.replace( /[^a-z0-9_]/, '' )
+        vVal = vVal.replace( /_+/, '_' )
+        vVal = vVal.replace( /^[0-9_]+/, '' )
+        vVal = vVal.replace( /_$/, '' )
+        $(this).val( vVal )
+      })
+      vCreateBtn.before( vFormVarField )
+      vCreateBtn.before( ' ' )
+    }
+    addNewForm = function ( vFormName )
+    {
+      vClickedBtnName = vFormName
+      if ( $('#new_form_var-' + vFormName).val() != '' )
+      {
+        vAddNewForm( vFormName )
+      }
+    }
+    $(document).on( 'ajaxSend', function(e,x,s)
+    {
+      if ( s.url == app_path_webroot + 'Design/create_form.php?pid=' + pid )
+      {
+        s.data += '&form_var_name=' + $( '#new_form_var-' + vClickedBtnName ).val()
+      }
+    } )
+  })
+</script>
+<?php
 	}
 
 
@@ -2454,6 +3183,37 @@ $(function()
 <?php
 
 		return true;
+	}
+
+
+
+
+
+	// Rename a form display name, without changing its underlying variable name.
+
+	function renameForm( $formName, $newFormName, $log = true )
+	{
+		$projectID = $this->getProjectId();
+		$newFormName = strip_tags( \label_decode( $newFormName ) );
+		$status = \REDCap::getProjectStatus( $projectID );
+
+		// Use temp metadata table if project is in production.
+		$metadataTable = ($status > 0) ? "redcap_metadata_temp" : "redcap_metadata";
+		// Clear old form display name.
+		$this->query( "UPDATE $metadataTable SET form_menu_description = NULL " .
+		              "WHERE form_name = ? AND project_id = ?",
+		              [ $formName, $projectID ] );
+		// Set new form display name.
+		$this->query( "UPDATE $metadataTable SET form_menu_description = ? WHERE form_name = ? " .
+		              "AND project_id = ? ORDER BY field_order LIMIT 1",
+		              [ $newFormName, $formName, $projectID ] );
+		// Log the rename.
+		if ( $log )
+		{
+			\Logging::logEvent( "", $metadataTable, "MANAGE", $formName,
+			                    "form_name = '" . \db_escape($formName) . "'",
+			                    "Rename data collection instrument");
+		}
 	}
 
 
