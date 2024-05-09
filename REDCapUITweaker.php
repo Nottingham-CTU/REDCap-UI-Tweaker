@@ -262,7 +262,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
 			{
 				$this->renameForm( $_POST['page'], $_POST['menu_description'] );
-				echo $_POST['page'], "\n", $_POST['menu_description'];
+				echo \filter_tags( $_POST['page'] ), "\n",
+				     \filter_tags( $_POST['menu_description'] );
 				$this->exitAfterHook();
 			}
 		}
@@ -1150,9 +1151,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	// Echo plain text to output (without Psalm taints).
 	// Use only for e.g. JSON or CSV output.
+
 	function echoText( $text )
 	{
-		echo array_reduce( [ $text ], function( $c, $i ) { return $c . $i; }, '' );
+		$text = htmlspecialchars( $text, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XHTML );
+		$chars = [ '&amp;' => 38, '&quot;' => 34, '&apos;' => 39, '&lt;' => 60, '&gt;' => 62 ];
+		$text = preg_split( '/(&(?>amp|quot|apos|lt|gt);)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE );
+		foreach ( $text as $part )
+		{
+			echo isset( $chars[ $part ] ) ? chr( $chars[ $part ] ) : $part;
+		}
 	}
 
 
