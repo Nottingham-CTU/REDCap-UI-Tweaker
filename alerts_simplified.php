@@ -29,7 +29,7 @@ function alertsEscape( $text )
 	                      '<span style="text-decoration:underline;color:#009">$2</span>' .
 	                      '<sub style="color:#999">$1</sub>', $text );
 	$text = preg_replace( '/&lt;((?(?=&gt;)|.)*)&gt;/', '', $text );
-	$text = str_replace( [ '&lt;', '&gt;', '&quot;', '&#039;', '&amp;' ], '', $text );
+	$text = str_replace( [ '&lt;', '&gt;', '&quot;', '&#039;' ], '', $text );
 	$text = str_replace( [ '&amp;lt;', '&amp;gt;', '&amp;quot;', '&amp;#039;', '&amp;amp;' ],
 	                     [ '&lt;', '&gt;', '&quot;', '&#039;', '&amp;' ], $text );
 	$text = str_replace( '<br>', $svbr, $text );
