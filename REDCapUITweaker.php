@@ -262,8 +262,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
 			{
 				$this->renameForm( $_POST['page'], $_POST['menu_description'] );
-				echo \filter_tags( $_POST['page'] ), "\n",
-				     \filter_tags( $_POST['menu_description'] );
+				echo $this->escapeHTML( strip_tags( $_POST['page'] ) ), "\n",
+				     $this->escapeHTML( strip_tags( $_POST['menu_description'] ) );
 				$this->exitAfterHook();
 			}
 		}
