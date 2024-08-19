@@ -2083,7 +2083,8 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
-    $('a[href*="redcap.vanderbilt.edu/enduser_survey"]').parent().css('display','none')
+    $('a[href*="redcap.vanderbilt.edu/enduser_survey"],a[href*="redcap.vumc.org/enduser_survey"]')
+     .parent().css('display','none')
   })
 </script>
 <?php
