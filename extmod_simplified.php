@@ -68,9 +68,10 @@ $queryModules = $module->query( "SELECT em.directory_prefix module, if( project_
                                 "`value` = 'true' AND project_id IS NULL ) ) AND " .
                                 "em.external_module_id NOT IN ( SELECT external_module_id FROM " .
                                 "redcap_external_module_settings WHERE `key` = 'enabled' AND " .
-                                "`value` = 'false' AND project_id = ? ) AND ( (project_id IS " .
-                                "NULL AND `key` LIKE concat('p',?,'-%')) OR project_id = ? ) AND " .
-                                "`key` <> 'enabled' AND ( `key` <> " .
+                                "`value` = 'false' AND project_id = ? ) AND ( (project_id IS NULL" .
+                                " AND `key` COLLATE utf8mb4_unicode_ci LIKE concat('p',?,'-%')) " .
+                                "COLLATE utf8mb4_unicode_ci OR project_id = ? ) " .
+                                "AND `key` <> 'enabled' AND ( `key` <> " .
                                 "'reserved-hide-from-non-admins-in-project-list' OR `value` <> " .
                                 "'false' ) ORDER BY module, setting",
                                [ $module->getProjectID(), $module->getProjectID(),
