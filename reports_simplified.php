@@ -33,17 +33,22 @@ $queryReports = $module->query( "SELECT r.*, ( SELECT group_concat( field_name O
                                 "report_id = r.report_id AND limiter_operator IS NULL ) fields, " .
                                 "( SELECT trim(substring(group_concat( concat( " .
                                 "limiter_group_operator, ' ', field_name, ' ', CASE " .
-                                "limiter_operator WHEN 'E' THEN '=' WHEN 'NE' THEN '<>' ELSE " .
-                                "limiter_operator END, ' ', limiter_value ) ORDER BY field_order " .
-                                "SEPARATOR ' ' ),4)) FROM redcap_reports_fields WHERE " .
-                                "report_id = 3 AND limiter_operator IS NOT NULL ) simple_logic, " .
+                                "limiter_operator WHEN 'E' THEN '=' WHEN 'NE' THEN '<>' " .
+                                "WHEN 'LT' THEN '<' WHEN 'LTE' THEN '<=' WHEN 'GT' THEN '>' " .
+                                "WHEN 'GTE' THEN '>=' ELSE limiter_operator END, ' ', CASE " .
+                                "limiter_operator WHEN 'LT' THEN '' WHEN 'LTE' THEN '' WHEN 'GT' " .
+                                "THEN '' WHEN 'GTE' THEN '' ELSE '\'' END, limiter_value, CASE " .
+                                "limiter_operator WHEN 'LT' THEN '' WHEN 'LTE' THEN '' WHEN 'GT' " .
+                                "THEN '' WHEN 'GTE' THEN '' ELSE '\'' END ) ORDER BY field_order " .
+                                "SEPARATOR ' ' ),4)) FROM redcap_reports_fields WHERE report_id =" .
+                                " r.report_id AND limiter_operator IS NOT NULL ) simple_logic, " .
                                 "( SELECT group_concat( role_name SEPARATOR ', ' ) FROM " .
                                 "redcap_reports_access_roles rr JOIN redcap_user_roles ur ON " .
                                 "rr.role_id = ur.role_id WHERE rr.report_id = r.report_id ) " .
                                 "access_roles, " .
                                 "( SELECT group_concat( role_name SEPARATOR ', ' ) FROM " .
-                                "redcap_reports_edit_access_roles rr JOIN redcap_user_roles ur ON " .
-                                "rr.role_id = ur.role_id WHERE rr.report_id = r.report_id ) " .
+                                "redcap_reports_edit_access_roles rr JOIN redcap_user_roles ur ON" .
+                                " rr.role_id = ur.role_id WHERE rr.report_id = r.report_id ) " .
                                 "edit_access_roles, " .
                                 "( SELECT 1 FROM redcap_reports_access_users " .
                                 "WHERE report_id = r.report_id ) access_users, " .
@@ -55,7 +60,7 @@ $queryReports = $module->query( "SELECT r.*, ( SELECT group_concat( field_name O
                                 "WHERE report_id = r.report_id ) edit_access_dags " .
                                 "FROM redcap_reports r " .
                                 "WHERE project_id = ? ORDER BY report_order",
-                               [ $module->getProjectID() ] );
+                                [ $module->getProjectID() ] );
 
 if ( $reportsNS )
 {
