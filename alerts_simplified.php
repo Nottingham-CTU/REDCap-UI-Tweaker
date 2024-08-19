@@ -15,7 +15,7 @@ function alertsEscape( $text )
 {
 	global $svbr;
 	$text = str_replace( [ "\r\n", "\r" ], "\n", $text );
-	$text = preg_replace( "/<\\/p>( |\n|\t)*<p>/", '<br><br>', $text );
+	$text = preg_replace( "/<\\/p>( |\n|\t)*<p[^>]*>/", '<br><br>', $text );
 	$text = preg_replace( "/<\\/p>( |\n|\t)*<[ou]l>/", '<br>', $text );
 	$text = preg_replace( '/<li[^>]*>/', '<br>', $text );
 	$text = str_replace( [ '<p>', '</p>' ], '', $text );
@@ -139,6 +139,10 @@ while ( $infoAlert = $queryAlerts->fetch_assoc() )
 	}
 	$infoAlert['alert_condition'] = str_replace( "\r\n", "\n", $infoAlert['alert_condition'] );
 	$infoAlert['alert_message'] = str_replace( "\r\n", "\n", $infoAlert['alert_message'] );
+	$infoAlert['alert_message'] = preg_replace( '/ +/', ' ', $infoAlert['alert_message'] );
+	$infoAlert['alert_message'] = preg_replace( '!<br ?/>!', '<br>', $infoAlert['alert_message'] );
+	$infoAlert['alert_message'] = str_replace( ' <br>', '<br>', $infoAlert['alert_message'] );
+	$infoAlert['alert_message'] = str_replace( ' </p>', '</p>', $infoAlert['alert_message'] );
 	$listExport['alerts'][] = $infoAlert;
 }
 
@@ -155,6 +159,16 @@ while ( $infoASI = $queryASI->fetch_assoc() )
 
 while ( $infoSurvey = $querySurvey->fetch_assoc() )
 {
+	$infoSurvey['confirmation_email_content'] =
+			str_replace( "\r\n", "\n", $infoSurvey['confirmation_email_content'] );
+	$infoSurvey['confirmation_email_content'] =
+			preg_replace( '/ +/', ' ', $infoSurvey['confirmation_email_content'] );
+	$infoSurvey['confirmation_email_content'] =
+			preg_replace( '!<br ?/>!', '<br>', $infoSurvey['confirmation_email_content'] );
+	$infoSurvey['confirmation_email_content'] =
+			str_replace( ' <br>', '<br>', $infoSurvey['confirmation_email_content'] );
+	$infoSurvey['confirmation_email_content'] =
+			str_replace( ' </p>', '</p>', $infoSurvey['confirmation_email_content'] );
 	$listExport['survey'][] = $infoSurvey;
 }
 
