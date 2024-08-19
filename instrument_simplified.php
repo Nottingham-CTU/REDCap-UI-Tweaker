@@ -204,7 +204,7 @@ foreach ( $listNew['arms'] as $i => $itemNewArm )
 			$itemOldEvent['deleted'] = true;
 			$itemNewArm['events'][] = $itemOldEvent;
 		}
-		if ( $listData['max_events'] < count( $itemNewArm['events'] ) )
+		if ( $listData['max_events'] < count( $itemNewArm['events'] ?? [] ) )
 		{
 			$listData['max_events'] = count( $itemNewArm['events'] );
 		}
@@ -337,7 +337,7 @@ foreach ( $listData['arms'] as $infoArm )
                  ( $infoEvent['repeat'] == 1 ? ' &#10227;' : '' ); ?></th>
 <?php
 	}
-	for ( $i = count( $infoArm['events'] ); $i < $listData['max_events']; $i++ )
+	for ( $i = count( $infoArm['events'] ?? [] ); $i < $listData['max_events']; $i++ )
 	{
 ?>
   <th style="<?php echo $armHdrStyle; ?>"></th>
