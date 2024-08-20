@@ -389,7 +389,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			if ( $this->getSystemSetting( 'login-page-logo' ) != '' )
 			{
 				echo '<script type="text/javascript">$(function(){$(\'#container\')',
-				     '.css(\'background\',$(\'#container\').css(\'background\')+\',url("',
+				     '.css(\'background\',$(\'#container\').css(\'background\')' ,
+				     '.replace(\'rgba(0, 0, 0, 0)\',\'\')+\',url("',
 				     $this->escapeHTML( $this->getSystemSetting( 'login-page-logo' ) ),
 				     '") top right no-repeat\')})</script>';
 			}
@@ -2082,7 +2083,8 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
-    $('a[href*="redcap.vanderbilt.edu/enduser_survey"]').parent().css('display','none')
+    $('a[href*="redcap.vanderbilt.edu/enduser_survey"],a[href*="redcap.vumc.org/enduser_survey"]')
+     .parent().css('display','none')
   })
 </script>
 <?php

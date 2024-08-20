@@ -15,7 +15,7 @@ function alertsEscape( $text )
 {
 	global $svbr;
 	$text = str_replace( [ "\r\n", "\r" ], "\n", $text );
-	$text = preg_replace( "/<\\/p>( |\n|\t)*<p>/", '<br><br>', $text );
+	$text = preg_replace( "/<\\/p>( |\n|\t)*<p[^>]*>/", '<br><br>', $text );
 	$text = preg_replace( "/<\\/p>( |\n|\t)*<[ou]l>/", '<br>', $text );
 	$text = preg_replace( '/<li[^>]*>/', '<br>', $text );
 	$text = str_replace( [ '<p>', '</p>' ], '', $text );
@@ -110,7 +110,9 @@ $querySurvey = $module->query( "SELECT form_name, ( SELECT form_menu_description
                                "if( confirmation_email_attachment IS NULL, 0, 1) " .
                                "confirmation_email_attachment FROM redcap_surveys rs " .
                                "WHERE survey_enabled = 1 AND confirmation_email_subject IS NOT " .
-                               "NULL AND confirmation_email_content IS NOT NULL AND project_id = ? " .
+                               "NULL AND confirmation_email_content IS NOT NULL AND " .
+                               "project_id = ? AND form_name IN ( SELECT DISTINCT form_name " .
+                               "FROM redcap_metadata WHERE project_id = rs.project_id ) " .
                                "ORDER BY ( SELECT field_order FROM redcap_metadata WHERE " .
                                "form_name = rs.form_name AND form_menu_description IS NOT NULL " .
                                "AND project_id = rs.project_id LIMIT 1 )",
@@ -139,6 +141,10 @@ while ( $infoAlert = $queryAlerts->fetch_assoc() )
 	}
 	$infoAlert['alert_condition'] = str_replace( "\r\n", "\n", $infoAlert['alert_condition'] );
 	$infoAlert['alert_message'] = str_replace( "\r\n", "\n", $infoAlert['alert_message'] );
+	$infoAlert['alert_message'] = preg_replace( '/ +/', ' ', $infoAlert['alert_message'] );
+	$infoAlert['alert_message'] = preg_replace( '!<br ?/>!', '<br>', $infoAlert['alert_message'] );
+	$infoAlert['alert_message'] = str_replace( ' <br>', '<br>', $infoAlert['alert_message'] );
+	$infoAlert['alert_message'] = str_replace( ' </p>', '</p>', $infoAlert['alert_message'] );
 	$listExport['alerts'][] = $infoAlert;
 }
 
@@ -155,6 +161,16 @@ while ( $infoASI = $queryASI->fetch_assoc() )
 
 while ( $infoSurvey = $querySurvey->fetch_assoc() )
 {
+	$infoSurvey['confirmation_email_content'] =
+			str_replace( "\r\n", "\n", $infoSurvey['confirmation_email_content'] );
+	$infoSurvey['confirmation_email_content'] =
+			preg_replace( '/ +/', ' ', $infoSurvey['confirmation_email_content'] );
+	$infoSurvey['confirmation_email_content'] =
+			preg_replace( '!<br ?/>!', '<br>', $infoSurvey['confirmation_email_content'] );
+	$infoSurvey['confirmation_email_content'] =
+			str_replace( ' <br>', '<br>', $infoSurvey['confirmation_email_content'] );
+	$infoSurvey['confirmation_email_content'] =
+			str_replace( ' </p>', '</p>', $infoSurvey['confirmation_email_content'] );
 	$listExport['survey'][] = $infoSurvey;
 }
 

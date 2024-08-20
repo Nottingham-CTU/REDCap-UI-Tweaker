@@ -101,6 +101,7 @@ while ( $infoFDL = $queryFDL->fetch_assoc() )
 			$fdlEvents[ $i ] = $listEventNames[ $fdlEventID ];
 		}
 	}
+	$infoFDL['control_condition'] = str_replace( "\r\n", "\n", $infoFDL['control_condition'] );
 	$listExport['forms'][ $infoFDL['form_name'] ]['fdl'][] =
 			[ 'condition' => $infoFDL['control_condition'], 'events' => $fdlEvents ];
 }
