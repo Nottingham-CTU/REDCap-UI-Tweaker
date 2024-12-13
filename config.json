@@ -178,6 +178,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "show-autofill-development",
+			"name" : "Always show autofill option in development status",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-nav-proj",
 			"name" : "<b>Project navigation tweaks</b>",
 			"type" : "descriptive"

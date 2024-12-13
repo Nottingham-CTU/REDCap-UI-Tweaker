@@ -950,6 +950,40 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 		}
 
+		// Check if autofill links for all users are enabled and this is a development project or
+		// server and provide the autofill link if so.
+		if ( $this->getSystemSetting( 'show-autofill-development' ) &&
+		     ( $this->getProjectStatus() == 'DEV' ||
+		       ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
+		                              'WHERE field_name = ? AND `value` = ?',
+		                              ['is_development_server', '1'] )->fetch_row() ) ) )
+		{
+			$this->provideAutofill( false );
+		}
+
+
+	}
+
+
+
+
+
+	// Perform actions on survey pages.
+
+	function redcap_survey_page( $project_id, $record, $instrument, $event_id, $group_id = null,
+	                             $survey_hash = null, $response_id = null, $repeat_instance = 1 )
+	{
+
+		// Check if autofill links for all users are enabled and this is a development project or
+		// server and provide the autofill link if so.
+		if ( $this->getSystemSetting( 'show-autofill-development' ) &&
+		     ( $this->getProjectStatus() == 'DEV' ||
+		       ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
+		                              'WHERE field_name = ? AND `value` = ?',
+		                              ['is_development_server', '1'] )->fetch_row() ) ) )
+		{
+			$this->provideAutofill( true );
+		}
 
 	}
 
@@ -1404,6 +1438,55 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript to add the autofill option for all users if the project is in development
+	// status or the server is a development/testing server.
+
+	function provideAutofill( $survey = false )
+	{
+		if ( $survey )
+		{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( $('#auto-fill-btn').length == 0 && $('#admin-controls-div').length == 0 )
+    {
+      $('#pagecontent').append('<div id="admin-controls-div" style="position:absolute;top:0px;' +
+                               'left:calc(100%);margin:5px 0px 0px 7px;width:max-content"></div>')
+      $('#admin-controls-div').append('<a id="auto-fill-btn" class="btn btn-link btn-xs fs11" ' +
+                                      'href="javascript:;" onclick="autoFill();" style="color:' +
+                                      'rgb(136, 136, 136)"><i class="fs10 fa-solid ' +
+                                      'fa-wand-magic-sparkles"></i> <span data-rc-lang=' +
+                                      '"global_276">' + lang.global_276 + '</span></a>')
+    }
+  })
+</script>
+<?php
+		}
+		else
+		{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( $('#auto-fill-btn').length == 0 )
+    {
+      $('#formSaveTip').append('<div class=""><button id="auto-fill-btn" class="btn btn-link ' +
+                               'btn-xs" style="font-size:11px !important;padding:1px 5px ' +
+                               '!important;margin:0 !important;color:#007bffcc;" onclick=' +
+                               '"autoFill();"><i class="fs10 fa-solid fa-wand-magic-sparkles ' +
+                               'mr-1"></i>' + lang.global_275 + '</button></div>')
+    }
+  })
+</script>
+<?php
+		}
 	}
 
 
