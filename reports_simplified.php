@@ -51,13 +51,13 @@ $queryReports = $module->query( "SELECT r.*, ( SELECT group_concat( field_name O
                                 " rr.role_id = ur.role_id WHERE rr.report_id = r.report_id ) " .
                                 "edit_access_roles, " .
                                 "( SELECT 1 FROM redcap_reports_access_users " .
-                                "WHERE report_id = r.report_id ) access_users, " .
+                                "WHERE report_id = r.report_id LIMIT 1 ) access_users, " .
                                 "( SELECT 1 FROM redcap_reports_edit_access_users " .
-                                "WHERE report_id = r.report_id ) edit_access_users, " .
+                                "WHERE report_id = r.report_id LIMIT 1 ) edit_access_users, " .
                                 "( SELECT 1 FROM redcap_reports_access_dags " .
-                                "WHERE report_id = r.report_id ) access_dags, " .
+                                "WHERE report_id = r.report_id LIMIT 1 ) access_dags, " .
                                 "( SELECT 1 FROM redcap_reports_edit_access_dags " .
-                                "WHERE report_id = r.report_id ) edit_access_dags " .
+                                "WHERE report_id = r.report_id LIMIT 1 ) edit_access_dags " .
                                 "FROM redcap_reports r " .
                                 "WHERE project_id = ? ORDER BY report_order",
                                 [ $module->getProjectID() ] );
