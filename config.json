@@ -3,6 +3,7 @@
 	"namespace": "Nottingham\\REDCapUITweaker",
 	"description": "A selection of options to make adjustments to the REDCap user interface, which can each be enabled as required.<br>See the documentation for full details.",
 	"enable-every-page-hooks-on-system-pages" : true,
+	"enable-every-page-hooks-on-login-form" : true,
 	"authors": [
 		{
 			"name": "Richard Dooley",

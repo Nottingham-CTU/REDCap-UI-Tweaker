@@ -1874,15 +1874,25 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
+    $('head').append('<style type="text/css">.mod-uitweaker-expanno{overflow:hidden;' +
+                     'text-overflow:ellipsis;white-space:nowrap}</style>')
+    var vInsertAnnotationRow = '<tr class="frmedit actiontags"><td colspan="2"></td></tr>'
+    if ( $('td.frmedit.actiontags').length > 0 )
+    {
+      vInsertAnnotationRow = '<tr><td class="frmedit actiontags" colspan="2"></td></tr>'
+    }
     var vListAnnotations = <?php echo json_encode( $listAnnotations ), "\n"; ?>
     var vLastField = ''
     var vLastFieldAnnotation = ''
     $('.frmedit_tbl:not(:has(.frmedit.actiontags)):not(:has(.header))'
-          ).find('>tbody>tr:last(),>tr:last()'
-          ).after('<tr><td class="frmedit actiontags" colspan="2"></td></tr>')
+          ).find('>tbody>tr:last(),>tr:last()').after( vInsertAnnotationRow )
     var vFuncExpAnno = function()
     {
       var vAnnotationElem = $(this).find('.frmedit.actiontags')
+      if ( vAnnotationElem.prop('tagName').toLowerCase() == 'tr' )
+      {
+        vAnnotationElem = vAnnotationElem.find('td')
+      }
       var vFieldName = $(this).attr('id').slice(7)
       if ( vListAnnotations[ vFieldName ] === undefined ) return
       $(this).css('border-collapse','separate')
@@ -1902,8 +1912,7 @@ $(function()
       if ( vLastField == '' ) return
       vListAnnotations[ vLastField ] = $('<div></div>').text( vLastFieldAnnotation ).html()
       $('.frmedit_tbl:not(:has(.frmedit.actiontags)):not(:has(.header))'
-            ).find('>tbody>tr:last(),>tr:last()'
-            ).after('<tr><td class="frmedit actiontags" colspan="2"></td></tr>')
+            ).find('>tbody>tr:last(),>tr:last()').after( vInsertAnnotationRow )
       $('.frmedit_tbl:not(:has(.header)):not(:has(.mod-uitweaker-expanno))').each( vFuncExpAnno )
       vLastField = ''
     }, 1500 )
