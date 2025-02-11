@@ -210,6 +210,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "lock-blank-form",
+			"name" : "Provide 'lock blank form' option",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "all-status-types",
 			"name" : "Remember the selection of 'all status types' on the record status dashboard",
 			"type" : "checkbox"

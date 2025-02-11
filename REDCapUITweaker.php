@@ -961,6 +961,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$this->provideAutofill( false );
 		}
 
+		// Check if the lock blank form option is enabled and provide it if this is a blank form.
+		if ( $this->getSystemSetting( 'lock-blank-form' ) &&
+		     ! $this->query( 'SELECT 1 FROM ' . \REDCap::getDataTable( $project_id ) .
+		                     ' WHERE project_id = ? AND event_id = ? AND record = ? AND ' .
+		                     'field_name = ? AND ifnull(instance,1) = ?',
+		                     [ $project_id, $event_id, $record, $instrument . '_complete',
+		                       $repeat_instance ] )->fetch_assoc() )
+		{
+			$this->provideLockBlankForm();
+		}
+
 
 	}
 
@@ -2283,6 +2294,35 @@ $(function()
       vLEStatLink.on( 'click', { mode: 'off' }, vFuncSetSel )
     }
     vAStatLink.on( 'click', { mode: 'on' }, vFuncSetSel )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Output JavaScript to provide a 'lock blank form' option.
+
+	function provideLockBlankForm()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setTimeout(function()
+    {
+      if ( $('#__LOCKRECORD__:visible:not(:checked)').length > 0 )
+      {
+        $('#__LOCKRECORD__-tr')
+          .after('<tr class="d-print-none"><td class="labelrc col-7"></td><td class="data col-5">' +
+                 '<button onclick="lockDisabledForm(this)" class="btn btn-defaultrc btn-xs" ' +
+                 'type="button" style="margin:10px 0px">Lock blank form</button></td></tr>')
+      }
+    },1000)
   })
 </script>
 <?php
