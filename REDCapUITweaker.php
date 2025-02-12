@@ -167,6 +167,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If the @SQLCHECKBOX action tag is enabled and saving the SQL, add the SQL to provide the
+		// combined options.
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'Design/edit_field.php' &&
+		     $this->getSystemSetting( 'sql-checkbox' ) && $_POST['field_type'] == 'sql' &&
+		     \Form::hasActionTag( '@SQLCHECKBOX',
+		                          str_replace( "\n", ' ', $_POST['field_annotation'] ) ) )
+		{
+			$this->sqlCheckboxAddSQL();
+		}
+
+
 		// If any data entry page.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' )
@@ -188,7 +199,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				$GLOBALS['lang']['dataqueries_309'] = $dqCustomBodyDRW;
 			}
 
-			// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
+			// [DEPRECATED] Check if the @SQLCHECKBOX action tag is enabled and provide its
+			// functionality if so.
 			if($_GET['page'] != '' && $this->getSystemSetting( 'sql-checkbox' ))
 			{
 
@@ -205,9 +217,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				if ( ! empty( $listFieldsSQLChkbx ) )
 				{
-					$this->provideSQLCheckBox( $listFieldsSQLChkbx, $project_id,
-					                           $_GET['id'], $_GET['event_id'],
-					                           $_GET['page'], $_GET['instance'] );
+					$this->provideOldSQLCheckbox( $listFieldsSQLChkbx, $project_id,
+					                              $_GET['id'], $_GET['event_id'],
+					                              $_GET['page'], $_GET['instance'] );
 				}
 			}
 
@@ -587,6 +599,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					}
 				}
 
+
+				// If the @SQLCHECKBOX action tag is enabled, remove the SQL which provides the
+				// combined options on the edit field dialog.
+				if ( $this->getSystemSetting( 'sql-checkbox' ) )
+				{
+					$this->sqlCheckboxRemoveSQL();
+				}
+
 			}
 			else
 			{
@@ -673,15 +693,13 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					' or base64, in which case you can prefix it with url: or b64: respectively ' .
 					'to indicate the format. Note: This action tag does not work with @IF.';
 			}
-			if ($this->getSystemSetting( 'sql-checkbox' ) )
+			if ( $this->getSystemSetting( 'sql-checkbox' ) )
 			{
 				$listActionTags['@SQLCHECKBOX'] =
-					'On checkbox fields, dynamically replace the options with those from a ' .
-					'specified SQL field. The format must follow the pattern ' .
-					'@SQLCHECKBOX=\'????\', in which the desired value must be the field name of ' .
-					'an SQL field in the project. Note: This action tag does not work with @IF. ' .
-					'Checkbox options will NOT be replaced if the form, record or project has ' .
-					'been locked.';
+					'On SQL fields, replace the drop-down with checkboxes. When writing an SQL ' .
+					'query for use with the @SQLCHECKBOX action tag, ensure that the returned ' .
+					'column names are \'code\' and \'label\', otherwise the query will not ' .
+					'function. Also note that this action tag does not work with @IF.';
 			}
 			$this->provideActionTagExplain( $listActionTags );
 		}
@@ -972,6 +990,28 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$this->provideLockBlankForm();
 		}
 
+		// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
+		if( $this->getSystemSetting( 'sql-checkbox' ) )
+		{
+			$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+			$listFieldsSQLChkbx = [];
+
+			foreach ( $listFields as $infoField )
+			{
+				if ( $infoField['field_type'] == 'sql' &&
+				     \Form::hasActionTag( '@SQLCHECKBOX',
+				                        str_replace( "\n", ' ', $infoField['field_annotation'] ) ) )
+				{
+					$listFieldsSQLChkbx[] = [ 'name' => $infoField['field_name'],
+					                          'align' => $infoField['custom_alignment'] ];
+				}
+			}
+			if ( ! empty( $listFieldsSQLChkbx ) )
+			{
+				$this->provideSQLCheckbox( $listFieldsSQLChkbx );
+			}
+		}
+
 
 	}
 
@@ -1218,6 +1258,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	function escapeHTML( $text )
 	{
 		return htmlspecialchars( $text, ENT_QUOTES );
+	}
+
+
+
+
+
+	// Escapes text string for inclusion in JavaScript.
+
+	function escapeJSString( $text )
+	{
+		return '"' . $this->escapeHTML( substr( json_encode( (string)$text,
+		                                                     JSON_HEX_QUOT | JSON_HEX_APOS |
+		                                                     JSON_HEX_TAG | JSON_HEX_AMP |
+		                                                     JSON_UNESCAPED_SLASHES ),
+		                                        1, -1 ) ) . '"';
 	}
 
 
@@ -2767,10 +2822,75 @@ $(function()
 
 
 
-	// Logic to run before page render to provide the SQL checkbox field functionality.
+	// Output JavaScript to provide the SQL checkbox field functionality.
 
-	function provideSQLCheckBox( $listFields, $project_id, $record,
-	                             $event_id, $instrument, $instance )
+	function provideSQLCheckbox( $listFields )
+	{
+		$fieldsJSON = $this->escapeJSString( json_encode( $listFields ) );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setTimeout(function(){
+      var vListFields = JSON.parse(<?php echo $fieldsJSON; ?>)
+      for ( var i = 0; i < vListFields.length; i++ )
+      {
+        var vFieldName = vListFields[i].name
+        var vIsVertical = ( vListFields[i].align.indexOf('H') == -1 )
+        var vSQLField = $('select[name="' + vFieldName + '"]')
+        var vFieldOptions = $( vSQLField ).find('option:not([value=""]):not([value*=","])')
+        var vContainerField = vSQLField.parent()
+        while ( vContainerField.parent().prop('tagName').toLowerCase() == 'span' )
+        {
+          vContainerField = vContainerField.parent()
+        }
+        var vContainerChkbx = $('<div></div>')
+        for ( var j = 0; j < vFieldOptions.length; j++ )
+        {
+          var vOption = vFieldOptions.slice( j, j + 1 )
+          var vOptionChkbx = $('<input type="checkbox">').attr('data-sqlcb-field', vFieldName)
+                                                         .attr('data-sqlcb-val', vOption.val())
+          var vOptionLabel = $('<label></label>').css('margin-bottom','0')
+                                                 .append( vOptionChkbx )
+                                                 .append( ' ' + vOption.text() )
+          vOptionLabel.click( function()
+          {
+            var vClickedField = $(this).find('input').attr('data-sqlcb-field')
+            $('select[name="' + vClickedField + '"]')
+            .val( $('input[data-sqlcb-field="' + vClickedField + '"]:checked')
+                  .map(function(){return $(this).attr('data-sqlcb-val')}).toArray().join(',') )
+          })
+          if ( vIsVertical )
+          {
+            var vOptionWrap = $('<div class="choicevert"></div>')
+                              .css('text-indent','0').css('margin-left','0')
+          }
+          else
+          {
+            var vOptionWrap = $('<span class="choicehoriz"></span>')
+          }
+          vOptionWrap.append( vOptionLabel )
+          vContainerChkbx.append( vOptionWrap )
+        }
+        vContainerField.after( vContainerChkbx )
+        vContainerField.css('display','none')
+      }
+    },100)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// [DEPRECATED] Logic to run before page render to provide the SQL checkbox field functionality.
+
+	function provideOldSQLCheckbox( $listFields, $project_id, $record,
+	                                $event_id, $instrument, $instance )
 	{
 		global $Proj;
 		foreach ( $listFields as $infoField )
@@ -3465,6 +3585,69 @@ $(function()
 <script type="text/javascript">
   $(function() {
     dataEntrySubmit( 'submit-btn-savenextform' )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Add the SQL to an SQLCHECKBOX field to provide the combined options.
+
+	function sqlCheckboxAddSQL()
+	{
+		$_POST['element_enum'] =
+			"SELECT * FROM ( WITH RECURSIVE redcap_ui_tweaker_qy AS (\n" .
+			"-- END redcap_ui_tweaker\n" .
+			$_POST['element_enum'] .
+			"\n-- BEGIN redcap_ui_tweaker\n" .
+			"), redcap_ui_tweaker_cb AS ( SELECT cast(concat(',',redcap_ui_tweaker_qy.`code`) " .
+			"AS CHAR(255)) AS codestr, redcap_ui_tweaker_qy.`code`, cast(concat(', '," .
+			"redcap_ui_tweaker_qy.`label`) AS CHAR(255)) AS `label` FROM redcap_ui_tweaker_qy " .
+			"UNION ALL SELECT concat(redcap_ui_tweaker_cb.codestr,',',redcap_ui_tweaker_qy." .
+			"`code`), redcap_ui_tweaker_qy.`code`, concat(redcap_ui_tweaker_cb.`label`,', '," .
+			"redcap_ui_tweaker_qy.`label`) FROM redcap_ui_tweaker_cb JOIN redcap_ui_tweaker_qy " .
+			"WHERE locate(concat(',',redcap_ui_tweaker_qy.`code`),redcap_ui_tweaker_cb.codestr) " .
+			"= 0 AND redcap_ui_tweaker_cb.`code` < redcap_ui_tweaker_qy.`code` ) " .
+			"SELECT substring(codestr,2) AS `code`, substring(`label`,3) AS `label` " .
+			"FROM redcap_ui_tweaker_cb ) redcap_ui_tweaker_out";
+	}
+
+
+
+
+
+	// JavaScript to remove the SQL which provides the combined options from an SQLCHECKBOX field.
+
+	function sqlCheckboxRemoveSQL()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vOpenAddQuesFormVisible = openAddQuesFormVisible
+    var vRemoveUITweakerCode = function()
+    {
+      $('#element_enum').val( $('#element_enum').val()
+                             .replace(/-- BEGIN redcap_ui_tweaker.*?-- END redcap_ui_tweaker/gs, '')
+                             .replace(/-- BEGIN redcap_ui_tweaker.*/gs, '')
+                             .replace(/.*-- END redcap_ui_tweaker/gs, '').trim() )
+    }
+    openAddQuesFormVisible = function(sq_id)
+    {
+      if ( $('#field_type').val() == 'sql' &&
+           $('#field_annotation').val().indexOf('@SQLCHECKBOX') != -1 )
+      {
+        setTimeout( vRemoveUITweakerCode, 100 )
+        setTimeout( vRemoveUITweakerCode, 500 )
+        setTimeout( vRemoveUITweakerCode, 1000 )
+      }
+      return vOpenAddQuesFormVisible(sq_id)
+    }
   })
 </script>
 <?php
