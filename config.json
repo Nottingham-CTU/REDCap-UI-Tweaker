@@ -417,5 +417,19 @@
 			"type" : "checkbox",
 			"super-users-only" : true
 		}
+	],
+	"action-tags" : [
+		{
+			"tag" : "@SAVEOPTIONS",
+			"description" : "Sets the save options on the form to the options specified (in the specified order). The format must follow the pattern @SAVEOPTIONS='????', in which the desired value must be a comma separated list of the following options: record (Save and Exit Form), continue (Save and Stay), nextinstance (Save and Add New Instance), nextform (Save and Go To Next Form), nextrecord (Save and Go To Next Record), exitrecord (Save and Exit Record), compresp (Save and Mark Survey as Complete). If this action tag is used on multiple fields on a form, the value from the first field not hidden by branching logic when the form loads, and not suppressed by @IF, will be used."
+		},
+		{
+			"tag" : "@SQLDESCRIPTIVE",
+			"description" : "On SQL fields, hide the drop-down and use the text in the selected option as descriptive text. You may want to pair this tag with @DEFAULT or @SETVALUE/@PREFILL to select the desired option. To ensure that the data is handled corectly, you may wish to output it from the database as URL-encoded or base64, in which case you can prefix it with url: or b64: respectively to indicate the format. Note that this action tag does not work with @IF."
+		},
+		{
+			"tag" : "@SQLCHECKBOX",
+			"description" : "On SQL fields, replace the drop-down with checkboxes. When writing an SQL query for use with the @SQLCHECKBOX action tag, ensure that the returned column names are 'code' and 'label', otherwise the query will not function. Also note that this action tag does not work with @IF."
+		}
 	]
 }

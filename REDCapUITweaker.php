@@ -662,46 +662,26 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-		// Amend the list of action tags (accessible from the add/edit field window in the
-		// instrument designer) when features which provide extra action tags are enabled.
+		// Amend the list of action tags when features which provide extra action tags are disabled.
 
-		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) == 'Design/online_designer.php' ||
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' )
+		$listRemoveActionTags = [];
+		if ( ! $this->getSystemSetting( 'submit-option-custom' ) )
 		{
-			$listActionTags = [];
-			if ( $this->getSystemSetting( 'submit-option-custom' ) )
-			{
-				$listActionTags['@SAVEOPTIONS'] =
-					'Sets the save options on the form to the options specified (in the specified' .
-					' order). The format must follow the pattern @SAVEOPTIONS=\'????\', in which ' .
-					'the desired value must be a comma separated list of the following options: ' .
-					'record (Save and Exit Form), continue (Save and Stay), nextinstance (Save ' .
-					'and Add New Instance), nextform (Save and Go To Next Form), nextrecord ' .
-					'(Save and Go To Next Record), exitrecord (Save and Exit Record), compresp ' .
-					'(Save and Mark Survey as Complete). If this action tag is used on multiple ' .
-					'fields on a form, the value from the first field not hidden by branching ' .
-					'logic when the form loads, and not suppressed by @IF, will be used.';
-			}
-			if ( defined( 'SUPER_USER' ) && SUPER_USER &&
-			     $this->getSystemSetting( 'sql-descriptive' ) )
-			{
-				$listActionTags['@SQLDESCRIPTIVE'] =
-					'On SQL fields, hide the drop-down and use the text in the selected option ' .
-					'as descriptive text. You may want to pair this tag with @DEFAULT or ' .
-					'@SETVALUE/@PREFILL to select the desired option. To ensure that the data is ' .
-					'handled corectly, you may wish to output it from the database as URL-encoded' .
-					' or base64, in which case you can prefix it with url: or b64: respectively ' .
-					'to indicate the format. Note: This action tag does not work with @IF.';
-			}
-			if ( $this->getSystemSetting( 'sql-checkbox' ) )
-			{
-				$listActionTags['@SQLCHECKBOX'] =
-					'On SQL fields, replace the drop-down with checkboxes. When writing an SQL ' .
-					'query for use with the @SQLCHECKBOX action tag, ensure that the returned ' .
-					'column names are \'code\' and \'label\', otherwise the query will not ' .
-					'function. Also note that this action tag does not work with @IF.';
-			}
-			$this->provideActionTagExplain( $listActionTags );
+			$listRemoveActionTags[] = '@SAVEOPTIONS';
+		}
+		if ( ! defined( 'SUPER_USER' ) || ! SUPER_USER ||
+		     ! $this->getSystemSetting( 'sql-descriptive' ) )
+		{
+			$listRemoveActionTags[] = '@SQLDESCRIPTIVE';
+		}
+		if ( ! defined( 'SUPER_USER' ) || ! SUPER_USER ||
+		     ! $this->getSystemSetting( 'sql-checkbox' ) )
+		{
+			$listRemoveActionTags[] = '@SQLCHECKBOX';
+		}
+		if ( ! empty( $listRemoveActionTags ) )
+		{
+			$this->provideActionTagRemove( $listRemoveActionTags );
 		}
 
 
@@ -1413,54 +1393,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-	// Output JavaScript to amend the action tags guide.
+	// Output JavaScript to remove action tags from the action tags guide.
 
-	function provideActionTagExplain( $listActionTags )
+	function provideActionTagRemove( $listActionTags )
 	{
-		if ( empty( $listActionTags ) )
-		{
-			return;
-		}
-		$listActionTagsJS = [];
-		foreach ( $listActionTags as $t => $d )
-		{
-			$listActionTagsJS[] = [ $t, $d ];
-		}
-		$listActionTagsJS = json_encode( $listActionTagsJS );
 
 ?>
 <script type="text/javascript">
 $(function()
 {
-  var vActionTagPopup = actionTagExplainPopup
-  var vMakeRow = function(vTag, vDesc, vTable)
+  if ( typeof actionTagExplainPopup == 'undefined' )
   {
-    var vRow = $( '<tr>' + vTable.find('tr:first').html() + '</tr>' )
-    var vOldTag = vRow.find('td:eq(1)').html()
-    var vButton = vRow.find('button')
-    vRow.find('td:eq(1)').html(vTag)
-    vRow.find('td:eq(2)').html(vDesc)
-    if ( vButton.length != 0 )
-    {
-      vButton.attr('onclick', vButton.attr('onclick').replace(vOldTag,vTag))
-    }
-    var vRows = vTable.find('tr')
-    var vInserted = false
-    for ( var i = 0; i < vRows.length; i++ )
-    {
-      var vA = vRows.eq(i).find('td:eq(1)').html()
-      if ( vTag < vRows.eq(i).find('td:eq(1)').html() )
-      {
-        vRows.eq(i).before(vRow)
-        vInserted = true
-        break
-      }
-    }
-    if ( ! vInserted )
-    {
-      vRows.last().after(vRow)
-    }
+    return
   }
+  var vListTagsRemove = <?php echo json_encode( $listActionTags ), "\n"; ?>
+  var vActionTagPopup = actionTagExplainPopup
   actionTagExplainPopup = function(hideBtns)
   {
     vActionTagPopup(hideBtns)
@@ -1472,10 +1419,15 @@ $(function()
       }
       clearInterval( vCheckTagsPopup )
       var vActionTagTable = $('#action_tag_explain_popup table');
-      <?php echo $listActionTagsJS; ?>.forEach(function(vItem)
+      var vRows = vActionTagTable.find('tr')
+      for ( var i = 0; i < vRows.length; i++ )
       {
-        vMakeRow(vItem[0],vItem[1],vActionTagTable)
-      })
+        var vTag = vRows.eq(i).find('td:eq(1)').text()
+        if ( vListTagsRemove.includes( vTag ) )
+        {
+          vRows.eq(i).css('display','none')
+        }
+      }
     }, 200 )
   }
 })
