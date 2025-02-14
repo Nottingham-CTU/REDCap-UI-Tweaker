@@ -973,23 +973,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
 		if( $this->getSystemSetting( 'sql-checkbox' ) )
 		{
-			$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
-			$listFieldsSQLChkbx = [];
-
-			foreach ( $listFields as $infoField )
-			{
-				if ( $infoField['field_type'] == 'sql' &&
-				     \Form::hasActionTag( '@SQLCHECKBOX',
-				                        str_replace( "\n", ' ', $infoField['field_annotation'] ) ) )
-				{
-					$listFieldsSQLChkbx[] = [ 'name' => $infoField['field_name'],
-					                          'align' => $infoField['custom_alignment'] ];
-				}
-			}
-			if ( ! empty( $listFieldsSQLChkbx ) )
-			{
-				$this->provideSQLCheckbox( $listFieldsSQLChkbx );
-			}
+			$this->provideSQLCheckbox( $instrument );
 		}
 
 
@@ -1014,6 +998,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		                              ['is_development_server', '1'] )->fetch_row() ) ) )
 		{
 			$this->provideAutofill( true );
+		}
+
+		// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
+		if( $this->getSystemSetting( 'sql-checkbox' ) )
+		{
+			$this->provideSQLCheckbox( $instrument );
 		}
 
 	}
@@ -2776,9 +2766,26 @@ $(function()
 
 	// Output JavaScript to provide the SQL checkbox field functionality.
 
-	function provideSQLCheckbox( $listFields )
+	function provideSQLCheckbox( $instrument )
 	{
-		$fieldsJSON = $this->escapeJSString( json_encode( $listFields ) );
+		$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+		$listFieldsSQLChkbx = [];
+
+		foreach ( $listFields as $infoField )
+		{
+			if ( $infoField['field_type'] == 'sql' &&
+			     \Form::hasActionTag( '@SQLCHECKBOX',
+			                        str_replace( "\n", ' ', $infoField['field_annotation'] ) ) )
+			{
+				$listFieldsSQLChkbx[] = [ 'name' => $infoField['field_name'],
+				                          'align' => $infoField['custom_alignment'] ];
+			}
+		}
+		if ( empty( $listFieldsSQLChkbx ) )
+		{
+			return;
+		}
+		$fieldsJSON = $this->escapeJSString( json_encode( $listFieldsSQLChkbx ) );
 
 ?>
 <script type="text/javascript">
