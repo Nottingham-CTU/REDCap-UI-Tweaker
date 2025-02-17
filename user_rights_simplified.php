@@ -325,6 +325,8 @@ foreach ( array_merge( [
             [ $GLOBALS['lang']['app_02'], 'data_comparison_tool', $lookupYN ],
             // - Logging
             [ $GLOBALS['lang']['app_07'], 'data_logging', $lookupYN ],
+            // - Email logging
+            [ $GLOBALS['lang']['email_users_53'], 'email_logging', $lookupYN ],
             // - File repository
             [ $GLOBALS['lang']['app_04'], 'file_repository', $lookupYN ],
             // - Rando

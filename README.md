@@ -159,17 +159,18 @@ in URL-encoded or base64 format, which can be indicated by prefixing the data as
 * if not prefixed, then assume raw (no encoding)
 
 ### Enable @SQLCHECKBOX action tag
-Allow use of the **@SQLCHECKBOX** action tag for checkbox fields, which will dynamically replace
-the checkbox options with those from a specified SQL field. The format must follow the pattern
-@SQLCHECKBOX='????', in which the desired value must be the field name of an SQL field in the
-project.<br>Note: Checkbox options will **not** be replaced if the form, record or project has been
-locked.
+Allow use of the **@SQLCHECKBOX** action tag for SQL fields, which will replace the drop-down list
+with a checkbox for each option similar to a checkbox field.
 
-*Note that using this action tag will cause the project data dictionary to be updated as necessary
-in order to align the checkbox options with those from the SQL field.*
+When writing an SQL query for use with the *@SQLCHECKBOX* action tag, ensure that the returned
+column names are `code` and `label`, otherwise the query will not function. Also note that the
+*@SQLCHECKBOX* action tag does not work with the *@IF* action tag.
 
 For best results, the SQL query should return all possible options outside of a record context<br>
 (where \[record-name\] = '') and only limit to a subset (if required) within a record context.
+
+*The previous implementation of @SQLCHECKBOX where the tag is applied to checkbox fields is now
+deprecated and will be removed in a future version of this module.*
 
 ### Static form variable names
 This option will allow the form variable name (as used in the \*_complete variable) to be set
@@ -246,6 +247,10 @@ Hides one or both of the 'contact REDCap administrator' links shown on project p
 ### Hide 'suggest a new feature' link
 Hides the 'suggest a new feature' link shown on project pages.
 
+### Always show autofill option in development status
+If the project is in development status, or the server is set as a development server, then the
+option to autofill the forms will be shown to all users.
+
 ### Submit options
 On a REDCap data entry form, there are several options available when submitting.
 The **Save & Exit Form** option is always displayed next to a button/list combo of options which can
@@ -275,6 +280,11 @@ If custom submit options are enabled, the submit options can also be set project
 project settings (in the same format as for the action tag). If a @SAVEOPTIONS action tag is used,
 it will override the project-wide setting. The @SAVEOPTIONS action tag and the project-wide setting
 will each override the system-wide setting.
+
+### Provide 'lock blank form' option
+Users with the privilege for locking individual forms will see an extra option on forms which are
+blank (appear with a grey status icon on the dashboard), so they can lock the form without saving
+any data on it and thus retaining its blank status.
 
 ### Remember the selection of 'all status types' on the record status dashboard
 If a user selects the 'all status types' option on the record status dashboard, their selection will
