@@ -607,6 +607,31 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					$this->sqlCheckboxRemoveSQL();
 				}
 
+				// [DEPRECATED] Check if the old @SQLCHECKBOX action tag is used and provide a
+				// warning if so.
+				if ( $_GET['page'] != '' && $this->getSystemSetting( 'sql-checkbox' ) )
+				{
+					$listFields = \REDCap::getDataDictionary( 'array', false, null, $_GET['page'] );
+					$listFieldsSQLChkbx = [];
+					foreach ( $listFields as $infoField )
+					{
+						if ( $infoField['field_type'] == 'checkbox' &&
+						     str_contains( $infoField['field_annotation'], '@SQLCHECKBOX' ) )
+						{
+							$listFieldsSQLChkbx[] = $infoField['field_name'];
+						}
+					}
+					if ( ! empty( $listFieldsSQLChkbx ) )
+					{
+						echo '<script type="text/javascript">$(function(){alert(\'The following ' .
+						     'fields on this form are using the\\nold @SQLCHECKBOX ' .
+						     'implementation:\\n';
+						echo $this->escapeHTML( implode( '\\n', $listFieldsSQLChkbx ) );
+						echo '\\n\\nIt is recommended that you update this form\\nto use the ' .
+						     'new @SQLCHECKBOX implementation.\')})</script>';
+					}
+				}
+
 			}
 			else
 			{
