@@ -269,7 +269,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				$this->exitAfterHook();
 			}
-			elseif ( isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
+			elseif ( \REDCap::versionCompare( REDCAP_VERSION, '15.1.0', '<' ) &&
+			         isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
 			         ! isset( $_GET['internal_name'] ) &&
 			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
 			{
@@ -3061,6 +3062,10 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
+<?php
+		if ( \REDCap::versionCompare( REDCAP_VERSION, '15.1.0', '<' ) )
+		{
+?>
     if ( status == '0' )
     {
       $('#table-forms_surveys tr').find('td:eq(1)').each(function()
@@ -3071,10 +3076,10 @@ $(function()
         vFormLink.css('display', 'inline-block')
         var vSaveBtn = $(this).find( '#form_menu_save_btn-' + vFormName )
         var vChgName = $('<a href="#"><i class="fas fa-pencil-alt fs8"></i></a>')
-        vChgName.attr('title', 'Edit instrument variable name')
+        vChgName.attr('title', 'Edit form variable name')
         vChgName.click(function()
         {
-          var vNewFormName = prompt( 'New instrument variable name for ' + vFormName, vFormName )
+          var vNewFormName = prompt( 'New form variable name for ' + vFormName, vFormName )
           if ( vNewFormName !== null && vNewFormName !== '' )
           {
             $.post( app_path_webroot + 'Design/set_form_name.php?internal_name=1&pid=' + pid,
@@ -3098,6 +3103,9 @@ $(function()
         vSaveBtn.after( ' &nbsp;&nbsp;' )
       })
     }
+<?php
+		}
+?>
     var vAddNewFormReveal = addNewFormReveal
     var vAddNewForm = addNewForm
     var vClickedBtnName = ''
@@ -3106,7 +3114,7 @@ $(function()
       vAddNewFormReveal( vFormName )
       var vCreateBtn = $( '#new-' + vFormName + ' [type="button"]' )
       vCreateBtn.before( '<br><span style="margin:0 5px 0 25px;font-weight:bold">' +
-                         'Instrument variable name:</span>' )
+                         'Form variable name:</span>' )
       var vFormVarField = $( '<input type="text" class="x-form-text x-form-field" ' +
                              'style="font-size:13px;" id="new_form_var-' + vFormName + '">' )
       vFormVarField.keyup( function()
