@@ -2861,6 +2861,11 @@ $(function()
         for ( var j = 0; j < vFieldOptions.length; j++ )
         {
           var vOption = vFieldOptions.slice( j, j + 1 )
+          if ( typeof vOption.parent().attr('data-mlm-mdcs') != 'undefined' ||
+               vOption.parent().attr('data-rc-lang-attrs') == 'label=missing_data_04' )
+          {
+            continue
+          }
           var vOptionChkbx = $('<input type="checkbox">').attr('data-sqlcb-field', vFieldName)
                                                          .attr('data-sqlcb-val', vOption.val())
           var vOptionLabel = $('<label></label>').css('margin-bottom','0')
