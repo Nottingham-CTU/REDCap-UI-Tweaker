@@ -278,6 +278,34 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				     $this->escapeHTML( strip_tags( $_POST['menu_description'] ) );
 				$this->exitAfterHook();
 			}
+			if ( $this->getSystemSetting( 'preserve-form-labels' ) )
+			{
+				if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 34 ) ==
+				     'Design/zip_instrument_download.php' )
+				{
+					foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
+					{
+						$this->query( 'UPDATE ' . $metadataTable .
+						              ' SET misc = concat(\'##UITweaker-FormName:\',' .
+						              'form_menu_description,\'\n\',ifnull(misc,\'\')) ' .
+						              'WHERE project_id = ? AND form_name = ? ' .
+						              'AND form_menu_description IS NOT NULL',
+						              [ $project_id, $_GET['page'] ] );
+					}
+				}
+				elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 7 ) == 'Design/' )
+				{
+					foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
+					{
+						$this->query( 'UPDATE ' . $metadataTable .
+						              ' SET form_menu_description = regexp_substr(substring(misc,' .
+						              '22),\'[^\n]+$\',1,1,\'m\'), misc = regexp_replace(misc,' .
+						              '\'^[^\n]+\n\',\'\') WHERE project_id = ? AND ' .
+						              'form_menu_description IS NOT NULL AND left(misc,21) = ' .
+						              '\'##UITweaker-FormName:\'', [ $project_id ] );
+					}
+				}
+			}
 		}
 
 

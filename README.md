@@ -195,6 +195,10 @@ This will populate field names with a prefix based on the form name when new fie
 
 Static form variable names must be enabled in order to use this feature.
 
+### Preserve form labels in instrument zips
+This will save the form name label into the data dictionary prior to instrument download, and load
+the name from the data dictionary following an instrument upload.
+
 ### Enable the Data Resolution Workflow on new projects
 This option will enable the Data Resolution Workflow instead of the Field Comment Log on new
 projects.

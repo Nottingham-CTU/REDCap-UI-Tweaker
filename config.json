@@ -87,6 +87,12 @@
 			"branchingLogic" : { "field" : "static-form-names", "value" : true }
 		},
 		{
+			"key" : "preserve-form-labels",
+			"name" : "Preserve form labels in instrument zips",
+			"type" : "checkbox",
+			"branchingLogic" : { "field" : "static-form-names", "value" : true }
+		},
+		{
 			"key" : "hdr-data-qual",
 			"name" : "<b>Data quality tweaks</b>",
 			"type" : "descriptive"
