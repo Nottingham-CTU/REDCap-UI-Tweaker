@@ -20,7 +20,26 @@ function reportsEscape( $text )
 	                     [ '<b>', '</b>', '<i>', '</i>' ], $text );
 	$text = preg_replace( '/&(amp;)*amp;lt;(b|i)&(amp;)*amp;gt;/', '&$1lt;$2&$3gt;', $text );
 	$text = preg_replace( '/&(amp;)*amp;lt;\\/(b|i)&(amp;)*amp;gt;/', '&$1lt;/$2&$3gt;', $text );
-	$text = str_replace( "\n", $svbr, $text );
+	$lineCount = 0;
+	$textLines = explode( "\n", $text );
+	$text = '';
+	while ( ! empty( $textLines ) )
+	{
+		if ( $text != '' )
+		{
+			if ( $lineCount > 25 )
+			{
+				$text .= '<br>';
+				$lineCount = 0;
+			}
+			else
+			{
+				$text .= $svbr;
+			}
+		}
+		$lineCount += 1 + floor( strlen( $textLines[0] ) / 100 );
+		$text .= array_shift( $textLines );
+	}
 	return $text;
 }
 

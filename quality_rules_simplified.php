@@ -20,6 +20,7 @@ $queryRules = $module->query( 'SELECT rule_id, rule_name, rule_logic, real_time_
 $listRules = [];
 while ( $infoRule = $queryRules->fetch_assoc() )
 {
+	$infoRule['rule_logic'] = str_replace( "\r\n", "\n", $infoRule['rule_logic'] );
 	$listRules[] = $infoRule;
 }
 

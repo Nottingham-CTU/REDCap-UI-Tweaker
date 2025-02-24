@@ -32,7 +32,26 @@ function alertsEscape( $text )
 	$text = str_replace( [ '&lt;', '&gt;', '&quot;', '&#039;' ], '', $text );
 	$text = str_replace( [ '&amp;lt;', '&amp;gt;', '&amp;quot;', '&amp;#039;', '&amp;amp;' ],
 	                     [ '&lt;', '&gt;', '&quot;', '&#039;', '&amp;' ], $text );
-	$text = str_replace( '<br>', $svbr, $text );
+	$lineCount = 0;
+	$textLines = explode( '<br>', $text );
+	$text = '';
+	while ( ! empty( $textLines ) )
+	{
+		if ( $text != '' )
+		{
+			if ( $lineCount > 25 )
+			{
+				$text .= '<br>';
+				$lineCount = 0;
+			}
+			else
+			{
+				$text .= $svbr;
+			}
+		}
+		$lineCount += 1 + floor( strlen( $textLines[0] ) / 50 );
+		$text .= array_shift( $textLines );
+	}
 	return $text;
 }
 
