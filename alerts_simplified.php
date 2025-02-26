@@ -693,8 +693,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 			$infoTemp = $oldVals ? $infoAlert['alert_oldvals'] : $infoAlert;
 			if ( $infoTemp['cron_send_email_on'] == 'now' )
 			{
-				echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-				                          ?? $GLOBALS['lang']['global_1540'] );
+				echo $module->escapeHTML( $GLOBALS['lang']['global_1540'] );
 			}
 			elseif ( $infoTemp['cron_send_email_on'] == 'next_occurrence' )
 			{
@@ -1007,8 +1006,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 				$infoTemp = $oldVals ? $infoASI['asi_oldvals'] : $infoASI;
 				if ( $infoTemp['condition_send_time_option'] == 'IMMEDIATELY' )
 				{
-					echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-					                          ?? $GLOBALS['lang']['global_1540'] );
+					echo $module->escapeHTML( $GLOBALS['lang']['global_1540'] );
 				}
 				elseif ( $infoTemp['condition_send_time_option'] == 'NEXT_OCCURRENCE' )
 				{
@@ -1172,8 +1170,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 
 			// Output the Survey Confirmation schedule.
 			echo '  <td style="', $tblStyle, '">',
-			     $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-			                          ?? $GLOBALS['lang']['global_1540'] ), $svbr,
+			     $module->escapeHTML( $GLOBALS['lang']['global_1540'] ), $svbr,
 			     $module->escapeHTML( $GLOBALS['lang']['alerts_61'] ),
 			     "</td>\n";
 
