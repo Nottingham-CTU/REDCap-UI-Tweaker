@@ -1517,6 +1517,10 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
+    if ( typeof lang.global_276 == 'undefined' )
+    {
+      lang.global_276 = <?php echo $this->escapeJSString( $GLOBALS['lang']['global_276'] ), "\n"; ?>
+    }
     if ( $('#auto-fill-btn').length == 0 && $('#admin-controls-div').length == 0 )
     {
       $('#pagecontent').append('<div id="admin-controls-div" style="position:absolute;top:0px;' +
@@ -1537,14 +1541,17 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
-    if ( $('#auto-fill-btn').length == 0 )
+    setInterval( function()
     {
-      $('#formSaveTip').append('<div class=""><button id="auto-fill-btn" class="btn btn-link ' +
-                               'btn-xs" style="font-size:11px !important;padding:1px 5px ' +
-                               '!important;margin:0 !important;color:#007bffcc;" onclick=' +
-                               '"autoFill();"><i class="fs10 fa-solid fa-wand-magic-sparkles ' +
-                               'mr-1"></i>' + lang.global_275 + '</button></div>')
-    }
+      if ( $('#auto-fill-btn').length == 0 )
+      {
+        $('#formSaveTip').append('<div class=""><button id="auto-fill-btn" class="btn btn-link ' +
+                                'btn-xs" style="font-size:11px !important;padding:1px 5px ' +
+                                 '!important;margin:0 !important;color:#007bffcc;" onclick=' +
+                                 '"autoFill();"><i class="fs10 fa-solid fa-wand-magic-sparkles ' +
+                                 'mr-1"></i>' + lang.global_275 + '</button></div>')
+      }
+    }, 5000 )
   })
 </script>
 <?php
