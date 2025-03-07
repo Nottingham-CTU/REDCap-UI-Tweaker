@@ -3631,10 +3631,11 @@ $(function()
 
 	function sqlCheckboxAddSQL()
 	{
+		unset( $_POST['dropdown_autocomplete'] );
 		$_POST['element_enum'] =
 			"SELECT * FROM ( WITH RECURSIVE redcap_ui_tweaker_qy AS (\n" .
 			"-- END redcap_ui_tweaker\n" .
-			$_POST['element_enum'] .
+			rtrim( $_POST['element_enum'], " \n\r\t;" ) .
 			"\n-- BEGIN redcap_ui_tweaker\n" .
 			"), redcap_ui_tweaker_cb AS ( SELECT cast(concat(',',redcap_ui_tweaker_qy.`code`) " .
 			"AS CHAR(255)) AS codestr, redcap_ui_tweaker_qy.`code`, cast(concat(', '," .
