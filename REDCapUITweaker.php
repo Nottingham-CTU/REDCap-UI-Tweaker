@@ -2863,6 +2863,7 @@ $(function()
         var vIsVertical = ( vListFields[i].align.indexOf('H') == -1 )
         var vSQLField = $('select[name="' + vFieldName + '"]')
         var vFieldOptions = $( vSQLField ).find('option:not([value=""]):not([value*=","])')
+        var vSelectedOptions = $( vSQLField ).val().split(',')
         var vContainerField = vSQLField.parent()
         while ( vContainerField.parent().prop('tagName').toLowerCase() == 'span' )
         {
@@ -2879,6 +2880,10 @@ $(function()
           }
           var vOptionChkbx = $('<input type="checkbox">').attr('data-sqlcb-field', vFieldName)
                                                          .attr('data-sqlcb-val', vOption.val())
+          if ( vSelectedOptions.indexOf( vOption.val() ) > -1 )
+          {
+            vOptionChkbx.prop('checked', true)
+          }
           var vOptionLabel = $('<label></label>').css('margin-bottom','0')
                                                  .append( vOptionChkbx )
                                                  .append( ' ' + vOption.text() )
