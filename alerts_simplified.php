@@ -39,7 +39,7 @@ function alertsEscape( $text )
 	{
 		if ( $text != '' )
 		{
-			if ( $lineCount > 25 )
+			if ( $lineCount > REDCapUITweaker::SVBR_MAX_LINES )
 			{
 				$text .= '<br>';
 				$lineCount = 0;

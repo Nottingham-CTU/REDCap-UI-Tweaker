@@ -24,6 +24,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	// Simplified view <br> tag.
 	const SVBR = '<br style="mso-data-placement:same-cell">';
+	const SVBR_MAX_LINES = 25;
 
 	private $customAlerts;
 	private $customReports;
