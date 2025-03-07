@@ -20,6 +20,9 @@ function reportsEscape( $text )
 	                     [ '<b>', '</b>', '<i>', '</i>' ], $text );
 	$text = preg_replace( '/&(amp;)*amp;lt;(b|i)&(amp;)*amp;gt;/', '&$1lt;$2&$3gt;', $text );
 	$text = preg_replace( '/&(amp;)*amp;lt;\\/(b|i)&(amp;)*amp;gt;/', '&$1lt;/$2&$3gt;', $text );
+	// Line breaks will split cells in Excel only when max_lines is reached so we avoid split cells
+	// as much as possible but cells with too much content to be displayed are also avoided.
+	// Line wrapping is assumed to take place at 100 characters and included in the line count.
 	$lineCount = 0;
 	$textLines = explode( "\n", $text );
 	$text = '';

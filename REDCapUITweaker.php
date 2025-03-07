@@ -24,6 +24,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	// Simplified view <br> tag.
 	const SVBR = '<br style="mso-data-placement:same-cell">';
+	// Maximum number of lines before Excel cell-splitting is allowed.
+	// (In some contexts we want to allow cell-splitting so there isn't too much content in a cell.)
 	const SVBR_MAX_LINES = 25;
 
 	private $customAlerts;

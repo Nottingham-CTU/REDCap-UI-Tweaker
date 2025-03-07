@@ -32,6 +32,9 @@ function alertsEscape( $text )
 	$text = str_replace( [ '&lt;', '&gt;', '&quot;', '&#039;' ], '', $text );
 	$text = str_replace( [ '&amp;lt;', '&amp;gt;', '&amp;quot;', '&amp;#039;', '&amp;amp;' ],
 	                     [ '&lt;', '&gt;', '&quot;', '&#039;', '&amp;' ], $text );
+	// Line breaks will split cells in Excel only when max_lines is reached so we avoid split cells
+	// as much as possible but cells with too much content to be displayed are also avoided.
+	// Line wrapping is assumed to take place at 50 characters and included in the line count.
 	$lineCount = 0;
 	$textLines = explode( '<br>', $text );
 	$text = '';
