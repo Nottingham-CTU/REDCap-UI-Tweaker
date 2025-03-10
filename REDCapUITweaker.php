@@ -24,6 +24,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	// Simplified view <br> tag.
 	const SVBR = '<br style="mso-data-placement:same-cell">';
+	// Maximum number of lines before Excel cell-splitting is allowed.
+	// (In some contexts we want to allow cell-splitting so there isn't too much content in a cell.)
+	const SVBR_MAX_LINES = 25;
 
 	private $customAlerts;
 	private $customReports;
@@ -167,6 +170,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// If the @SQLCHECKBOX action tag is enabled and saving the SQL, add the SQL to provide the
+		// combined options.
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'Design/edit_field.php' &&
+		     $this->getSystemSetting( 'sql-checkbox' ) && $_POST['field_type'] == 'sql' &&
+		     \Form::hasActionTag( '@SQLCHECKBOX',
+		                          str_replace( "\n", ' ', $_POST['field_annotation'] ) ) )
+		{
+			$this->sqlCheckboxAddSQL();
+		}
+
+
 		// If any data entry page.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' )
@@ -188,7 +202,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				$GLOBALS['lang']['dataqueries_309'] = $dqCustomBodyDRW;
 			}
 
-			// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
+			// [DEPRECATED] Check if the @SQLCHECKBOX action tag is enabled and provide its
+			// functionality if so.
 			if($_GET['page'] != '' && $this->getSystemSetting( 'sql-checkbox' ))
 			{
 
@@ -205,9 +220,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				if ( ! empty( $listFieldsSQLChkbx ) )
 				{
-					$this->provideSQLCheckBox( $listFieldsSQLChkbx, $project_id,
-					                           $_GET['id'], $_GET['event_id'],
-					                           $_GET['page'], $_GET['instance'] );
+					$this->provideOldSQLCheckbox( $listFieldsSQLChkbx, $project_id,
+					                              $_GET['id'], $_GET['event_id'],
+					                              $_GET['page'], $_GET['instance'] );
 				}
 			}
 
@@ -257,7 +272,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				$this->exitAfterHook();
 			}
-			elseif ( isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
+			elseif ( \REDCap::versionCompare( REDCAP_VERSION, '15.1.0', '<' ) &&
+			         isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
 			         ! isset( $_GET['internal_name'] ) &&
 			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
 			{
@@ -265,6 +281,34 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				echo $this->escapeHTML( strip_tags( $_POST['page'] ) ), "\n",
 				     $this->escapeHTML( strip_tags( $_POST['menu_description'] ) );
 				$this->exitAfterHook();
+			}
+			if ( $this->getSystemSetting( 'preserve-form-labels' ) )
+			{
+				if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 34 ) ==
+				     'Design/zip_instrument_download.php' )
+				{
+					foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
+					{
+						$this->query( 'UPDATE ' . $metadataTable .
+						              ' SET misc = concat(\'##UITweaker-FormName:\',' .
+						              'form_menu_description,\'\n\',ifnull(misc,\'\')) ' .
+						              'WHERE project_id = ? AND form_name = ? ' .
+						              'AND form_menu_description IS NOT NULL',
+						              [ $project_id, $_GET['page'] ] );
+					}
+				}
+				elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 7 ) == 'Design/' )
+				{
+					foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
+					{
+						$this->query( 'UPDATE ' . $metadataTable .
+						              ' SET form_menu_description = regexp_substr(substring(misc,' .
+						              '22),\'[^\n]+$\',1,1,\'m\'), misc = regexp_replace(misc,' .
+						              '\'^[^\n]+\n\',\'\') WHERE project_id = ? AND ' .
+						              'form_menu_description IS NOT NULL AND left(misc,21) = ' .
+						              '\'##UITweaker-FormName:\'', [ $project_id ] );
+					}
+				}
 			}
 		}
 
@@ -587,6 +631,39 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					}
 				}
 
+
+				// If the @SQLCHECKBOX action tag is enabled, remove the SQL which provides the
+				// combined options on the edit field dialog.
+				if ( $this->getSystemSetting( 'sql-checkbox' ) )
+				{
+					$this->sqlCheckboxRemoveSQL();
+				}
+
+				// [DEPRECATED] Check if the old @SQLCHECKBOX action tag is used and provide a
+				// warning if so.
+				if ( $_GET['page'] != '' && $this->getSystemSetting( 'sql-checkbox' ) )
+				{
+					$listFields = \REDCap::getDataDictionary( 'array', false, null, $_GET['page'] );
+					$listFieldsSQLChkbx = [];
+					foreach ( $listFields as $infoField )
+					{
+						if ( $infoField['field_type'] == 'checkbox' &&
+						     str_contains( $infoField['field_annotation'], '@SQLCHECKBOX' ) )
+						{
+							$listFieldsSQLChkbx[] = $infoField['field_name'];
+						}
+					}
+					if ( ! empty( $listFieldsSQLChkbx ) )
+					{
+						echo '<script type="text/javascript">$(function(){alert(\'The following ' .
+						     'fields on this form are using the\\nold @SQLCHECKBOX ' .
+						     'implementation:\\n';
+						echo $this->escapeHTML( implode( '\\n', $listFieldsSQLChkbx ) );
+						echo '\\n\\nIt is recommended that you update this form\\nto use the ' .
+						     'new @SQLCHECKBOX implementation.\')})</script>';
+					}
+				}
+
 			}
 			else
 			{
@@ -642,48 +719,26 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-		// Amend the list of action tags (accessible from the add/edit field window in the
-		// instrument designer) when features which provide extra action tags are enabled.
+		// Amend the list of action tags when features which provide extra action tags are disabled.
 
-		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) == 'Design/online_designer.php' ||
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 22 ) == 'ProjectSetup/index.php' )
+		$listRemoveActionTags = [];
+		if ( ! $this->getSystemSetting( 'submit-option-custom' ) )
 		{
-			$listActionTags = [];
-			if ( $this->getSystemSetting( 'submit-option-custom' ) )
-			{
-				$listActionTags['@SAVEOPTIONS'] =
-					'Sets the save options on the form to the options specified (in the specified' .
-					' order). The format must follow the pattern @SAVEOPTIONS=\'????\', in which ' .
-					'the desired value must be a comma separated list of the following options: ' .
-					'record (Save and Exit Form), continue (Save and Stay), nextinstance (Save ' .
-					'and Add New Instance), nextform (Save and Go To Next Form), nextrecord ' .
-					'(Save and Go To Next Record), exitrecord (Save and Exit Record), compresp ' .
-					'(Save and Mark Survey as Complete). If this action tag is used on multiple ' .
-					'fields on a form, the value from the first field not hidden by branching ' .
-					'logic when the form loads, and not suppressed by @IF, will be used.';
-			}
-			if ( defined( 'SUPER_USER' ) && SUPER_USER &&
-			     $this->getSystemSetting( 'sql-descriptive' ) )
-			{
-				$listActionTags['@SQLDESCRIPTIVE'] =
-					'On SQL fields, hide the drop-down and use the text in the selected option ' .
-					'as descriptive text. You may want to pair this tag with @DEFAULT or ' .
-					'@SETVALUE/@PREFILL to select the desired option. To ensure that the data is ' .
-					'handled corectly, you may wish to output it from the database as URL-encoded' .
-					' or base64, in which case you can prefix it with url: or b64: respectively ' .
-					'to indicate the format. Note: This action tag does not work with @IF.';
-			}
-			if ($this->getSystemSetting( 'sql-checkbox' ) )
-			{
-				$listActionTags['@SQLCHECKBOX'] =
-					'On checkbox fields, dynamically replace the options with those from a ' .
-					'specified SQL field. The format must follow the pattern ' .
-					'@SQLCHECKBOX=\'????\', in which the desired value must be the field name of ' .
-					'an SQL field in the project. Note: This action tag does not work with @IF. ' .
-					'Checkbox options will NOT be replaced if the form, record or project has ' .
-					'been locked.';
-			}
-			$this->provideActionTagExplain( $listActionTags );
+			$listRemoveActionTags[] = '@SAVEOPTIONS';
+		}
+		if ( ! defined( 'SUPER_USER' ) || ! SUPER_USER ||
+		     ! $this->getSystemSetting( 'sql-descriptive' ) )
+		{
+			$listRemoveActionTags[] = '@SQLDESCRIPTIVE';
+		}
+		if ( ! defined( 'SUPER_USER' ) || ! SUPER_USER ||
+		     ! $this->getSystemSetting( 'sql-checkbox' ) )
+		{
+			$listRemoveActionTags[] = '@SQLCHECKBOX';
+		}
+		if ( ! empty( $listRemoveActionTags ) )
+		{
+			$this->provideActionTagRemove( $listRemoveActionTags );
 		}
 
 
@@ -950,6 +1005,63 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 		}
 
+		// Check if autofill links for all users are enabled and this is a development project or
+		// server and provide the autofill link if so.
+		if ( $this->getSystemSetting( 'show-autofill-development' ) &&
+		     ( $this->getProjectStatus() == 'DEV' ||
+		       ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
+		                              'WHERE field_name = ? AND `value` = ?',
+		                              ['is_development_server', '1'] )->fetch_row() ) ) )
+		{
+			$this->provideAutofill( false );
+		}
+
+		// Check if the lock blank form option is enabled and provide it if this is a blank form.
+		if ( $this->getSystemSetting( 'lock-blank-form' ) &&
+		     ! $this->query( 'SELECT 1 FROM ' . \REDCap::getDataTable( $project_id ) .
+		                     ' WHERE project_id = ? AND event_id = ? AND record = ? AND ' .
+		                     'field_name = ? AND ifnull(instance,1) = ?',
+		                     [ $project_id, $event_id, $record, $instrument . '_complete',
+		                       $repeat_instance ] )->fetch_assoc() )
+		{
+			$this->provideLockBlankForm();
+		}
+
+		// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
+		if( $this->getSystemSetting( 'sql-checkbox' ) )
+		{
+			$this->provideSQLCheckbox( $instrument );
+		}
+
+
+	}
+
+
+
+
+
+	// Perform actions on survey pages.
+
+	function redcap_survey_page( $project_id, $record, $instrument, $event_id, $group_id = null,
+	                             $survey_hash = null, $response_id = null, $repeat_instance = 1 )
+	{
+
+		// Check if autofill links for all users are enabled and this is a development project or
+		// server and provide the autofill link if so.
+		if ( $this->getSystemSetting( 'show-autofill-development' ) &&
+		     ( $this->getProjectStatus() == 'DEV' ||
+		       ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
+		                              'WHERE field_name = ? AND `value` = ?',
+		                              ['is_development_server', '1'] )->fetch_row() ) ) )
+		{
+			$this->provideAutofill( true );
+		}
+
+		// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
+		if( $this->getSystemSetting( 'sql-checkbox' ) )
+		{
+			$this->provideSQLCheckbox( $instrument );
+		}
 
 	}
 
@@ -1179,6 +1291,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+	// Escapes text string for inclusion in JavaScript.
+
+	function escapeJSString( $text )
+	{
+		return '"' . $this->escapeHTML( substr( json_encode( (string)$text,
+		                                                     JSON_HEX_QUOT | JSON_HEX_APOS |
+		                                                     JSON_HEX_TAG | JSON_HEX_AMP |
+		                                                     JSON_UNESCAPED_SLASHES ),
+		                                        1, -1 ) ) . '"';
+	}
+
+
+
+
+
 	// Get the alerts supplied by other modules.
 
 	function getCustomAlerts()
@@ -1313,54 +1440,21 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
-	// Output JavaScript to amend the action tags guide.
+	// Output JavaScript to remove action tags from the action tags guide.
 
-	function provideActionTagExplain( $listActionTags )
+	function provideActionTagRemove( $listActionTags )
 	{
-		if ( empty( $listActionTags ) )
-		{
-			return;
-		}
-		$listActionTagsJS = [];
-		foreach ( $listActionTags as $t => $d )
-		{
-			$listActionTagsJS[] = [ $t, $d ];
-		}
-		$listActionTagsJS = json_encode( $listActionTagsJS );
 
 ?>
 <script type="text/javascript">
 $(function()
 {
-  var vActionTagPopup = actionTagExplainPopup
-  var vMakeRow = function(vTag, vDesc, vTable)
+  if ( typeof actionTagExplainPopup == 'undefined' )
   {
-    var vRow = $( '<tr>' + vTable.find('tr:first').html() + '</tr>' )
-    var vOldTag = vRow.find('td:eq(1)').html()
-    var vButton = vRow.find('button')
-    vRow.find('td:eq(1)').html(vTag)
-    vRow.find('td:eq(2)').html(vDesc)
-    if ( vButton.length != 0 )
-    {
-      vButton.attr('onclick', vButton.attr('onclick').replace(vOldTag,vTag))
-    }
-    var vRows = vTable.find('tr')
-    var vInserted = false
-    for ( var i = 0; i < vRows.length; i++ )
-    {
-      var vA = vRows.eq(i).find('td:eq(1)').html()
-      if ( vTag < vRows.eq(i).find('td:eq(1)').html() )
-      {
-        vRows.eq(i).before(vRow)
-        vInserted = true
-        break
-      }
-    }
-    if ( ! vInserted )
-    {
-      vRows.last().after(vRow)
-    }
+    return
   }
+  var vListTagsRemove = <?php echo json_encode( $listActionTags ), "\n"; ?>
+  var vActionTagPopup = actionTagExplainPopup
   actionTagExplainPopup = function(hideBtns)
   {
     vActionTagPopup(hideBtns)
@@ -1372,10 +1466,15 @@ $(function()
       }
       clearInterval( vCheckTagsPopup )
       var vActionTagTable = $('#action_tag_explain_popup table');
-      <?php echo $listActionTagsJS; ?>.forEach(function(vItem)
+      var vRows = vActionTagTable.find('tr')
+      for ( var i = 0; i < vRows.length; i++ )
       {
-        vMakeRow(vItem[0],vItem[1],vActionTagTable)
-      })
+        var vTag = vRows.eq(i).find('td:eq(1)').text()
+        if ( vListTagsRemove.includes( vTag ) )
+        {
+          vRows.eq(i).css('display','none')
+        }
+      }
     }, 200 )
   }
 })
@@ -1404,6 +1503,62 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript to add the autofill option for all users if the project is in development
+	// status or the server is a development/testing server.
+
+	function provideAutofill( $survey = false )
+	{
+		if ( $survey )
+		{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( typeof lang.global_276 == 'undefined' )
+    {
+      lang.global_276 = <?php echo $this->escapeJSString( $GLOBALS['lang']['global_276'] ), "\n"; ?>
+    }
+    if ( $('#auto-fill-btn').length == 0 && $('#admin-controls-div').length == 0 )
+    {
+      $('#pagecontent').append('<div id="admin-controls-div" style="position:absolute;top:0px;' +
+                               'left:calc(100%);margin:5px 0px 0px 7px;width:max-content"></div>')
+      $('#admin-controls-div').append('<a id="auto-fill-btn" class="btn btn-link btn-xs fs11" ' +
+                                      'href="javascript:;" onclick="autoFill();" style="color:' +
+                                      'rgb(136, 136, 136)"><i class="fs10 fa-solid ' +
+                                      'fa-wand-magic-sparkles"></i> <span data-rc-lang=' +
+                                      '"global_276">' + lang.global_276 + '</span></a>')
+    }
+  })
+</script>
+<?php
+		}
+		else
+		{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setInterval( function()
+    {
+      if ( $('#auto-fill-btn').length == 0 )
+      {
+        $('#formSaveTip').append('<div class=""><button id="auto-fill-btn" class="btn btn-link ' +
+                                'btn-xs" style="font-size:11px !important;padding:1px 5px ' +
+                                 '!important;margin:0 !important;color:#007bffcc;" onclick=' +
+                                 '"autoFill();"><i class="fs10 fa-solid fa-wand-magic-sparkles ' +
+                                 'mr-1"></i>' + lang.global_275 + '</button></div>')
+      }
+    }, 5000 )
+  })
+</script>
+<?php
+		}
 	}
 
 
@@ -2210,6 +2365,35 @@ $(function()
 
 
 
+	// Output JavaScript to provide a 'lock blank form' option.
+
+	function provideLockBlankForm()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setTimeout(function()
+    {
+      if ( $('#__LOCKRECORD__:visible:not(:checked)').length > 0 )
+      {
+        $('#__LOCKRECORD__-tr')
+          .after('<tr class="d-print-none"><td class="labelrc col-7"></td><td class="data col-5">' +
+                 '<button onclick="lockDisabledForm(this)" class="btn btn-defaultrc btn-xs" ' +
+                 'type="button" style="margin:10px 0px">Lock blank form</button></td></tr>')
+      }
+    },1000)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to prevent selecting 'lock this instrument' from being treated as a data
 	// change.
 
@@ -2644,10 +2828,102 @@ $(function()
 
 
 
-	// Logic to run before page render to provide the SQL checkbox field functionality.
+	// Output JavaScript to provide the SQL checkbox field functionality.
 
-	function provideSQLCheckBox( $listFields, $project_id, $record,
-	                             $event_id, $instrument, $instance )
+	function provideSQLCheckbox( $instrument )
+	{
+		$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+		$listFieldsSQLChkbx = [];
+
+		foreach ( $listFields as $infoField )
+		{
+			if ( $infoField['field_type'] == 'sql' &&
+			     \Form::hasActionTag( '@SQLCHECKBOX',
+			                        str_replace( "\n", ' ', $infoField['field_annotation'] ) ) )
+			{
+				$listFieldsSQLChkbx[] = [ 'name' => $infoField['field_name'],
+				                          'align' => $infoField['custom_alignment'] ];
+			}
+		}
+		if ( empty( $listFieldsSQLChkbx ) )
+		{
+			return;
+		}
+		$fieldsJSON = $this->escapeJSString( json_encode( $listFieldsSQLChkbx ) );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setTimeout(function(){
+      var vListFields = JSON.parse(<?php echo $fieldsJSON; ?>)
+      for ( var i = 0; i < vListFields.length; i++ )
+      {
+        var vFieldName = vListFields[i].name
+        var vIsVertical = ( vListFields[i].align.indexOf('H') == -1 )
+        var vSQLField = $('select[name="' + vFieldName + '"]')
+        var vFieldOptions = $( vSQLField ).find('option:not([value=""]):not([value*=","])')
+        var vSelectedOptions = $( vSQLField ).val().split(',')
+        var vContainerField = vSQLField.parent()
+        while ( vContainerField.parent().prop('tagName').toLowerCase() == 'span' )
+        {
+          vContainerField = vContainerField.parent()
+        }
+        var vContainerChkbx = $('<div></div>')
+        for ( var j = 0; j < vFieldOptions.length; j++ )
+        {
+          var vOption = vFieldOptions.slice( j, j + 1 )
+          if ( typeof vOption.parent().attr('data-mlm-mdcs') != 'undefined' ||
+               vOption.parent().attr('data-rc-lang-attrs') == 'label=missing_data_04' )
+          {
+            continue
+          }
+          var vOptionChkbx = $('<input type="checkbox">').attr('data-sqlcb-field', vFieldName)
+                                                         .attr('data-sqlcb-val', vOption.val())
+          if ( vSelectedOptions.indexOf( vOption.val() ) > -1 )
+          {
+            vOptionChkbx.prop('checked', true)
+          }
+          var vOptionLabel = $('<label></label>').css('margin-bottom','0')
+                                                 .append( vOptionChkbx )
+                                                 .append( ' ' + vOption.text() )
+          vOptionLabel.click( function()
+          {
+            var vClickedField = $(this).find('input').attr('data-sqlcb-field')
+            $('select[name="' + vClickedField + '"]')
+            .val( $('input[data-sqlcb-field="' + vClickedField + '"]:checked')
+                  .map(function(){return $(this).attr('data-sqlcb-val')}).toArray().join(',') )
+          })
+          if ( vIsVertical )
+          {
+            var vOptionWrap = $('<div class="choicevert"></div>')
+                              .css('text-indent','0').css('margin-left','0')
+          }
+          else
+          {
+            var vOptionWrap = $('<span class="choicehoriz"></span>')
+          }
+          vOptionWrap.append( vOptionLabel )
+          vContainerChkbx.append( vOptionWrap )
+        }
+        vContainerField.after( vContainerChkbx )
+        vContainerField.css('display','none')
+      }
+    },100)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// [DEPRECATED] Logic to run before page render to provide the SQL checkbox field functionality.
+
+	function provideOldSQLCheckbox( $listFields, $project_id, $record,
+	                                $event_id, $instrument, $instance )
 	{
 		global $Proj;
 		foreach ( $listFields as $infoField )
@@ -2801,6 +3077,10 @@ $(function()
 <script type="text/javascript">
   $(function()
   {
+<?php
+		if ( \REDCap::versionCompare( REDCAP_VERSION, '15.1.0', '<' ) )
+		{
+?>
     if ( status == '0' )
     {
       $('#table-forms_surveys tr').find('td:eq(1)').each(function()
@@ -2811,10 +3091,10 @@ $(function()
         vFormLink.css('display', 'inline-block')
         var vSaveBtn = $(this).find( '#form_menu_save_btn-' + vFormName )
         var vChgName = $('<a href="#"><i class="fas fa-pencil-alt fs8"></i></a>')
-        vChgName.attr('title', 'Edit instrument variable name')
+        vChgName.attr('title', 'Edit form variable name')
         vChgName.click(function()
         {
-          var vNewFormName = prompt( 'New instrument variable name for ' + vFormName, vFormName )
+          var vNewFormName = prompt( 'New form variable name for ' + vFormName, vFormName )
           if ( vNewFormName !== null && vNewFormName !== '' )
           {
             $.post( app_path_webroot + 'Design/set_form_name.php?internal_name=1&pid=' + pid,
@@ -2838,6 +3118,9 @@ $(function()
         vSaveBtn.after( ' &nbsp;&nbsp;' )
       })
     }
+<?php
+		}
+?>
     var vAddNewFormReveal = addNewFormReveal
     var vAddNewForm = addNewForm
     var vClickedBtnName = ''
@@ -2846,7 +3129,7 @@ $(function()
       vAddNewFormReveal( vFormName )
       var vCreateBtn = $( '#new-' + vFormName + ' [type="button"]' )
       vCreateBtn.before( '<br><span style="margin:0 5px 0 25px;font-weight:bold">' +
-                         'Instrument variable name:</span>' )
+                         'Form variable name:</span>' )
       var vFormVarField = $( '<input type="text" class="x-form-text x-form-field" ' +
                              'style="font-size:13px;" id="new_form_var-' + vFormName + '">' )
       vFormVarField.keyup( function()
@@ -3342,6 +3625,70 @@ $(function()
 <script type="text/javascript">
   $(function() {
     dataEntrySubmit( 'submit-btn-savenextform' )
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
+	// Add the SQL to an SQLCHECKBOX field to provide the combined options.
+
+	function sqlCheckboxAddSQL()
+	{
+		unset( $_POST['dropdown_autocomplete'] );
+		$_POST['element_enum'] =
+			"SELECT * FROM ( WITH RECURSIVE redcap_ui_tweaker_qy AS (\n" .
+			"-- END redcap_ui_tweaker\n" .
+			rtrim( $_POST['element_enum'], " \n\r\t;" ) .
+			"\n-- BEGIN redcap_ui_tweaker\n" .
+			"), redcap_ui_tweaker_cb AS ( SELECT cast(concat(',',redcap_ui_tweaker_qy.`code`) " .
+			"AS CHAR(255)) AS codestr, redcap_ui_tweaker_qy.`code`, cast(concat(', '," .
+			"redcap_ui_tweaker_qy.`label`) AS CHAR(255)) AS `label` FROM redcap_ui_tweaker_qy " .
+			"UNION ALL SELECT concat(redcap_ui_tweaker_cb.codestr,',',redcap_ui_tweaker_qy." .
+			"`code`), redcap_ui_tweaker_qy.`code`, concat(redcap_ui_tweaker_cb.`label`,', '," .
+			"redcap_ui_tweaker_qy.`label`) FROM redcap_ui_tweaker_cb JOIN redcap_ui_tweaker_qy " .
+			"WHERE locate(concat(',',redcap_ui_tweaker_qy.`code`),redcap_ui_tweaker_cb.codestr) " .
+			"= 0 AND redcap_ui_tweaker_cb.`code` < redcap_ui_tweaker_qy.`code` ) " .
+			"SELECT substring(codestr,2) AS `code`, substring(`label`,3) AS `label` " .
+			"FROM redcap_ui_tweaker_cb ) redcap_ui_tweaker_out";
+	}
+
+
+
+
+
+	// JavaScript to remove the SQL which provides the combined options from an SQLCHECKBOX field.
+
+	function sqlCheckboxRemoveSQL()
+	{
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vOpenAddQuesFormVisible = openAddQuesFormVisible
+    var vRemoveUITweakerCode = function()
+    {
+      $('#element_enum').val( $('#element_enum').val()
+                             .replace(/-- BEGIN redcap_ui_tweaker.*?-- END redcap_ui_tweaker/gs, '')
+                             .replace(/-- BEGIN redcap_ui_tweaker.*/gs, '')
+                             .replace(/.*-- END redcap_ui_tweaker/gs, '').trim() )
+    }
+    openAddQuesFormVisible = function(sq_id)
+    {
+      if ( $('#field_type').val() == 'sql' &&
+           $('#field_annotation').val().indexOf('@SQLCHECKBOX') != -1 )
+      {
+        setTimeout( vRemoveUITweakerCode, 100 )
+        setTimeout( vRemoveUITweakerCode, 500 )
+        setTimeout( vRemoveUITweakerCode, 1000 )
+      }
+      return vOpenAddQuesFormVisible(sq_id)
+    }
   })
 </script>
 <?php

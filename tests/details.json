@@ -1,0 +1,224 @@
+[
+	{
+		"file" : "test_t01Fieldtypesorder.py",
+		"name" : "Field types are ordered/placed as defined",
+		"expected" : "Field types ordered/positioned correctly",
+		"scenario" : "Set the field types order and check in the instrument designer that the field types are displayed in the defined order"
+	},
+	{
+		"file" : "test_t02Newfieldsrequiredbydefault.py",
+		"name" : "Setting for new fields to be required by default",
+		"expected" : "If enabled, new fields are required by default (excl. calc/descriptive fields)",
+		"scenario" : "Check in the instrument designer that the 'required' option is enabled by default on new fields"
+	},
+	{
+		"file" : "test_t03Predefinedfieldannotations.py",
+		"name" : "Predefined field annotations",
+		"expected" : "Predefined field annotations are displayed in the designer",
+		"scenario" : "Check in the instrument designer that the list of field annotations is displayed and all predefined field annotations are present"
+	},
+	{
+		"file" : "test_t04SQLDESCRIPTIVEactiontag.py",
+		"name" : "SQLDESCRIPTIVE action tag",
+		"expected" : "Fields with the action tag show the SQL result as descriptive text",
+		"scenario" : "Create an SQL field and set the @SQLDESCRIPTIVE action tag. Check that the entry from the SQL result which corresponds to the field value is displayed as descriptive text."
+	},
+	{
+		"file" : "test_t05DefaultDataResWorkflow.py",
+		"name" : "Enable Data Resolution Workflow on new projects",
+		"expected" : "If enabled, new projects have Data Resolution Workflow enabled by default",
+		"scenario" : "Create a new project and check that the Data Resolution Workflow is enabled."
+	},
+	{
+		"file" : "test_t06Defaultmissingdatacodes.py",
+		"name" : "Default missing data codes",
+		"expected" : "New projects have the defined missing data codes",
+		"scenario" : "Create a new project and check that the missing data codes are defined."
+	},
+	{
+		"file" : "test_t07DefaultDQRsrealtime.py",
+		"name" : "Default data quality rules to execute in real time",
+		"expected" : "If enabled, real time execution check box defaults to checked",
+		"scenario" : "Navigate to data quality rules page and observe real time execution check box."
+	},
+	{
+		"file" : "test_t08CustomDQnotificationtext.py",
+		"name" : "Custom data quality notification text",
+		"expected" : "When data quality rules are violated, the notification uses the custom text",
+		"scenario" : "Save data which violates a data quality rule, and check that the notification uses the custom header text and custom notification text. Test this with Data Resolution Workflow enabled and disabled to confirm the correct text is used in each case."
+	},
+	{
+		"file" : "test_t09Alternatestatusicons.py",
+		"name" : "Alternate status icons",
+		"expected" : "If enabled, the alternate status icons are used",
+		"scenario" : "Navigate to a record or data entry page and check the status icons."
+	},
+	{
+		"file" : "test_t10Showuserrole.py",
+		"name" : "Show user's role below username",
+		"expected" : "If enabled, the user's role is shown on project pages below username",
+		"scenario" : "Check role name is shown on project pages"
+	},
+	{
+		"file" : "test_t11Hidecontactadminlinks.py",
+		"name" : "Hide 'contact administrator' links",
+		"expected" : "The 'contact administrator' links are shown/hidden as selected",
+		"scenario" : "Check 'contact administrator' links on project pages."
+	},
+	{
+		"file" : "test_t12Hidesuggestfeaturelink.py",
+		"name" : "Hide 'suggest a new feature' link",
+		"expected" : "If enabled, the 'suggest a new feature' link is hidden",
+		"scenario" : "Check 'suggest a new feature' link on project pages is hidden."
+	},
+	{
+		"file" : "test_t13Submitoptions.py",
+		"name" : "Submit options",
+		"expected" : "Form submission options limited to those specified, and these perform the correct functions",
+		"scenario" : "Check defined submit options at the system level and at the project level. Also check the @SAVEOPTIONS action tag. Project level options and action tag should only be available if custom submit options allowed."
+	},
+	{
+		"file" : "test_t14Allstatustypes.py",
+		"name" : "Remember selection of all status types on record status dashboard",
+		"expected" : "If a user selects 'all status types' then this selection is remembered",
+		"scenario" : "Select 'all status types' on the record status dashboard, navigate away then back, and check that 'all status types' is again selected."
+	},
+	{
+		"file" : "test_t15Myprojectsalphabetical.py",
+		"name" : "Show 'my projects' in alphabetical order",
+		"expected" : "If enabled, projects are shown in alphabetical order by default",
+		"scenario" : "Navigate to 'my projects', check that projects are listed alphabetically instead of by project ID."
+	},
+	{
+		"file" : "test_t16Singleprojectredirection.py",
+		"name" : "Single project redirection",
+		"expected" : "If enabled, users with only one project are redirected to that project upon login",
+		"scenario" : "Set up a user with only one project, navigate to the REDCap homepage and log in as that user. The user should be redirected to their project."
+	},
+	{
+		"file" : "test_t17Customfromaddresses.py",
+		"name" : "Custom from addresses in alerts",
+		"expected" : "If enabled, alerts can be sent from an email address not associated with a project user",
+		"scenario" : "Set up and test an alert with a custom from address. Check that the alert sends successfully. Check only custom from addresses matching the regular expression are allowed."
+	},
+	{
+		"file" : "test_t18Projectsimplifiedviews.py",
+		"name" : "Project simplified views",
+		"expected" : "A button should be displayed for each enabled simplified view on the appropriate feature",
+		"scenario" : "Check that the project simplified views (alerts, codebook, data quality, instrument mapping, user rights) are each available if enabled, and that they display correctly."
+	},
+	{
+		"file" : "test_t19SQLCHECKBOXactiontag.py",
+		"name" : "SQLCHECKBOX action tag",
+		"expected" : "Fields with the action tag show the options from the SQL result as checkboxes",
+		"scenario" : "Create an SQL field and set the @SQLCHECKBOX action tag. Check that each entry from the SQL result is displayed as a checkbox and all combinations of options will set the field correctly."
+	},
+	{
+		"file" : "test_t20Fullannotationsindesigner.py",
+		"name" : "Always show full annotations in the online designer",
+		"expected" : "The full annotations are shown below each field in the designer",
+		"scenario" : "Check in the instrument designer that the list of action tags below each field is replaced by the full field annotation."
+	},
+	{
+		"file" : "test_t21Defaultreasonforchange.py",
+		"name" : "Require a reason for change on new projects",
+		"expected" : "The option for reason for change in a new project are set as configured",
+		"scenario" : "Check that reason for change is set to be required if set to 'yes', and that the module option to apply this only to forms previously marked as complete is set if this is configured with that option."
+	},
+	{
+		"file" : "test_t22Reasonforchange.py",
+		"name" : "Require a reason for change for forms marked 'complete' only",
+		"expected" : "If enabled, the reason for change prompt is only displayed if the form was previously saved as complete",
+		"scenario" : "Check that reason for change prompt is shown if form was previously saved as complete, but not if the form is incomplete/unverified."
+	},
+	{
+		"file" : "test_t23Defaultlocknotchange.py",
+		"name" : "Default prevent 'lock this instrument' being treated as a data change",
+		"expected" : "The option to prevent 'lock this instrument' being treated as a data change in the module project settings is enabled for new projects",
+		"scenario" : "Check that the option defaults to enabled."
+	},
+	{
+		"file" : "test_t24Locknotchange.py",
+		"name" : "Prevent 'lock this instrument' being treated as a data change",
+		"expected" : "Edits to a form where no data has been changed but the 'lock form' option is selected is not considered a data change",
+		"scenario" : "Ensure that only locking the form does not trigger any prompts (e.g. reason for change) which would be expected if data was changed."
+	},
+	{
+		"file" : "test_t25VersionlessURLs.py",
+		"name" : "Versionless URLs",
+		"expected" : "The REDCap version number is stripped from the URL after page load for the specified pages",
+		"scenario" : "Check that versionless URLs are applied as specified. Check the 'always enable', 'only where page matches', and 'exclude where page matches' behave as expected."
+	},
+	{
+		"file" : "test_t26Projecthomepageredirect.py",
+		"name" : "Project home page redirection",
+		"expected" : "Upon navigating to the project home page, the user is redirected to the specified page",
+		"scenario" : "Check that the redirection occurs as expected."
+	},
+	{
+		"file" : "test_t27Customlogonameoptions.py",
+		"name" : "Custom logo/name display options",
+		"expected" : "Only the chosen sections of the logo/name are displayed",
+		"scenario" : "Check that both logo and name displayed, only logo is displayed (name hidden) or only name displayed (logo hidden) according to the setting."
+	},
+	{
+		"file" : "test_t28HidelogiconDQpopup.py",
+		"name" : "Hide logic on data quality popup",
+		"expected" : "If the data quality popup is displayed following form submission, hide the rule logic",
+		"scenario" : "Submit a form which violates at least one data quality rule, check that the rule logic is hidden unless the option is clicked to explicitly show it."
+	},
+	{
+		"file" : "test_t29Listdatachanges.py",
+		"name" : "List data changes on change reason popup",
+		"expected" : "The 'reason for change' popup lists all changed fields with their old and new values",
+		"scenario" : "Submit a form with changed values to trigger the change reason popup, check that the changed values are shown on the popup."
+	},
+	{
+		"file" : "test_t30Namespacedreports.py",
+		"name" : "Namespaced reports",
+		"expected" : "Roles with a report namespace can add/edit reports within the namespace only",
+		"scenario" : "Create a user role without reports privilege, set up a report namespace for the role, check that the role can create reports which are added to the namespace, and that they can edit those reports."
+	},
+	{
+		"file" : "test_t31Additionalloginpagelogo.py",
+		"name" : "Additional login page logo",
+		"expected" : "The additional logo is displayed on the login page",
+		"scenario" : "Check that the logo is displayed"
+	},
+	{
+		"file" : "test_t32Staticformnames.py",
+		"name" : "Static form names (SFNs)",
+		"expected" : "When renaming a form, the underlying name is not changed",
+		"scenario" : "Rename a form on a project in development status. Check that the underlying form name is not changed."
+	},
+	{
+		"file" : "test_t33SFNsautomaticversionfields.py",
+		"name" : "SFNs: automatic version fields",
+		"expected" : "When creating a new form, a version field is added",
+		"scenario" : "Create a new form. Check that a version field is added."
+	},
+	{
+		"file" : "test_t34SFNsformnameprefixes.py",
+		"name" : "SFNs: form name prefixes",
+		"expected" : "When adding a field to a form, the field name is prefixed with the form name",
+		"scenario" : "Add a new field, check that the form name prefix appears in the field name box."
+	},
+	{
+		"file" : "test_t35SFNspreserveformlabels.py",
+		"name" : "SFNs: preserve form labels",
+		"expected" : "When a form is exported, the form name is preserved in the data dictionary and is loaded from it when the form is imported",
+		"scenario" : "Export an instrument zip, verify that the form name has been written into the data dictionary, and verify that form names loaded into the data dictionary are moved into the instrument display name."
+	},
+	{
+		"file" : "test_t36Lockblankform.py",
+		"name" : "Lock blank form",
+		"expected" : "When a form with no data is loaded, users with locking rights see a 'lock blank form' option which locks the form without saving data",
+		"scenario" : "Load a blank form, check for the presence of the 'lock blank form' button, use the button to lock the form, check that the form is locked and retains the grey status icon."
+	},
+	{
+		"file" : "test_t37Allusersautofillondev.py",
+		"name" : "Show the 'autofill' option to all users in development projects/servers",
+		"expected" : "Show the 'autofill' option to non-administrators, but only if the project is in development status or the server is a development server",
+		"scenario" : "Test for 'live' server and production project, ensure no 'autofill' option for non-administrators. Test for development project and development server and check that 'autofill' option is then displayed."
+	}
+]

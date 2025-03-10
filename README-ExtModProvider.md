@@ -41,9 +41,9 @@ that:
   other usage or presentation of module settings.
 
 The code to supply a transformation function should be placed within the
-`redcap_every_page_before_render` function. Call the `addExtModFunc` function once per alert. It is
-recommended that you use the `areExtModFuncExpected` function to test for when the alert details
-need to be supplied.
+`redcap_every_page_before_render` function. Call the `addExtModFunc` function once. It is
+recommended that you use the `areExtModFuncExpected` function to test for when the transformation
+function needs to be supplied.
 
 The callback function should take one parameter, which is an array containing two keys: `setting`
 and `value`. The function can either:

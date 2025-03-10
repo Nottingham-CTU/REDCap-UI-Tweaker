@@ -32,7 +32,29 @@ function alertsEscape( $text )
 	$text = str_replace( [ '&lt;', '&gt;', '&quot;', '&#039;' ], '', $text );
 	$text = str_replace( [ '&amp;lt;', '&amp;gt;', '&amp;quot;', '&amp;#039;', '&amp;amp;' ],
 	                     [ '&lt;', '&gt;', '&quot;', '&#039;', '&amp;' ], $text );
-	$text = str_replace( '<br>', $svbr, $text );
+	// Line breaks will split cells in Excel only when max_lines is reached so we avoid split cells
+	// as much as possible but cells with too much content to be displayed are also avoided.
+	// Line wrapping is assumed to take place at 50 characters and included in the line count.
+	$lineCount = 0;
+	$textLines = explode( '<br>', $text );
+	$text = '';
+	while ( ! empty( $textLines ) )
+	{
+		if ( $text != '' )
+		{
+			if ( $lineCount > REDCapUITweaker::SVBR_MAX_LINES )
+			{
+				$text .= '<br>';
+				$lineCount = 0;
+			}
+			else
+			{
+				$text .= $svbr;
+			}
+		}
+		$lineCount += 1 + floor( strlen( $textLines[0] ) / 50 );
+		$text .= array_shift( $textLines );
+	}
 	return $text;
 }
 
@@ -674,8 +696,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 			$infoTemp = $oldVals ? $infoAlert['alert_oldvals'] : $infoAlert;
 			if ( $infoTemp['cron_send_email_on'] == 'now' )
 			{
-				echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-				                          ?? $GLOBALS['lang']['global_1540'] );
+				echo $module->escapeHTML( $GLOBALS['lang']['global_1540'] );
 			}
 			elseif ( $infoTemp['cron_send_email_on'] == 'next_occurrence' )
 			{
@@ -988,8 +1009,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 				$infoTemp = $oldVals ? $infoASI['asi_oldvals'] : $infoASI;
 				if ( $infoTemp['condition_send_time_option'] == 'IMMEDIATELY' )
 				{
-					echo $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-					                          ?? $GLOBALS['lang']['global_1540'] );
+					echo $module->escapeHTML( $GLOBALS['lang']['global_1540'] );
 				}
 				elseif ( $infoTemp['condition_send_time_option'] == 'NEXT_OCCURRENCE' )
 				{
@@ -1153,8 +1173,7 @@ foreach ( [ true, false ] as $enabledAlerts )
 
 			// Output the Survey Confirmation schedule.
 			echo '  <td style="', $tblStyle, '">',
-			     $module->escapeHTML( $GLOBALS['lang']['alerts_110']
-			                          ?? $GLOBALS['lang']['global_1540'] ), $svbr,
+			     $module->escapeHTML( $GLOBALS['lang']['global_1540'] ), $svbr,
 			     $module->escapeHTML( $GLOBALS['lang']['alerts_61'] ),
 			     "</td>\n";
 

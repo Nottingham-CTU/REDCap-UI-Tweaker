@@ -11,10 +11,11 @@
 			"institution": "University of Nottingham"
 		}
 	],
-	"framework-version" : 12,
+	"framework-version" : 14,
 	"compatibility" : {
-		"redcap-version-min" : "13.1.0",
-		"php-version-min" : "8.0.0"
+		"redcap-version-min" : "13.7.0",
+		"php-version-min" : "8.0.0",
+		"php-version-max" : "8.99.99"
 	},
 	"system-settings" : [
 		{
@@ -83,6 +84,12 @@
 		{
 			"key" : "fields-form-name-prefix",
 			"name" : "Use form name prefix when creating fields",
+			"type" : "checkbox",
+			"branchingLogic" : { "field" : "static-form-names", "value" : true }
+		},
+		{
+			"key" : "preserve-form-labels",
+			"name" : "Preserve form labels in instrument zips",
 			"type" : "checkbox",
 			"branchingLogic" : { "field" : "static-form-names", "value" : true }
 		},
@@ -178,6 +185,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "show-autofill-development",
+			"name" : "Always show autofill option in development status",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-nav-proj",
 			"name" : "<b>Project navigation tweaks</b>",
 			"type" : "descriptive"
@@ -202,6 +214,11 @@
 		{
 			"key" : "submit-option-custom",
 			"name" : "Allow custom submit options",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "lock-blank-form",
+			"name" : "Provide 'lock blank form' option",
 			"type" : "checkbox"
 		},
 		{
@@ -406,6 +423,20 @@
 			"name" : "Form navigation fix<br>(Refer to module documentation before using this option)",
 			"type" : "checkbox",
 			"super-users-only" : true
+		}
+	],
+	"action-tags" : [
+		{
+			"tag" : "@SAVEOPTIONS",
+			"description" : "Sets the save options on the form to the options specified (in the specified order). The format must follow the pattern @SAVEOPTIONS='????', in which the desired value must be a comma separated list of the following options: record (Save and Exit Form), continue (Save and Stay), nextinstance (Save and Add New Instance), nextform (Save and Go To Next Form), nextrecord (Save and Go To Next Record), exitrecord (Save and Exit Record), compresp (Save and Mark Survey as Complete). If this action tag is used on multiple fields on a form, the value from the first field not hidden by branching logic when the form loads, and not suppressed by @IF, will be used."
+		},
+		{
+			"tag" : "@SQLDESCRIPTIVE",
+			"description" : "On SQL fields, hide the drop-down and use the text in the selected option as descriptive text. You may want to pair this tag with @DEFAULT or @SETVALUE/@PREFILL to select the desired option. To ensure that the data is handled corectly, you may wish to output it from the database as URL-encoded or base64, in which case you can prefix it with url: or b64: respectively to indicate the format. Note that this action tag does not work with @IF."
+		},
+		{
+			"tag" : "@SQLCHECKBOX",
+			"description" : "On SQL fields, replace the drop-down with checkboxes. When writing an SQL query for use with the @SQLCHECKBOX action tag, ensure that the returned column names are 'code' and 'label', otherwise the query will not function. Also note that this action tag does not work with @IF."
 		}
 	]
 }
