@@ -2892,7 +2892,7 @@ $(function()
             var vClickedField = $(this).find('input').attr('data-sqlcb-field')
             $('select[name="' + vClickedField + '"]')
             .val( $('input[data-sqlcb-field="' + vClickedField + '"]:checked')
-                  .map(function(){return $(this).attr('data-sqlcb-val')}).toArray().join(',') )
+                .map(function(){return $(this).attr('data-sqlcb-val')}).toArray().sort().join(',') )
           })
           if ( vIsVertical )
           {
@@ -3641,10 +3641,12 @@ $(function()
 	{
 		unset( $_POST['dropdown_autocomplete'] );
 		$_POST['element_enum'] =
-			"SELECT * FROM ( WITH RECURSIVE redcap_ui_tweaker_qy AS (\n" .
+			"SELECT * FROM ( WITH RECURSIVE redcap_ui_tweaker_qy AS ( " .
+			"SELECT * FROM (\n" .
 			"-- END redcap_ui_tweaker\n" .
 			rtrim( $_POST['element_enum'], " \n\r\t;" ) .
 			"\n-- BEGIN redcap_ui_tweaker\n" .
+			") redcap_ui_tweaker_sqy LIMIT 15" .
 			"), redcap_ui_tweaker_cb AS ( SELECT cast(concat(',',redcap_ui_tweaker_qy.`code`) " .
 			"AS CHAR(255)) AS codestr, redcap_ui_tweaker_qy.`code`, cast(concat(', '," .
 			"redcap_ui_tweaker_qy.`label`) AS CHAR(255)) AS `label` FROM redcap_ui_tweaker_qy " .
