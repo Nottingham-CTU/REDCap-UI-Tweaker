@@ -169,8 +169,11 @@ column names are `code` and `label`, otherwise the query will not function. Also
 For best results, the SQL query should return all possible options outside of a record context<br>
 (where \[record-name\] = '') and only limit to a subset (if required) within a record context.
 
-Note that for performance reasons, the number of options returned by an `@SQLCHECKBOX` field may be
-limited if the query returns more than 15 options.
+Due to the field being based upon the SQL drop down field type, the module has to amend the query to
+return all the individual options plus all the combinations which are in use at a given time as
+additional options. If many different combinations have been selected for various records this may
+have an impact on performance as all these combinations will have to be loaded for the field. The
+maximum number of options for an `@SQLCHECKBOX` field is therefore limited to 60.
 
 *The previous implementation of* `@SQLCHECKBOX` *where the tag is applied to checkbox fields is now
 deprecated and will be removed in a future version of this module.*

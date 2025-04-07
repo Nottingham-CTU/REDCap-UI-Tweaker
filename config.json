@@ -436,7 +436,7 @@
 		},
 		{
 			"tag" : "@SQLCHECKBOX",
-			"description" : "On SQL fields, replace the drop-down with checkboxes. When writing an SQL query for use with the @SQLCHECKBOX action tag, ensure that the returned column names are 'code' and 'label', otherwise the query will not function. Also note that this action tag does not work with @IF, and that for performance reasons the number of options returned may be limited if the query returns more than 15 options."
+			"description" : "On SQL fields, replace the drop-down with checkboxes. When writing an SQL query for use with the @SQLCHECKBOX action tag, ensure that the returned column names are 'code' and 'label', otherwise the query will not function. Also note that this action tag does not work with @IF, and that a maximum of 60 options will be returned."
 		}
 	]
 }
