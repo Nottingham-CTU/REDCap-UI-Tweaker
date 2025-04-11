@@ -28,6 +28,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	// (In some contexts we want to allow cell-splitting so there isn't too much content in a cell.)
 	const SVBR_MAX_LINES = 25;
 
+	// Maximum number of checkboxes for SQLCHECKBOX fields.
+	const MAX_SQLCHECKBOX_OPTIONS = 60;
+
 	private $customAlerts;
 	private $customReports;
 	private $extModSettings;
@@ -3685,7 +3688,7 @@ $(function()
 			"-- END redcap_ui_tweaker\n" .
 			rtrim( $_POST['element_enum'], " \n\r\t;" ) .
 			"\n-- BEGIN redcap_ui_tweaker\n" .
-			") redcap_ui_tweaker_sqy LIMIT 60" .
+			") redcap_ui_tweaker_sqy LIMIT " . self::MAX_SQLCHECKBOX_OPTIONS .
 			"), redcap_ui_tweaker_cb AS ( SELECT cast(concat(',',redcap_ui_tweaker_qy.`code`) " .
 			"AS CHAR(255)) AS codestr, redcap_ui_tweaker_qy.`code`, cast(concat(', '," .
 			"redcap_ui_tweaker_qy.`label`) AS CHAR(255)) AS `label` FROM redcap_ui_tweaker_qy " .
