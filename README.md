@@ -162,14 +162,20 @@ in URL-encoded or base64 format, which can be indicated by prefixing the data as
 Allow use of the **@SQLCHECKBOX** action tag for SQL fields, which will replace the drop-down list
 with a checkbox for each option similar to a checkbox field.
 
-When writing an SQL query for use with the *@SQLCHECKBOX* action tag, ensure that the returned
+When writing an SQL query for use with the `@SQLCHECKBOX` action tag, ensure that the returned
 column names are `code` and `label`, otherwise the query will not function. Also note that the
-*@SQLCHECKBOX* action tag does not work with the *@IF* action tag.
+`@SQLCHECKBOX` action tag does not work with the `@IF` action tag.
 
 For best results, the SQL query should return all possible options outside of a record context<br>
 (where \[record-name\] = '') and only limit to a subset (if required) within a record context.
 
-*The previous implementation of @SQLCHECKBOX where the tag is applied to checkbox fields is now
+Due to the field being based upon the SQL drop down field type, the module has to amend the query to
+return all the individual options plus all the combinations which are in use at a given time as
+additional options. If many different combinations have been selected for various records this may
+have an impact on performance as all these combinations will have to be loaded for the field. The
+maximum number of options for an `@SQLCHECKBOX` field is therefore limited to 60.
+
+*The previous implementation of* `@SQLCHECKBOX` *where the tag is applied to checkbox fields is now
 deprecated and will be removed in a future version of this module.*
 
 ### Static form variable names

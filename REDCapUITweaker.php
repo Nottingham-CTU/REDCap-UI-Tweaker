@@ -28,6 +28,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	// (In some contexts we want to allow cell-splitting so there isn't too much content in a cell.)
 	const SVBR_MAX_LINES = 25;
 
+	// Maximum number of checkboxes for SQLCHECKBOX fields.
+	const MAX_SQLCHECKBOX_OPTIONS = 60;
+
 	private $customAlerts;
 	private $customReports;
 	private $extModSettings;
@@ -200,6 +203,30 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			if ( $dqCustomBodyDRW != '' )
 			{
 				$GLOBALS['lang']['dataqueries_309'] = $dqCustomBodyDRW;
+			}
+
+			// If a submission which includes @SQLCHECKBOX fields, ensure that the selected options
+			// are allowed to be submitted.
+			$listValuesSQLChkbx = [];
+			if ( $_GET['page'] != '' && ! empty( $_POST ) &&
+			     $this->getSystemSetting( 'sql-checkbox' ) )
+			{
+				foreach ( $_POST as $postField => $postVal )
+				{
+					if ( substr( $postField, -22 ) == ':uitweaker-sqlcheckbox' )
+					{
+						$listValuesSQLChkbx[] = $_POST[ substr( $postField, 0, -22 ) ];
+					}
+				}
+			}
+			if ( empty( $listValuesSQLChkbx ) )
+			{
+				$this->removeProjectSetting( 'sql-checkbox-submittedvalues' );
+			}
+			else
+			{
+				$this->setProjectSetting( 'sql-checkbox-submittedvalues',
+				                          json_encode( $listValuesSQLChkbx ) );
 			}
 
 			// [DEPRECATED] Check if the @SQLCHECKBOX action tag is enabled and provide its
@@ -2890,9 +2917,15 @@ $(function()
           vOptionLabel.click( function()
           {
             var vClickedField = $(this).find('input').attr('data-sqlcb-field')
-            $('select[name="' + vClickedField + '"]')
-            .val( $('input[data-sqlcb-field="' + vClickedField + '"]:checked')
-                  .map(function(){return $(this).attr('data-sqlcb-val')}).toArray().join(',') )
+            var vNewValue = $('input[data-sqlcb-field="' + vClickedField + '"]:checked')
+                  .map(function(){return $(this).attr('data-sqlcb-val')}).toArray().sort().join(',')
+            if ( $('select[name="' + vClickedField + '"] ' +
+                   'option[value="' + vNewValue + '"]').length == 0 )
+            {
+              $('select[name="' + vClickedField + '"]')
+              .append('<option value="' + vNewValue + '">' + vNewValue + '</option>')
+            }
+            $('select[name="' + vClickedField + '"]').val( vNewValue )
           })
           if ( vIsVertical )
           {
@@ -2908,6 +2941,8 @@ $(function()
         }
         vContainerField.after( vContainerChkbx )
         vContainerField.css('display','none')
+        vSQLField.after( '<input type="hidden" name="' + vFieldName +
+                         ':uitweaker-sqlcheckbox" value="1">' )
       }
     },100)
   })
@@ -3641,10 +3676,19 @@ $(function()
 	{
 		unset( $_POST['dropdown_autocomplete'] );
 		$_POST['element_enum'] =
-			"SELECT * FROM ( WITH RECURSIVE redcap_ui_tweaker_qy AS (\n" .
+			"SELECT * FROM ( WITH RECURSIVE redcap_ui_tweaker_ev AS ( SELECT DISTINCT `value` " .
+			"AS v FROM [data-table] WHERE project_id = [project-id] AND field_name = '" .
+			preg_replace( '/[^A-Za-z0-9_]/', '', $_POST['field_name'] ) .
+			"' UNION SELECT v FROM redcap_external_module_settings JOIN JSON_TABLE( `value`, " .
+			"'$[*]' COLUMNS ( v VARCHAR(255) PATH '$' ) ) redcap_ui_tweaker_sv WHERE " .
+			"external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE " .
+			"directory_prefix = 'redcap_ui_tweaker' LIMIT 1) AND project_id = [project-id] AND " .
+			"`key` = 'sql-checkbox-submittedvalues' ), redcap_ui_tweaker_qy AS (" .
+			"SELECT * FROM (\n" .
 			"-- END redcap_ui_tweaker\n" .
 			rtrim( $_POST['element_enum'], " \n\r\t;" ) .
 			"\n-- BEGIN redcap_ui_tweaker\n" .
+			") redcap_ui_tweaker_sqy LIMIT " . self::MAX_SQLCHECKBOX_OPTIONS .
 			"), redcap_ui_tweaker_cb AS ( SELECT cast(concat(',',redcap_ui_tweaker_qy.`code`) " .
 			"AS CHAR(255)) AS codestr, redcap_ui_tweaker_qy.`code`, cast(concat(', '," .
 			"redcap_ui_tweaker_qy.`label`) AS CHAR(255)) AS `label` FROM redcap_ui_tweaker_qy " .
@@ -3652,7 +3696,10 @@ $(function()
 			"`code`), redcap_ui_tweaker_qy.`code`, concat(redcap_ui_tweaker_cb.`label`,', '," .
 			"redcap_ui_tweaker_qy.`label`) FROM redcap_ui_tweaker_cb JOIN redcap_ui_tweaker_qy " .
 			"WHERE locate(concat(',',redcap_ui_tweaker_qy.`code`),redcap_ui_tweaker_cb.codestr) " .
-			"= 0 AND redcap_ui_tweaker_cb.`code` < redcap_ui_tweaker_qy.`code` ) " .
+			"= 0 AND redcap_ui_tweaker_cb.`code` < redcap_ui_tweaker_qy.`code` AND " .
+			"concat(redcap_ui_tweaker_cb.codestr,',',redcap_ui_tweaker_qy.`code`) " .
+			"IN ( SELECT substring(concat(',',v),1,length(concat(redcap_ui_tweaker_cb.codestr," .
+			"',',redcap_ui_tweaker_qy.`code`))) FROM redcap_ui_tweaker_ev ) ) " .
 			"SELECT substring(codestr,2) AS `code`, substring(`label`,3) AS `label` " .
 			"FROM redcap_ui_tweaker_cb ) redcap_ui_tweaker_out";
 	}
