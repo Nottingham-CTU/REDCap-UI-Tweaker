@@ -1370,8 +1370,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function getIconUrl( $icon )
 	{
-		return preg_replace( '/&pid=[1-9][0-9]*/', '',
-		                     $this->getUrl( "status_icon.php?icon=$icon" ) );
+		return preg_replace( '!^https?://[^/]*!', '',
+		                     preg_replace( '/&pid=[1-9][0-9]*/', '',
+		                                   $this->getUrl( "status_icon.php?icon=$icon" ) ) );
 	}
 
 
