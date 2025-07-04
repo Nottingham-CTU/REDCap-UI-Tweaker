@@ -85,8 +85,15 @@ while ( $infoModule = $queryModules->fetch_assoc() )
 	$fetchedModuleInstance = false;
 	if ( ! isset( $listModuleInstances[ $infoModule['module'] ] ) )
 	{
-		$listModuleInstances[ $infoModule['module'] ] =
-				\ExternalModules\ExternalModules::getModuleInstance( $infoModule['module'] );
+		try
+		{
+			$listModuleInstances[ $infoModule['module'] ] =
+					\ExternalModules\ExternalModules::getModuleInstance( $infoModule['module'] );
+		}
+		catch ( \Exception $e )
+		{
+			continue;
+		}
 		$fetchedModuleInstance = true;
 		$listModuleSettings[ $infoModule['module'] ] =
 				getAllModSettings( $listModuleInstances[ $infoModule['module'] ]
