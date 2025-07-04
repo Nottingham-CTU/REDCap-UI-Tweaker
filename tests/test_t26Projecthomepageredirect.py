@@ -31,7 +31,7 @@ class TestT26Projecthomepageredirect():
     self.driver.find_element(By.NAME, "project-home-redirect").send_keys("DataEntry/record_status_dashboard.php?pid=*")
     self.driver.find_element(By.CSS_SELECTOR, "#external-modules-configure-modal .modal-footer .save").click()
     time.sleep(2)
-    self.driver.find_element(By.LINK_TEXT, "Project Home").click()
+    self.driver.find_element(By.XPATH, "//div[@id=\'home_setup_panel\']//a[contains(.,\'Home\')][contains(@href,\'index.php?pid=\')]").click()
     self.driver.execute_script("if (window.location.href.includes(\'record_status_dashboard\')) document.body.setAttribute(\'data-homeredirect\',1)")
     elements = self.driver.find_elements(By.CSS_SELECTOR, "body[data-homeredirect]")
     assert len(elements) > 0
