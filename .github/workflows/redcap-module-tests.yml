@@ -15,6 +15,7 @@ jobs:
     with:
       RC_COMMUNITY_USERNAME: ${{ vars.RC_COMMUNITY_USERNAME }}
       RC_INSTALLED_VERSION: ${{ vars.RC_INSTALLED_VERSION }}
+      USERS_NAMES: ${{ vars.USERS_NAMES }}
     secrets:
       RC_COMMUNITY_PASSWORD: ${{ secrets.RC_COMMUNITY_PASSWORD }}
 
