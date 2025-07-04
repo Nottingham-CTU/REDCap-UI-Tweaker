@@ -55,8 +55,8 @@ class TestT37Allusersautofillondev():
     WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.ID, "footer")))
     elements = self.driver.find_elements(By.CSS_SELECTOR, "a[onclick*=\"autoFill()\"]")
     assert len(elements) == 0
-    self.driver.execute_script("$(\'#footer\').remove();window.history.back()")
-    WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.ID, "footer")))
+    self.driver.execute_script("window.history.back()")
+    WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.ID, "rc-login-form")))
     self.driver.execute_script("$(\'#username\').val(JSON.parse(sessionStorage.getItem(\'test-userdetails\')).user2);$(\'#password\').val(JSON.parse(sessionStorage.getItem(\'test-userdetails\')).pass2)")
     self.driver.find_element(By.ID, "login_btn").click()
     self.driver.find_element(By.LINK_TEXT, "My Projects").click()
@@ -94,8 +94,8 @@ class TestT37Allusersautofillondev():
       WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "a[onclick*=\"autoFill()\"]")))
       elements = self.driver.find_elements(By.CSS_SELECTOR, "a[onclick*=\"autoFill()\"]")
       assert len(elements) > 0
-      self.driver.execute_script("$(\'#footer\').remove();window.history.back()")
-      WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.ID, "footer")))
+      self.driver.execute_script("window.history.back()")
+      WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.ID, "rc-login-form")))
       self.driver.execute_script("$(\'#username\').val(JSON.parse(sessionStorage.getItem(\'test-userdetails\')).user2);$(\'#password\').val(JSON.parse(sessionStorage.getItem(\'test-userdetails\')).pass2)")
       self.driver.find_element(By.ID, "login_btn").click()
       self.driver.find_element(By.LINK_TEXT, "My Projects").click()

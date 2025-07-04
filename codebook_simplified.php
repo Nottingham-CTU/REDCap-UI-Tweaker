@@ -48,6 +48,8 @@ while ( $infoCodebook = $queryCodebook->fetch_assoc() )
 			str_replace( [ "\r\n", '<br>', '<br />' ], "\n", $infoCodebook['element_label'] ?? '' );
 	$infoCodebook['element_enum'] =
 			str_replace( [ "\r\n", '<br>', '<br />' ], "\n", $infoCodebook['element_enum'] ?? '' );
+	$infoCodebook['branching_logic'] =
+			str_replace( "\r\n", "\n", $infoCodebook['branching_logic'] ?? '' );
 	$infoCodebook['misc'] = str_replace( "\r\n", "\n", $infoCodebook['misc'] ?? '' );
 	// Update legacy field type validation names.
 	if ( $infoCodebook['element_validation_type'] == 'int' )

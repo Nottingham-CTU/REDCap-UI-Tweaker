@@ -981,10 +981,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					{
 						$submitOptions = substr( $submitOptions, 1, -1 );
 					}
+					// If data is being added using the Instance Table external module, only allow
+					// blank submit options to be set (i.e. prohibit saving).
+					if ( $submitOptions != '' && isset( $_GET['extmod_instance_table'] ) )
+					{
+						continue;
+					}
 					$customSubmit = $this->rearrangeSubmitOptions( $submitOptions );
 				}
 			}
-			if ( ! $customSubmit && $this->getProjectSetting( 'submit-option' ) != '' )
+			if ( ! $customSubmit && ! isset( $_GET['extmod_instance_table'] ) &&
+			     $this->getProjectSetting( 'submit-option' ) != '' )
 			{
 				$customSubmit =
 					$this->rearrangeSubmitOptions( $this->getProjectSetting( 'submit-option' ) );
@@ -994,7 +1001,14 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// selected in the module system settings (if applicable).
 		if ( ! $customSubmit )
 		{
-			if ( $this->getSystemSetting( 'submit-option-tweak' ) == '1' )
+			if ( isset( $_GET['extmod_instance_table'] ) )
+			{
+				// If data is being added using the Instance Table external module, and blank submit
+				// options have not been set on the form, then display *only* the save and exit form
+				// option.
+				$this->rearrangeSubmitOptions( 'record' );
+			}
+			elseif ( $this->getSystemSetting( 'submit-option-tweak' ) == '1' )
 			{
 				// Identify the 'Save & Go To Next Record' option and remove it.
 				$this->removeSubmitOption( 'nextrecord' );
@@ -1044,7 +1058,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 		// Check if the lock blank form option is enabled and provide it if this is a blank form.
+		// If data is being added using the Instance Table external module then *do not* display
+		// the lock blank form option.
 		if ( $this->getSystemSetting( 'lock-blank-form' ) &&
+		     ! isset( $_GET['extmod_instance_table'] ) &&
 		     ! $this->query( 'SELECT 1 FROM ' . \REDCap::getDataTable( $project_id ) .
 		                     ' WHERE project_id = ? AND event_id = ? AND record = ? AND ' .
 		                     'field_name = ? AND ifnull(instance,1) = ?',
@@ -1370,8 +1387,9 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	function getIconUrl( $icon )
 	{
-		return preg_replace( '/&pid=[1-9][0-9]*/', '',
-		                     $this->getUrl( "status_icon.php?icon=$icon" ) );
+		return preg_replace( '!^https?://[^/]*!', '',
+		                     preg_replace( '/&pid=[1-9][0-9]*/', '',
+		                                   $this->getUrl( "status_icon.php?icon=$icon" ) ) );
 	}
 
 
