@@ -812,6 +812,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				$this->provideDQRealTime();
 			}
 
+			// Add link to the enhanced rule H check.
+			if ( $this->getSystemSetting( 'dq-enhanced-calc' ) )
+			{
+				$this->provideDQEnhancedCalc();
+			}
+
 			// Add simplified view option.
 			if ( $this->getSystemSetting( 'quality-rules-simplified-view' ) )
 			{
@@ -1873,6 +1879,26 @@ $(function()
 ?>
       $('#customizeprojectform').submit()
     }, 1000 )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to add a link to the enhanced DQ rule H check.
+
+	function provideDQEnhancedCalc()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('#rulename_pd-10')
+      .append('<br><a href="<?php echo addslashes( $this->getUrl('quality_rules_ecalc.php') ); ?>">' +
+              '<i class="fas fa-wand-sparkles"></i> Enhanced check</a>')
   })
 </script>
 <?php

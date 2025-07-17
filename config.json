@@ -129,6 +129,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "dq-enhanced-calc",
+			"name" : "Provide enhanced 'Incorrect values for calculated fields' (Rule H) check",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "dq-real-time",
 			"name" : "Default data quality rules to execute in real time",
 			"type" : "checkbox"
