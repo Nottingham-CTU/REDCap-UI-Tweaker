@@ -15,19 +15,15 @@ There are 2 methods to provide amended settings to this module.
 ## Method 1: Define an exportProjectSettings() function
 
 If your module defines an exportProjectSettings() function, the output of this function will be used
-instead of the actual values stored in the database. The function should return an array of arrays,
-in which the inner arrays contain the keys `key` and `value`.
+instead of the actual values stored in the database.
 
-```
-  [
-    [ 'key' => 'some-key-name-here', 'value' => 'A setting value here' ],
-    [ 'key' => 'another-key-name-here', 'value' => 'Another setting value here' ],
-    ...
-  ]
-```
+For more information on how to use an exportProjectSettings() function, see the
+[documentation](https://github.com/Nottingham-CTU/Project-Deployment/wiki/External-Module-Developers)
+for the Project Deployment module.
 
-This method is intended for performing settings adjustments for any exportable context, and so could
-be utilised by modules other than this one.
+This method is intended for performing settings adjustments for any exportable context, and so can
+be utilised by modules other than this one (e.g. the
+[Project Deployment](https://github.com/Nottingham-CTU/Project-Deployment) module).
 
 ## Method 2: Provide a settings transformation function
 
