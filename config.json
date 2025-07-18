@@ -195,6 +195,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "show-hidden-fields",
+			"name" : "Add a 'show hidden fields' option in development status",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-nav-proj",
 			"name" : "<b>Project navigation tweaks</b>",
 			"type" : "descriptive"

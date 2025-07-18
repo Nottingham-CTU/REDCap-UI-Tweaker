@@ -1052,15 +1052,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 		}
 
-		// Check if autofill links for all users are enabled and this is a development project or
-		// server and provide the autofill link if so.
-		if ( $this->getSystemSetting( 'show-autofill-development' ) &&
-		     ( $this->getProjectStatus() == 'DEV' ||
-		       ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
-		                              'WHERE field_name = ? AND `value` = ?',
-		                              ['is_development_server', '1'] )->fetch_row() ) ) )
+		// If this is a development project/server.
+		if ( $this->getProjectStatus() == 'DEV' ||
+		     ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
+		                            'WHERE field_name = ? AND `value` = ?',
+		                            ['is_development_server', '1'] )->fetch_row() ) )
 		{
-			$this->provideAutofill( false );
+			// Provide the autofill link for all users if enabled.
+			if ( $this->getSystemSetting( 'show-autofill-development' ) )
+			{
+				$this->provideAutofill( false );
+			}
+			// Provide the show hidden fields link if enabled.
+			if ( $this->getSystemSetting( 'show-hidden-fields' ) )
+			{
+				$this->provideShowHiddenFields( false );
+			}
 		}
 
 		// Check if the lock blank form option is enabled and provide it if this is a blank form.
@@ -1096,15 +1103,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	                             $survey_hash = null, $response_id = null, $repeat_instance = 1 )
 	{
 
-		// Check if autofill links for all users are enabled and this is a development project or
-		// server and provide the autofill link if so.
-		if ( $this->getSystemSetting( 'show-autofill-development' ) &&
-		     ( $this->getProjectStatus() == 'DEV' ||
-		       ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
-		                              'WHERE field_name = ? AND `value` = ?',
-		                              ['is_development_server', '1'] )->fetch_row() ) ) )
+		// If this is a development project/server.
+		if ( $this->getProjectStatus() == 'DEV' ||
+		     ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
+		                            'WHERE field_name = ? AND `value` = ?',
+		                            ['is_development_server', '1'] )->fetch_row() ) )
 		{
-			$this->provideAutofill( true );
+			// Provide the autofill link for all users if enabled.
+			if ( $this->getSystemSetting( 'show-autofill-development' ) )
+			{
+				$this->provideAutofill( true );
+			}
+			// Provide the show hidden fields link if enabled.
+			if ( $this->getSystemSetting( 'show-hidden-fields' ) )
+			{
+				$this->provideShowHiddenFields( true );
+			}
 		}
 
 		// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
@@ -2551,6 +2565,71 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript to add the show hidden fields option for all users if the project is in
+	// development status or the server is a development/testing server.
+
+	function provideShowHiddenFields( $survey = false )
+	{
+		if ( $survey )
+		{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( $('#admin-controls-div').length == 0 )
+    {
+      $('#pagecontent').append('<div id="admin-controls-div" style="position:absolute;top:0px;' +
+                               'left:calc(100%);margin:5px 0px 0px 7px;width:max-content"></div>')
+    }
+    else
+    {
+      $('#admin-controls-div').append('<br>')
+    }
+    $('#admin-controls-div').append('<a id="show-hidden-btn" class="btn btn-link btn-xs fs11" ' +
+                                    'href="javascript:;" onclick="$(\'head\').append(\'<style ' +
+                                    'type=&quot;text/css&quot;>.\\\\@HIDDEN,.\\\\@HIDDEN-SURVEY' +
+                                    '{display:revert;filter:blur(0.6px) contrast(0.07) ' +
+                                    'brightness(1.3)}.\\\\@HIDDEN:hover,.\\\\@HIDDEN-SURVEY:hover' +
+                                    '{display:revert;filter:brightness(0.95)}</style>\');' +
+                                    '$(\'#show-hidden-btn\').css(\'display\',\'none\')" ' +
+                                    'style="color:rgb(136, 136, 136)"><i class="fs10 fa-solid ' +
+                                    'fa-eye"></i> Show hidden fields</a>')
+  })
+</script>
+<?php
+		}
+		else
+		{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setInterval( function()
+    {
+      if ( $('#show-hidden-btn').length == 0 )
+      {
+        $('#formSaveTip').append('<div id="show-hidden-btn"><button class="btn btn-link ' +
+                                 'btn-xs" style="font-size:11px !important;padding:1px 5px ' +
+                                 '!important;margin:0 !important;color:#007bffcc;" onclick=' +
+                                 '"$(\'head\').append(\'<style type=&quot;text/css&quot;>.' +
+                                 '\\\\@HIDDEN,.\\\\@HIDDEN-FORM{display:revert;filter:blur(0.6px)' +
+                                 ' contrast(0.07) brightness(1.3)} .\\\\@HIDDEN:hover,' +
+                                 '.\\\\@HIDDEN-FORM:hover{display:revert;filter:brightness(0.95)}' +
+                                 '</style>\');$(\'#show-hidden-btn\').css(\'display\',\'none\')">' +
+                                 '<i class="fs10 fa-solid fa-eye mr-1"></i> ' +
+                                 'Show hidden fields</button></div>')
+      }
+    }, 5010 )
+  })
+</script>
+<?php
+		}
 	}
 
 
