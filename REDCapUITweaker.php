@@ -712,6 +712,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+		// If the survey settings page, provide custom alert sender if enabled.
+
+		if ( $this->getSystemSetting( 'custom-alert-sender' ) &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'Surveys/edit_info.php' &&
+		     isset( $_GET['view'] ) && $_GET['view'] == 'showform' )
+		{
+			$this->provideCustomAlertSender( 'surveyconf' );
+		}
+
+
+
 		// If any data entry page, and alternate status icons enabled.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' &&
@@ -1714,8 +1725,18 @@ $(function()
 
 	function provideCustomAlertSender( $for = 'alerts' )
 	{
-		$selectFields = ( $for == 'alerts' ? 'select[name="email-from"], select[name="email-failed"]'
-		                                   : 'select[name="email_sender"]' );
+		switch ( $for )
+		{
+			case 'alerts':
+				$selectFields = 'select[name="email-from"], select[name="email-failed"]';
+				break;
+			case 'ASI':
+				$selectFields = 'select[name="email_sender"]';
+				break;
+			case 'surveyconf':
+				$selectFields = 'select[name="confirmation_email_from"]';
+				break;
+		}
 
 ?>
 <script type="text/javascript">
@@ -1832,6 +1853,32 @@ $(function()
         }
       })
     }
+<?php
+
+	}
+	elseif ( $for == 'surveyconf' )
+	{
+
+?>
+    vSelectFields.find('[value="999"]').remove()
+    vSelectFields.append( '<option value="*">Enter a different email address...</option>' )
+    vSelectFields.on('click',function()
+    {
+      var vField = $(this)
+      vOldVal = vField.val()
+      vField.find('option[value="*"]').appendTo(vField)
+    })
+    vSelectFields.on('change',function()
+    {
+      if ( $(this).val() == '*' )
+      {
+        vActiveSelect = $(this)
+        vActiveSelect.val( vOldVal )
+        vDialog.find('input').val('')
+        vDialog.find('span').text('')
+        vDialog.dialog('open')
+      }
+    })
 <?php
 
 	}
