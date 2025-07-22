@@ -247,6 +247,54 @@
 			"type" : "text"
 		},
 		{
+			"key" : "theme-banner",
+			"name" : "Banner",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "theme-edge",
+			"name" : "Border/Edge",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "theme-icon",
+			"name" : "Icon",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "theme-banner-text",
+			"name" : "Banner text",
+			"type" : "text",
+			"branchingLogic" : { "field" : "theme-banner", "value" : true }
+		},
+		{
+			"key" : "theme-hue",
+			"name" : "Theme hue",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "Black" },
+				{ "value" : "blue", "name" : "Blue" },
+				{ "value" : "orange", "name" : "Orange" },
+				{ "value" : "white", "name" : "White" },
+				{ "value" : "custom", "name" : "Custom" }
+			],
+			"branchingLogic" : {
+				"type" : "or",
+				"conditions" : [
+					{ "field" : "theme-banner", "value" : true },
+					{ "field" : "theme-edge", "value" : true },
+					{ "field" : "theme-icon", "value" : true }
+				]
+			}
+		},
+		{
+			"key" : "theme-hue-custom",
+			"name" : "Custom theme hue",
+			"type" : "text",
+			"branchingLogic" : { "field" : "theme-hue", "value" : "custom" },
+			"required" : true
+		},
+		{
 			"key" : "hdr-nav-sys",
 			"name" : "<b>System navigation tweaks</b>",
 			"type" : "descriptive"
@@ -360,6 +408,26 @@
 			"key" : "fmt3",
 			"name" : "<script type=\"text/javascript\">$('[field=user-activate-permission],[field=fmt2],[field=fmt3]').css('display','none')</script>",
 			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt4",
+			"name" : "<script type=\"text/javascript\">$('tr[field^=\"theme\"]:has(input[type=\"checkbox\"])').each((i,e)=>{$(e).find('input').after($(e).find('td').first().html().replace(':',''))})</script>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt5",
+			"name" : "<script type=\"text/javascript\">$('tr[field^=\"theme\"]:has(input[type=\"checkbox\"])').find('td:first-child').html('')</script>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt6",
+			"name" : "<script type=\"text/javascript\">$('tr[field^=\"theme\"]:has(input[type=\"checkbox\"])').first().find('td:first-child').text('Theme:')</script>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt7",
+			"name" : "<script type=\"text/javascript\">$('[field=fmt4],[field=fmt5],[field=fmt6],[field=fmt7]').css('display','none')</script>",
+			"type" : "descriptive"
 		}
 	],
 	"project-settings" : [
@@ -448,5 +516,8 @@
 			"tag" : "@SQLCHECKBOX",
 			"description" : "On SQL fields, replace the drop-down with checkboxes. When writing an SQL query for use with the @SQLCHECKBOX action tag, ensure that the returned column names are 'code' and 'label', otherwise the query will not function. Also note that this action tag does not work with @IF, and that a maximum of 60 options will be returned."
 		}
+	],
+	"no-auth-pages" : [
+		"redcap_icon"
 	]
 }

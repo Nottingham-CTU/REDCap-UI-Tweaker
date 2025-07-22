@@ -452,6 +452,57 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// Provide the theme.
+		$themeBanner = $this->getSystemSetting( 'theme-banner' );
+		$themeEdge = $this->getSystemSetting( 'theme-edge' );
+		$themeIcon = $this->getSystemSetting( 'theme-icon' );
+		if ( $themeBanner || $themeEdge || $themeIcon )
+		{
+			$themeHue = '000000';
+			$themeTextHue = 'ffffff';
+			switch ( $this->getSystemSetting( 'theme-hue' ) )
+			{
+				case 'blue':
+					$themeHue = '0064ff';
+					break;
+				case 'orange':
+					$themeHue = 'df8500';
+					break;
+				case 'white':
+					$themeHue = 'ffffff';
+					$themeTextHue = '000000';
+					break;
+				case 'custom':
+					$customThemeHue = $this->getSystemSetting( 'theme-hue-custom' );
+					if ( preg_match( '^[0-9a-f]{6}$', $customThemeHue ) )
+					{
+						$themeHue = $customThemeHue;
+						if ( $themeBanner )
+						{
+							$themeLum = ( hexdec( substr( $themeHue, 0, 2 ) ) * 0.3 ) +
+							            ( hexdec( substr( $themeHue, 2, 2 ) ) * 0.59 ) +
+							            ( hexdec( substr( $themeHue, 4, 2 ) ) * 0.11 );
+							$themeTextHue = $themeLum > 186 ? '000000' : 'ffffff';
+						}
+					}
+					break;
+			}
+			if ( $themeIcon )
+			{
+				$this->provideThemeIcon( $themeHue );
+			}
+			if ( $themeEdge )
+			{
+				$this->provideThemeEdge( $themeHue );
+			}
+			if ( $themeBanner )
+			{
+				$this->provideThemeBanner( $this->getSystemSetting( 'theme-banner-text' ),
+				                           $themeTextHue, $themeHue );
+			}
+		}
+
+
 		// If no user is logged in, add the extra login page logo if set,
 		// then exit the function here.
 
@@ -3373,6 +3424,71 @@ $(function()
       }
     } )
   })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to provide the themed banner.
+
+	function provideThemeBanner( $text, $fg, $bg )
+	{
+		$text = str_replace( '[redcap-version]', $GLOBALS['redcap_version'], $text );
+		$text = $this->escapeJSString( $this->escapeHTML( $text ) );
+		$fg = $this->escapeJSString( '#' . $fg );
+		$bg = $this->escapeJSString( '#' . $bg );
+?>
+<script type="text/javascript">
+  $('head').append('<style type="text/css">:root{--page-top:25px}</style>')
+  $('body').prepend( $('<div style="position:fixed;top:0px;left:0px;right:0px;' +
+                       'height:var(--page-top);z-index:1000000;' +
+                       'text-align:center;font-size:calc(var(--page-top) - 8px)">' +
+                       <?php echo $text; ?> + '</div>')
+                     .css('color', <?php echo $fg; ?>).css('background-color', <?php echo $bg; ?>) )
+  $(function(){
+    $('.navbar.fixed-top,#formSaveTip').css('top','calc(var(--page-top) - 6px)')
+    $('.mainwindow,#pagecontainer').css('margin-top','calc(var(--page-top) - 4px)')
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to provide the themed border/edge.
+
+	function provideThemeEdge( $c )
+	{
+		$c = $this->escapeJSString( '#' . $c );
+?>
+<script type="text/javascript">
+  $('body').prepend( $('<div style="position:fixed;top:0px;bottom:0px;left:0px;right:0px;' +
+                       'z-index:999999;pointer-events:none;border:solid 3px"></div>')
+                     .css('border-color', <?php echo $c; ?>) )
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to provide the themed icon.
+
+	function provideThemeIcon( $c )
+	{
+		$icon = preg_replace( '!^https?://[^/]*!', '',
+		                      preg_replace( '/&pid=[1-9][0-9]*/', '',
+		                                    $this->getUrl( "redcap_icon.php?c=$c", true ) ) );
+		$icon = $this->escapeJSString( $icon );
+?>
+<script type="text/javascript">
+  $('link[rel~="icon"]').attr('href',<?php echo $icon; ?>)
 </script>
 <?php
 	}
