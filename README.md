@@ -226,6 +226,11 @@ changes they have made when writing the reason.
 This option will default new projects to not treat toggling the 'lock this instrument' checkbox as
 a data change. It can still be enabled/disabled on individual projects as required.
 
+### Provide enhanced 'Incorrect values for calculated fields' (Rule H) check
+If enabled, users running data quality rules will see a link next to Rule H providing the option to
+do an enhanced check. This provides extra options such as limiting the check to a specific arm, and
+fixing the incorrect values without needing to check for them first.
+
 ### Default data quality rules to execute in real time
 Automatically selects the 'execute in real time' checkbox for new data quality rules on the data
 quality rules page.
@@ -260,6 +265,10 @@ Hides the 'suggest a new feature' link shown on project pages.
 ### Always show autofill option in development status
 If the project is in development status, or the server is set as a development server, then the
 option to autofill the forms will be shown to all users.
+
+### Add a 'show hidden fields' option in development status
+If the project is in development status, or the server is set as a development server, then an
+option to show hidden fields on the form will be shown to all users.
 
 ### Submit options
 On a REDCap data entry form, there are several options available when submitting.
@@ -304,6 +313,18 @@ and across all projects.
 ### Additional login page logo URL
 Specify the URL of an image file to include it as an additional logo on the login page (on the top
 right of the page, opposite the REDCap logo).
+
+### Theme
+Apply a theme to REDCap. This will take the chosen theme hue and add/modify the following page
+elements which can assist in distinguishing different REDCap servers (e.g. dev, test, live).
+
+* **Banner** &ndash; Places a banner across the top of all pages, with the option to add text.
+* **Border/Edge** &ndash; Places a thin border around the page viewport.
+* **Icon** &ndash; Changes the colour of the 'R' in the REDCap icon displayed in browser tabs and
+  bookmarks.
+
+Select one of the predefined theme hues (recommended) or specify your own as a colour in hex format
+(e.g. `ffcc00`).
 
 ### Show 'My Projects' in alphabetical order
 If this option is enabled, the list of projects on the 'My Projects' page will be shown in
