@@ -3442,16 +3442,14 @@ $(function()
 		$bg = $this->escapeJSString( '#' . $bg );
 ?>
 <script type="text/javascript">
-  $('head').append('<style type="text/css">:root{--page-top:25px}</style>')
+  $('head').append('<style type="text/css">:root{--page-top:25px}' +
+                   '.navbar.fixed-top,#formSaveTip{top:calc(var(--page-top) - 6px)}' +
+                   '.mainwindow,#pagecontainer{margin-top:calc(var(--page-top) - 4px)}</style>')
   $('body').prepend( $('<div style="position:fixed;top:0px;left:0px;right:0px;' +
                        'height:var(--page-top);z-index:1000000;' +
                        'text-align:center;font-size:calc(var(--page-top) - 8px)">' +
                        <?php echo $text; ?> + '</div>')
                      .css('color', <?php echo $fg; ?>).css('background-color', <?php echo $bg; ?>) )
-  $(function(){
-    $('.navbar.fixed-top,#formSaveTip').css('top','calc(var(--page-top) - 6px)')
-    $('.mainwindow,#pagecontainer').css('margin-top','calc(var(--page-top) - 4px)')
-  })
 </script>
 <?php
 	}
@@ -3468,7 +3466,7 @@ $(function()
 ?>
 <script type="text/javascript">
   $('body').prepend( $('<div style="position:fixed;top:0px;bottom:0px;left:0px;right:0px;' +
-                       'z-index:999999;pointer-events:none;border:solid 3px"></div>')
+                       'z-index:999999;pointer-events:none;border:solid 4px"></div>')
                      .css('border-color', <?php echo $c; ?>) )
 </script>
 <?php
