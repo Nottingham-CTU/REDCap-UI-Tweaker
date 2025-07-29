@@ -815,6 +815,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		{
 			$listRemoveActionTags[] = '@SAVEOPTIONS';
 		}
+		if ( ! $this->getSystemSetting( 'buttononly' ) )
+		{
+			$listRemoveActionTags[] = '@BUTTONONLY';
+		}
 		if ( ! defined( 'SUPER_USER' ) || ! SUPER_USER ||
 		     ! $this->getSystemSetting( 'sql-descriptive' ) )
 		{
@@ -1152,6 +1156,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$this->provideSQLCheckbox( $instrument );
 		}
 
+		// Check if the @BUTTONONLY action tag is enabled and provide its functionality if so.
+		if( $this->getSystemSetting( 'buttononly' ) )
+		{
+			$this->provideButtonOnly( $record, $event_id, $instrument, $repeat_instance );
+		}
+
 
 	}
 
@@ -1187,6 +1197,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if( $this->getSystemSetting( 'sql-checkbox' ) )
 		{
 			$this->provideSQLCheckbox( $instrument );
+		}
+
+		// Check if the @BUTTONONLY action tag is enabled and provide its functionality if so.
+		if( $this->getSystemSetting( 'buttononly' ) )
+		{
+			$this->provideButtonOnly( $record, $event_id, $instrument, $repeat_instance, true );
 		}
 
 	}
@@ -1686,6 +1702,95 @@ $(function()
 </script>
 <?php
 		}
+	}
+
+
+
+
+
+	// Output JavaScript to provide the @BUTTONONLY action tag functionality.
+
+	function provideButtonOnly( $record, $eventID, $instrument, $repeatInstance, $survey = false )
+	{
+		$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+		$listFieldsButtonOnly = [];
+
+		foreach ( $listFields as $infoField )
+		{
+			if ( $infoField['field_type'] == 'text' &&
+			     strpos( $infoField['text_validation_type_or_show_slider_number'],
+			             'date' ) !== false )
+			{
+				$fieldAnnotationEIf = $this->replaceIfActionTag( $infoField['field_annotation'],
+				                                                 $this->getProjectId(), $record,
+				                                                 $eventID, $instrument,
+				                                                 $repeatInstance );
+				if ( preg_match( '/@BUTTONONLY(?= |\\(|$)(?:\\(\\s*(?:\'([^\']*)\'|"([^"]*)")' .
+				                 '(?:\\s*,\\s*(?:\'([^\']*)\'|"([^"]*)"))?\\s*\\))?/',
+				                 $fieldAnnotationEIf, $buttonOnly ) )
+				{
+					$buttonText = $buttonOnly[1] . $buttonOnly[2];
+					$buttonSave = $buttonOnly[3] . $buttonOnly[4];
+					if ( ! in_array( $buttonSave, self::SUBMIT_TYPES ) )
+					{
+						$buttonSave = '';
+					}
+					elseif ( $survey )
+					{
+						$buttonSave = 'record';
+					}
+					$listFieldsButtonOnly[] = [ 'name' => $infoField['field_name'],
+					                            'text' => $buttonText,
+					                            'save' => $buttonSave ];
+				}
+			}
+		}
+		if ( empty( $listFieldsButtonOnly ) )
+		{
+			return;
+		}
+		$fieldsJSON = $this->escapeJSString( json_encode( $listFieldsButtonOnly ) );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setTimeout(function()
+    {
+      var vListFields = JSON.parse(<?php echo $fieldsJSON; ?>)
+      for ( var i = 0; i < vListFields.length; i++ )
+      {
+        let vFieldName = vListFields[i].name
+        let vButtonText = vListFields[i].text
+        let vSaveOption = vListFields[i].save
+        let vTextbox = $( 'input[name="' + vFieldName + '"]' )
+        let vButton = $( '.today-now-btn[onclick*="(\'' + vFieldName + '\'"]' )
+        let vDatePicker = $( vTextbox ).parent().find('.ui-datepicker-trigger')
+        let vDateFormat = $( vButton ).parent().find('.df')
+        vTextbox.css('display', 'none')
+        vDatePicker.css('display', 'none')
+        vDateFormat.css('display', 'none')
+        vButton.css('font-size', 'unset')
+        if ( vButtonText != '' )
+        {
+          vButton.text( vButtonText )
+        }
+        if ( vSaveOption != '' )
+        {
+          vButton.on( 'click', function()
+          {
+            setTimeout( function()
+            {
+              dataEntrySubmit( 'submit-btn-save' + vSaveOption )
+            }, 250 )
+          })
+        }
+      }
+    },100)
+  })
+</script>
+<?php
+
 	}
 
 

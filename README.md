@@ -146,6 +146,12 @@ Miscellaneous
 If enabled, full field annotations will be shown at the bottom of each field in the online designer
 instead of just the action tags.
 
+#### Enable @BUTTONONLY action tag
+Allow use of the `@BUTTONONLY` action tag for date, time, and date/time fields. This will hide the
+field and show only the 'Now' or 'Today' button. If used in the format `@BUTTONONLY('????','????')`,
+custom text can be supplied as the first parameter, and if a second parameter is provided this can
+be a form submit option which will be triggered after the button is clicked.
+
 #### Enable @SQLDESCRIPTIVE action tag
 Allow use of the `@SQLDESCRIPTIVE` action tag for SQL fields, which will use the option label from
 the selected option in an SQL field as descriptive text and render the field like a descriptive
@@ -370,6 +376,8 @@ If matching or excluding URLs based on regular expressions, place each regular e
 line. The portion of the URL which will be matched to the regular expression is everything after the
 slash which follows the redcap version directory. Slashes do not need to be escaped in the regular
 expressions for this setting.
+
+### Email tweaks
 
 #### Allow custom from addresses in alerts/ASIs
 Provides an option when adding an alert to enter an email from address that is not provided in the
