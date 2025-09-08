@@ -4002,11 +4002,26 @@ $(function()
     $('img[src$="circle_yellow_stack.png"]').attr('src', '<?php echo $this->getIconUrl('yellows'); ?>')
     $('img[src$="circle_blue_stack.png"]').attr('src','<?php echo $this->getIconUrl('blues'); ?>')
     $('img[src$="circle_orange_tick.png"]').attr('src','<?php echo $this->getIconUrl('orange'); ?>')
+    $('.rc-instance-selector-status-icon[data-rc-status="0"]')
+      .removeClass('rc-instance-selector-status-icon').html($('<img>')
+      .attr('src','<?php echo $this->getIconUrl('red'); ?>'))
+    $('.rc-instance-selector-status-icon[data-rc-status="1"]')
+      .removeClass('rc-instance-selector-status-icon').html($('<img>')
+      .attr('src','<?php echo $this->getIconUrl('yellow'); ?>'))
+    $('.rc-instance-selector-status-icon[data-rc-status="S0"]')
+      .removeClass('rc-instance-selector-status-icon').html($('<img>')
+      .attr('src','<?php echo $this->getIconUrl('orange'); ?>'))
   }
   $(function(){
     $('img[src$="circle_red_stack.png"], img[src$="circle_yellow_stack.png"], ' +
       'img[src$="circle_blue_stack.png"]').on('click',
       function(){setTimeout(vFuncNewIcons,500);setTimeout(vFuncNewIcons,1000)})
+    var vShowInstSel = showFormInstanceSelector
+    showFormInstanceSelector = function ( el, pid, recordId, formName, eventId )
+    {
+      vShowInstSel( el, pid, recordId, formName, eventId )
+      vFuncNewIcons()
+    }
   })
   $(vFuncNewIcons)
 })()
