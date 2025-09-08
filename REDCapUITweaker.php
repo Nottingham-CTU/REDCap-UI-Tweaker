@@ -342,20 +342,28 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		// If report namespaces are enabled and this is a report page.
 		$this->reportNamespacing = false;
-		if ( $this->getProjectSetting( 'report-namespaces' ) &&
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' )
+		if ( $this->getProjectSetting( 'report-namespaces' ) )
 		{
-			if ( ! empty( $this->checkReportNamespaceAuth() ) )
+			if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' )
+			{
+				if ( ! empty( $this->checkReportNamespaceAuth() ) )
+				{
+					$GLOBALS['user_rights']['reports'] = 1;
+					$this->reportNamespacing = true;
+				}
+				elseif ( $GLOBALS['user_rights']['reports'] != 1 &&
+				         isset( $_GET['report_id'] ) && isset( $_GET['addedit'] ) )
+				{
+					header( 'Location: ' . APP_PATH_WEBROOT . '/DataExport/index.php?pid=' .
+					        $this->getProjectId() );
+					$this->exitAfterHook();
+				}
+			}
+			elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 33 ) ==
+			                                                'DataExport/report_filter_ajax.php' &&
+			         ! empty( $this->checkReportNamespaceAuth( true ) ) )
 			{
 				$GLOBALS['user_rights']['reports'] = 1;
-				$this->reportNamespacing = true;
-			}
-			elseif ( $GLOBALS['user_rights']['reports'] != 1 &&
-			         isset( $_GET['report_id'] ) && isset( $_GET['addedit'] ) )
-			{
-				header( 'Location: ' . APP_PATH_WEBROOT . '/DataExport/index.php?pid=' .
-				        $this->getProjectId() );
-				$this->exitAfterHook();
 			}
 		}
 
@@ -1348,13 +1356,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	// Check if the user is authorised to edit a namespaced report.
 
-	function checkReportNamespaceAuth()
+	function checkReportNamespaceAuth( $roleOnly = false )
 	{
+		// Get the user's role name.
 		$userRights = $this->getUser()->getRights();
 		$roleName = ( isset( $userRights ) && isset( $userRights['role_name'] ) &&
 		              $userRights['role_name'] != '' ? $userRights['role_name'] : null );
+		// User must be in a role to be authorised to edit namespaced reports.
 		if ( $roleName !== null )
 		{
+			// Get a list of the namespaces the user belongs to.
 			$listNS = [];
 			$reportNSRoles = $this->getProjectSetting( 'report-namespace-roles' );
 			foreach ( $reportNSRoles as $i => $roleNames )
@@ -1366,6 +1377,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					              'roles' => $roleNames ];
 				}
 			}
+			// If checking the role only (not checking report access), return the NS list here.
+			if ( $roleOnly )
+			{
+				return $listNS;
+			}
+			// Get the report ID.
 			if ( isset( $_POST['report_id'] ) )
 			{
 				if ( isset( $_GET['report_id'] ) )
@@ -1374,8 +1391,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				$_GET['report_id'] = $_POST['report_id'];
 			}
+			// If editing an existing report...
 			if ( ! empty( $listNS ) && isset( $_GET['report_id'] ) && $_GET['report_id'] != 0 )
 			{
+				// Get the report's folder names.
 				$queryReportFolders =
 					$this->query( 'SELECT rf.folder_id, rf.name FROM redcap_reports_folders_items' .
 					              ' rfi JOIN redcap_reports_folders rf ON rfi.folder_id = ' .
@@ -1386,6 +1405,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				{
 					$listReportFolders[] = $itemReportFolder['name'];
 				}
+				// Remove namespaces from the list if the report not in a matching folder.
 				foreach ( $listNS as $i => $infoNS )
 				{
 					if ( ! in_array( $infoNS['name'], $listReportFolders ) )
@@ -1395,8 +1415,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				$listNS = array_values( $listNS );
 			}
+			// Return the NS list.
 			return $listNS;
 		}
+		// Not authorised, return empty list.
 		return [];
 	}
 
