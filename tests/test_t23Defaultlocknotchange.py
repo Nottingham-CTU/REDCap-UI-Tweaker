@@ -54,7 +54,7 @@ class TestT23Defaultlocknotchange():
     self.driver.find_element(By.CSS_SELECTOR, ".btn-danger").click()
     self.driver.find_element(By.ID, "delete_project_confirm").send_keys("DELETE")
     self.driver.find_element(By.CSS_SELECTOR, ".ui-dialog-buttonset > .ui-button:nth-child(2)").click()
-    self.driver.find_element(By.XPATH, "//button[contains(.,\'Yes, delete the project\')]").click()
+    self.driver.find_element(By.XPATH, "//button[contains(.,\'Yes, delete the project\') or contains(.,\'CONFIRM DELETION\')]").click()
     self.driver.find_element(By.XPATH, "//div[contains(.,\'successfully deleted\')]/button[contains(.,\'Close\')]").click()
     time.sleep(0.5)
     self.driver.find_element(By.CSS_SELECTOR, "a[href$=\"ControlCenter/index.php\"]").click()
