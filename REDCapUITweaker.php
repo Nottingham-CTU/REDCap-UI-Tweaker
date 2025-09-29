@@ -482,7 +482,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					break;
 				case 'custom':
 					$customThemeHue = $this->getSystemSetting( 'theme-hue-custom' );
-					if ( preg_match( '^[0-9a-f]{6}$', $customThemeHue ) )
+					if ( preg_match( '/^[0-9a-f]{6}$/', $customThemeHue ) )
 					{
 						$themeHue = $customThemeHue;
 						if ( $themeBanner )
