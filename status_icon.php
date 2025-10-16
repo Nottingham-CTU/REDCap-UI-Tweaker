@@ -23,6 +23,17 @@ switch ( $_GET['icon'] )
 		        'bqSUMLNxd3OILA7M5qodMjtI6exijuW0WiXcfaxJETk/7rPoLlIy1uvpGmBmbDab0YKiKksrXd3FNE23' .
 		        '1/i82z3+G4+H/cPf+RfeHMAbbVBhpgAAAABJRU5ErkJggg';
 		break;
+	case 'grays':
+		$icon = 'iVBORw0KGgoAAAANSUhEUgAAABYAAAAQCAYAAAAS7Y8mAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMA' .
+		        'AAsTAAALEwEAmpwYAAAAB3RJTUUH6QoQCyY1fg4HMgAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3' .
+		        'aXRoIEdJTVBkLmUHAAABWElEQVQ4y7WUzW4CMQyExz8EcaYPQB+zh5543XJqgYbEcQ/ZzQYIqoREJEsT' .
+		        'rfbzZByF9p8fjles/eeH/57PT1X/763WucH3zxHujpwzSnG4F7iXSdcCHKoKZsbbdgsA+DochrqB3R0p' .
+		        'Jbg7SikoZQYDgE8FxBgRQmgnNrOhbuCcDe4OM5uABe5oTudFREgptf0j3cCLS0cptcwMZoZSalMiajWv' .
+		        'y+Uy1F0UFZJzQs7XwOoaYGYQEZgZfYQj3Tl2mGXEGJFSmiJxiAiYCcwCIm7wJRoe6gY+nY6IMbZIZmeq' .
+		        'KzDz1IBBdA1ercJQ3w1vPk4FS4NWsNw5VtWxXq5KvoEyRHS6twJVhYhM33rHOtTd8NAci8wuK3x2rLq4' .
+		        '/i8K7ruZ2XSdGEQLpGZdXasK1usF8Eg3sIhgs9m06TJTi6RWdR1CuHL8SLco3ne7px6x0OXaa3rVs/kH' .
+		        '88ssdjGium8AAAAASUVORK5CYII';
+		break;
 	case 'red':
 		$icon = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMA' .
 		        'AAsTAAALEwEAmpwYAAABlUlEQVQ4y6WTsW4TURBFz8x7b9/aiR26FHR8E59AEdFQIEFLQYERKfJLNPkT' .
