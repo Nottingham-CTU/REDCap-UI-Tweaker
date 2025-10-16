@@ -173,14 +173,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
-		// If the @SQLCHECKBOX action tag is enabled and saving the SQL, add the SQL to provide the
-		// combined options.
-		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'Design/edit_field.php' &&
-		     $this->getSystemSetting( 'sql-checkbox' ) && $_POST['field_type'] == 'sql' &&
-		     \Form::hasActionTag( '@SQLCHECKBOX',
-		                          str_replace( "\n", ' ', $_POST['field_annotation'] ) ) )
+		// If an edit field submission...
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'Design/edit_field.php' )
 		{
-			$this->sqlCheckboxAddSQL();
+			// If saving a descriptive field, ensure that the field is not set as required.
+			if ( $_POST['field_type'] == 'descriptive' )
+			{
+				$_POST['field_req'] = '0';
+			}
+			// If the @SQLCHECKBOX action tag is enabled and saving the SQL, add the SQL to provide
+			// the combined options.
+			if ( $_POST['field_type'] == 'sql' && $this->getSystemSetting( 'sql-checkbox' ) &&
+			     \Form::hasActionTag( '@SQLCHECKBOX',
+			                          str_replace( "\n", ' ', $_POST['field_annotation'] ) ) )
+			{
+				$this->sqlCheckboxAddSQL();
+			}
 		}
 
 
