@@ -14,10 +14,10 @@ class TestT41BUTTONONLYactiontag():
   def setup_method(self, method):
     self.driver = webdriver.Firefox()
     self.vars = {}
-
+  
   def teardown_method(self, method):
     self.driver.quit()
-
+  
   def test_t41BUTTONONLYactiontag(self):
     self.driver.get("http://127.0.0.1/")
     self.driver.find_element(By.LINK_TEXT, "My Projects").click()
@@ -52,7 +52,7 @@ class TestT41BUTTONONLYactiontag():
     self.vars["today"] = self.driver.execute_script("return new Date().toISOString().substring(0,10)")
     value = self.driver.find_element(By.NAME, "dob").get_attribute("value")
     assert value == self.vars["today"]
-    self.driver.execute_script("dataEntryFormValuesChanged=false")
+    self.driver.execute_script("window.dataEntryFormValuesChanged=false")
     self.driver.find_element(By.CSS_SELECTOR, "a[href*=\"online_designer.php\"]").click()
     self.driver.find_element(By.LINK_TEXT, "Basic Demography Form").click()
     self.driver.find_element(By.CSS_SELECTOR, "[onclick*=\"openAddQuesForm(\'dob\'\"][data-field-action=\"edit-field\"]").click()
@@ -77,4 +77,4 @@ class TestT41BUTTONONLYactiontag():
     self.driver.execute_script("$(\'[name=\"buttononly\"]\').prop(\'checked\',JSON.parse(sessionStorage.getItem(\'test-savedsetting\')))")
     self.driver.find_element(By.CSS_SELECTOR, "#external-modules-configure-modal .modal-footer .save").click()
     time.sleep(2)
-
+  

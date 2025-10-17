@@ -14028,7 +14028,7 @@
       "id": "519cfb5f-c07c-4435-b1d1-717a274d3f5d",
       "comment": "",
       "command": "runScript",
-      "target": "dataEntryFormValuesChanged=false",
+      "target": "window.dataEntryFormValuesChanged=false",
       "targets": [],
       "value": ""
     }, {
