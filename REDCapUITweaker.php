@@ -3580,7 +3580,8 @@ $(function()
   $('head').append('<style type="text/css">:root{--page-top:25px}' +
                    '.navbar.fixed-top,#formSaveTip{top:calc(var(--page-top) - 6px)}' +
                    '.mainwindow,#pagecontainer{margin-top:calc(var(--page-top) - 4px)}' +
-                   '.message-center-container{top:calc(var(--page-top) - 4px) !important}</style>')
+                   '.message-center-container{top:calc(var(--page-top) - 4px) !important}' +
+                   'body>.red[style*="width:100%"]{margin-top:var(--page-top)}</style>')
   $('body').prepend( $('<div style="position:fixed;top:0px;left:0px;right:0px;' +
                        'height:var(--page-top);z-index:1000000;' +
                        'text-align:center;font-size:calc(var(--page-top) - 8px)">' +
