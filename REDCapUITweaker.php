@@ -375,6 +375,28 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 		}
 
+
+		// If exporting a report with no fields defined, temporarily set the report to include
+		// all project fields.
+		if ( isset( $_SESSION['module_uitweak_remove_report_fields'] ) )
+		{
+			$this->query( 'DELETE FROM redcap_reports_fields WHERE report_id = ?',
+			              [ $_SESSION['module_uitweak_remove_report_fields'] ] );
+		}
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
+		     'DataExport/data_export_ajax.php' && isset( $_POST['report_id'] ) &&
+		     $this->query( 'SELECT 1 FROM redcap_reports WHERE report_id = ?',
+		                   [ $_POST['report_id'] ] )->fetch_assoc() &&
+		     ! $this->query( 'SELECT 1 FROM redcap_reports_fields WHERE report_id = ? LIMIT 1',
+		                   [ $_POST['report_id'] ] )->fetch_assoc() )
+		{
+			$_SESSION['module_uitweak_remove_report_fields'] = $_POST['report_id'];
+			$this->query( 'INSERT INTO redcap_reports_fields (report_id, field_name, field_order)' .
+			              ' SELECT ?, field_name, field_order FROM redcap_metadata ' .
+			              'WHERE project_id = ? ORDER BY field_order',
+			              [ $_POST['report_id'], $project_id ] );
+		}
+
 	}
 
 
