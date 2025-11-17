@@ -49,6 +49,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "buttononly",
+			"name" : "Enable @BUTTONONLY action tag",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "sql-descriptive",
 			"name" : "Enable @SQLDESCRIPTIVE action tag",
 			"type" : "checkbox"
@@ -129,6 +134,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "dq-enhanced-calc",
+			"name" : "Provide enhanced 'Incorrect values for calculated fields' (Rule H) check",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "dq-real-time",
 			"name" : "Default data quality rules to execute in real time",
 			"type" : "checkbox"
@@ -190,6 +200,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "show-hidden-fields",
+			"name" : "Add a 'show hidden fields' option in development status",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-nav-proj",
 			"name" : "<b>Project navigation tweaks</b>",
 			"type" : "descriptive"
@@ -235,6 +250,54 @@
 			"key" : "login-page-logo",
 			"name" : "Additional login page logo URL",
 			"type" : "text"
+		},
+		{
+			"key" : "theme-banner",
+			"name" : "Banner",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "theme-edge",
+			"name" : "Border/Edge",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "theme-icon",
+			"name" : "Icon",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "theme-banner-text",
+			"name" : "Banner text",
+			"type" : "text",
+			"branchingLogic" : { "field" : "theme-banner", "value" : true }
+		},
+		{
+			"key" : "theme-hue",
+			"name" : "Theme hue",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : "", "name" : "Black" },
+				{ "value" : "blue", "name" : "Blue" },
+				{ "value" : "orange", "name" : "Orange" },
+				{ "value" : "white", "name" : "White" },
+				{ "value" : "custom", "name" : "Custom" }
+			],
+			"branchingLogic" : {
+				"type" : "or",
+				"conditions" : [
+					{ "field" : "theme-banner", "value" : true },
+					{ "field" : "theme-edge", "value" : true },
+					{ "field" : "theme-icon", "value" : true }
+				]
+			}
+		},
+		{
+			"key" : "theme-hue-custom",
+			"name" : "Custom theme hue",
+			"type" : "text",
+			"branchingLogic" : { "field" : "theme-hue", "value" : "custom" },
+			"required" : true
 		},
 		{
 			"key" : "hdr-nav-sys",
@@ -350,6 +413,26 @@
 			"key" : "fmt3",
 			"name" : "<script type=\"text/javascript\">$('[field=user-activate-permission],[field=fmt2],[field=fmt3]').css('display','none')</script>",
 			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt4",
+			"name" : "<script type=\"text/javascript\">$('tr[field^=\"theme\"]:has(input[type=\"checkbox\"])').each((i,e)=>{$(e).find('input').after($(e).find('td').first().html().replace(':',''))})</script>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt5",
+			"name" : "<script type=\"text/javascript\">$('tr[field^=\"theme\"]:has(input[type=\"checkbox\"])').find('td:first-child').html('')</script>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt6",
+			"name" : "<script type=\"text/javascript\">$('tr[field^=\"theme\"]:has(input[type=\"checkbox\"])').first().find('td:first-child').text('Theme:')</script>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "fmt7",
+			"name" : "<script type=\"text/javascript\">$('[field=fmt4],[field=fmt5],[field=fmt6],[field=fmt7]').css('display','none')</script>",
+			"type" : "descriptive"
 		}
 	],
 	"project-settings" : [
@@ -427,6 +510,10 @@
 	],
 	"action-tags" : [
 		{
+			"tag" : "@BUTTONONLY",
+			"description" : "Hides the date, time, or date/time field and displays only the 'Now' or 'Today' button. Supports custom button text when following the pattern @BUTTONONLY('????'). A form save can be triggered upon clicking the button by providing a save option as the second parameter, e.g. @BUTTONONLY('????','continue'). Valid save options are: record (Save and Exit Form), continue (Save and Stay), nextinstance (Save and Add New Instance), nextform (Save and Go To Next Form), nextrecord (Save and Go To Next Record), exitrecord (Save and Exit Record), compresp (Save and Mark Survey as Complete)."
+		},
+		{
 			"tag" : "@SAVEOPTIONS",
 			"description" : "Sets the save options on the form to the options specified (in the specified order). The format must follow the pattern @SAVEOPTIONS='????', in which the desired value must be a comma separated list of the following options: record (Save and Exit Form), continue (Save and Stay), nextinstance (Save and Add New Instance), nextform (Save and Go To Next Form), nextrecord (Save and Go To Next Record), exitrecord (Save and Exit Record), compresp (Save and Mark Survey as Complete). If this action tag is used on multiple fields on a form, the value from the first field not hidden by branching logic when the form loads, and not suppressed by @IF, will be used."
 		},
@@ -438,5 +525,8 @@
 			"tag" : "@SQLCHECKBOX",
 			"description" : "On SQL fields, replace the drop-down with checkboxes. When writing an SQL query for use with the @SQLCHECKBOX action tag, ensure that the returned column names are 'code' and 'label', otherwise the query will not function. Also note that this action tag does not work with @IF, and that a maximum of 60 options will be returned."
 		}
+	],
+	"no-auth-pages" : [
+		"redcap_icon"
 	]
 }

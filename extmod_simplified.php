@@ -122,18 +122,49 @@ while ( $infoModule = $queryModules->fetch_assoc() )
 			                    'exportProjectSettings' ) )
 			{
 				$listExportableSettings =
-					$listModuleInstances[ $infoModule['module'] ]->exportProjectSettings();
-				if ( ! is_array( $listExportableSettings ) ||
-				     ( ! empty( $listExportableSettings ) &&
-				       ( ! isset( $listExportableSettings[0]['key'] ) ||
-				         ! isset( $listExportableSettings[0]['value'] ) ) ) )
+					$listModuleInstances[
+						$infoModule['module'] ]->exportProjectSettings( $module->getProjectId() );
+				if ( ! is_array( $listExportableSettings ) )
 				{
 					$listIgnoreExport[ $infoModule['module'] ] = true;
 				}
 				else
 				{
-					foreach ( $listExportableSettings as $infoExportableSetting )
+					$exportableSettingsMode = null;
+					foreach ( $listExportableSettings
+					          as $exportableSettingKey => $infoExportableSetting )
 					{
+						if ( $exportableSettingsMode === null )
+						{
+							if ( is_int( $exportableSettingKey ) )
+							{
+								$exportableSettingsMode = 'db';
+								if ( ! isset( $infoExportableSetting['key'] ) ||
+								     ! isset( $infoExportableSetting['value'] ) )
+								{
+									$listIgnoreExport[ $infoModule['module'] ] = true;
+									break;
+								}
+							}
+							else
+							{
+								$exportableSettingsMode = 'assoc';
+							}
+						}
+						if ( $exportableSettingsMode == 'assoc' )
+						{
+							if ( ! is_string( $infoExportableSetting ) )
+							{
+								$infoExportableSetting = json_encode( $infoExportableSetting );
+							}
+							$infoExportableSetting = [ 'key' => $exportableSettingKey,
+							                           'value' => $infoExportableSetting ];
+						}
+						elseif ( ! isset( $infoExportableSetting['key'] ) ||
+						         ! isset( $infoExportableSetting['value'] ) )
+						{
+							continue;
+						}
 						$infoSetting = [ 'module' => $infoModule['module'],
 						                 'setting' => $infoExportableSetting['key'],
 						                 'value' => $infoExportableSetting['value'] ];

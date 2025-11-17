@@ -10,7 +10,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-class TestT23Defaultlocknotchange():
+class TestT05DefaultDataResWorkflow():
   def setup_method(self, method):
     self.driver = webdriver.Firefox()
     self.vars = {}
@@ -18,51 +18,46 @@ class TestT23Defaultlocknotchange():
   def teardown_method(self, method):
     self.driver.quit()
   
-  def test_t23Defaultlocknotchange(self):
+  def test_t05DefaultDataResWorkflow(self):
     self.driver.get("http://127.0.0.1/")
     self.driver.find_element(By.LINK_TEXT, "My Projects").click()
     elements = self.driver.find_elements(By.XPATH, "//*[@id=\"table-proj_table\"][contains(.,\'REDCap UI Tweaker Test\')]")
     assert len(elements) > 0
-    elements = self.driver.find_elements(By.XPATH, "//*[@id=\"table-proj_table\"][contains(.,\'REDCap UI Tweaker DLNC Test\')]")
+    elements = self.driver.find_elements(By.XPATH, "//*[@id=\"table-proj_table\"][contains(.,\'REDCap UI Tweaker DRW Test\')]")
     assert len(elements) == 0
     self.driver.find_element(By.CSS_SELECTOR, "a[href$=\"ControlCenter/index.php\"]").click()
     self.driver.find_element(By.CSS_SELECTOR, "a[href$=\"ExternalModules/manager/control_center.php\"]").click()
     WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "tr[data-module=\"redcap_ui_tweaker\"] button.external-modules-configure-button")))
     self.driver.find_element(By.CSS_SELECTOR, "tr[data-module=\"redcap_ui_tweaker\"] button.external-modules-configure-button").click()
-    WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.NAME, "default-prevent-lock-as-change")))
-    self.driver.execute_script("sessionStorage.setItem(\'test-savedsetting\',$(\'[name=\"default-prevent-lock-as-change\"]\').prop(\'checked\'))")
-    element = self.driver.find_element(By.NAME, "default-prevent-lock-as-change")
+    WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "[name=\"data-res-workflow\"]")))
+    self.driver.execute_script("sessionStorage.setItem(\'test-savedsetting\',$(\'[name=\"data-res-workflow\"]\').prop(\'checked\'))")
+    element = self.driver.find_element(By.CSS_SELECTOR, "[name=\"data-res-workflow\"]")
     if element.is_selected() != True: element.click()
     self.driver.find_element(By.CSS_SELECTOR, "#external-modules-configure-modal .modal-footer .save").click()
     time.sleep(2)
     self.driver.find_element(By.LINK_TEXT, "My Projects").click()
     self.driver.find_element(By.LINK_TEXT, "New Project").click()
-    self.driver.find_element(By.ID, "app_title").send_keys("REDCap UI Tweaker DLNC Test")
+    self.driver.find_element(By.ID, "app_title").send_keys("REDCap UI Tweaker DRW Test")
     dropdown = self.driver.find_element(By.ID, "purpose")
     dropdown.find_element(By.XPATH, "//option[. = 'Practice / Just for fun']").click()
     self.driver.find_element(By.CSS_SELECTOR, ".btn-primaryrc").click()
     time.sleep(2)
     self.driver.find_element(By.LINK_TEXT, "My Projects").click()
-    self.driver.find_element(By.LINK_TEXT, "REDCap UI Tweaker DLNC Test").click()
-    self.driver.find_element(By.CSS_SELECTOR, "[href*=\"ExternalModules/manager/project.php\"]").click()
-    WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "tr[data-module=\"redcap_ui_tweaker\"] button.external-modules-configure-button")))
-    self.driver.find_element(By.CSS_SELECTOR, "tr[data-module=\"redcap_ui_tweaker\"] button.external-modules-configure-button").click()
-    assert self.driver.find_element(By.NAME, "prevent-lock-as-change").is_selected() is True
-    self.driver.find_element(By.XPATH, "//div[@id=\'external-modules-configure-modal\']//button[contains(.,\'Cancel\')]").click()
-    self.driver.find_element(By.CSS_SELECTOR, "[href*=\"ProjectSetup/index.php\"]").click()
+    self.driver.find_element(By.LINK_TEXT, "REDCap UI Tweaker DRW Test").click()
+    value = self.driver.find_element(By.ID, "data_resolution_enabled").get_attribute("value")
+    assert value == "2"
     self.driver.find_element(By.LINK_TEXT, "Other Functionality").click()
     self.driver.find_element(By.CSS_SELECTOR, ".btn-danger").click()
     self.driver.find_element(By.ID, "delete_project_confirm").send_keys("DELETE")
     self.driver.find_element(By.CSS_SELECTOR, ".ui-dialog-buttonset > .ui-button:nth-child(2)").click()
-    self.driver.find_element(By.XPATH, "//button[contains(.,\'Yes, delete the project\')]").click()
+    self.driver.find_element(By.XPATH, "//button[contains(.,\'Yes, delete the project\') or contains(.,\'CONFIRM DELETION\')]").click()
     self.driver.find_element(By.XPATH, "//div[contains(.,\'successfully deleted\')]/button[contains(.,\'Close\')]").click()
-    time.sleep(0.5)
     self.driver.find_element(By.CSS_SELECTOR, "a[href$=\"ControlCenter/index.php\"]").click()
     self.driver.find_element(By.CSS_SELECTOR, "a[href$=\"ExternalModules/manager/control_center.php\"]").click()
     WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "tr[data-module=\"redcap_ui_tweaker\"] button.external-modules-configure-button")))
     self.driver.find_element(By.CSS_SELECTOR, "tr[data-module=\"redcap_ui_tweaker\"] button.external-modules-configure-button").click()
-    WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "[name=\"default-prevent-lock-as-change\"]")))
-    self.driver.execute_script("$(\'[name=\"default-prevent-lock-as-change\"]\').prop(\'checked\',sessionStorage.getItem(\'test-savedsetting\')==\'true\')")
+    WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "[name=\"data-res-workflow\"]")))
+    self.driver.execute_script("$(\'[name=\"data-res-workflow\"]\').prop(\'checked\',sessionStorage.getItem(\'test-savedsetting\')==\'true\')")
     self.driver.find_element(By.CSS_SELECTOR, "#external-modules-configure-modal .modal-footer .save").click()
     time.sleep(2)
   

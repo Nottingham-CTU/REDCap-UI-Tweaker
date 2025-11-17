@@ -28,18 +28,18 @@ project. This will override any system setting, but can itself be overridden by 
 action tag.
 
 To use this setting, enter a comma separated list of submit options:
-* record &ndash; *Save & Exit Form*
-* continue &ndash; *Save & Stay*
-* nextinstance &ndash; *Save & Add New Instance*
-* nextform &ndash; *Save & Go To Next Form*
-* nextrecord &ndash; *Save & Go To Next Record*
-* exitrecord &ndash; *Save & Exit Record*
-* compresp &ndash; *Save & Mark Survey as Complete*
+* `record` &ndash; *Save & Exit Form*
+* `continue` &ndash; *Save & Stay*
+* `nextinstance` &ndash; *Save & Add New Instance*
+* `nextform` &ndash; *Save & Go To Next Form*
+* `nextrecord` &ndash; *Save & Go To Next Record*
+* `exitrecord` &ndash; *Save & Exit Record*
+* `compresp` &ndash; *Save & Mark Survey as Complete*
 
 To use the action tag, enter `@SAVEOPTIONS=` followed by a comma separated list of submit options.
-This is applied on a per-form basis by using the action tag on any of the fields on that form.
-The first @SAVEOPTIONS action tag encountered on the form will be used, excluding fields hidden by
-branching logic when the form loads.
+For example `@SAVEOPTIONS=record,nextform`. This is applied on a per-form basis by using the action
+tag on any of the fields on that form. The first `@SAVEOPTIONS` action tag encountered on the form
+will be used, excluding fields hidden by branching logic when the form loads.
 
 ### Redirect from the Project Home page to this URL
 If set, this will cause the *Project Home* page to redirect to the specified URL. Either an absolute
@@ -79,7 +79,9 @@ This setting is only available to administrators.
 
 ## System-wide configuration options
 
-### Order / placement of field types
+### Designer and field tweaks
+
+#### Order / placement of field types
 This setting defines a custom ordering of the field types in the add/edit field window. Enter the
 field types as a comma-separated list of numbers, where each number corresponds to the field type
 listed below.
@@ -97,24 +99,24 @@ listed below.
 11. Slider / Visual Analog Scale
 
 The field types you specify will be shown at the top of the field type list, under the heading
-**Common Field Types**. This will be followed by the **Headers and Descriptions** section (which
+*Common Field Types*. This will be followed by the *Headers and Descriptions* section (which
 contains *Begin New Section* and *Descriptive Text*). Unspecified field types will be shown at the
-bottom of the list, under the heading **Other Field Types**.
+bottom of the list, under the heading *Other Field Types*.
 
-To adjust the order of field types listed under **Other Field Types**, specify the common field
+To adjust the order of field types listed under *Other Field Types*, specify the common field
 types and other field types as two comma-separated lists, separated by a pipe (|) character. Any
 unspecified field types will then be listed at the bottom of the other field types, under the
 specified other field types.
 
 If this setting is blank or invalid, the REDCap default field types list will be used.
 
-### Set required status on new fields
-This will set the **required** option on new fields to *yes*. For standard fields, the required
+#### Set required status on new fields
+This will set the *required* option on new fields to *yes*. For standard fields, the required
 option will be set to *yes* for all field types except descriptive and calculated fields for which
 the option will be set to *no*. For matrix fields, the required option will be ticked when each
 field is added, but can be unticked once the field label and name have been set.
 
-### Predefined field annotations
+#### Predefined field annotations
 Enter field annotations here (one per line) for them to be provided in a drop down list on the
 add/edit field form for easy selection.
 
@@ -140,26 +142,32 @@ Process Outcome
 Miscellaneous
 ```
 
-### Always show full annotations in the online designer
+#### Always show full annotations in the online designer
 If enabled, full field annotations will be shown at the bottom of each field in the online designer
 instead of just the action tags.
 
-### Enable @SQLDESCRIPTIVE action tag
-Allow use of the **@SQLDESCRIPTIVE** action tag for SQL fields, which will use the option label from
+#### Enable @BUTTONONLY action tag
+Allow use of the `@BUTTONONLY` action tag for date, time, and date/time fields. This will hide the
+field and show only the 'Now' or 'Today' button. If used in the format `@BUTTONONLY('????','????')`,
+custom text can be supplied as the first parameter, and if a second parameter is provided this can
+be a form submit option which will be triggered after the button is clicked.
+
+#### Enable @SQLDESCRIPTIVE action tag
+Allow use of the `@SQLDESCRIPTIVE` action tag for SQL fields, which will use the option label from
 the selected option in an SQL field as descriptive text and render the field like a descriptive
 field. This allows HTML content to be generated on the page using a database query. You will
-probably want to pair this action tag with @DEFAULT or @SETVALUE/@PREFILL to select the appropriate
-option.
+probably want to pair this action tag with `@DEFAULT` or `@SETVALUE`/`@PREFILL` to select the
+appropriate option.
 
 As REDCap may strip HTML from option labels, for best results try returning data from the database
 in URL-encoded or base64 format, which can be indicated by prefixing the data as follows:
-* raw: &ndash; no encoding
-* url: &ndash; URL-encoded
-* b64: &ndash; base64 encoded
+* `raw:` &ndash; no encoding
+* `url:` &ndash; URL-encoded
+* `b64:` &ndash; base64 encoded
 * if not prefixed, then assume raw (no encoding)
 
-### Enable @SQLCHECKBOX action tag
-Allow use of the **@SQLCHECKBOX** action tag for SQL fields, which will replace the drop-down list
+#### Enable @SQLCHECKBOX action tag
+Allow use of the `@SQLCHECKBOX` action tag for SQL fields, which will replace the drop-down list
 with a checkbox for each option similar to a checkbox field.
 
 When writing an SQL query for use with the `@SQLCHECKBOX` action tag, ensure that the returned
@@ -178,92 +186,107 @@ maximum number of options for an `@SQLCHECKBOX` field is therefore limited to 60
 *The previous implementation of* `@SQLCHECKBOX` *where the tag is applied to checkbox fields is now
 deprecated and will be removed in a future version of this module.*
 
-### Static form variable names
+#### Static form variable names
 This option will allow the form variable name (as used in the \*_complete variable) to be set
 explicitly when forms are created, and remain unchanged even when projects are in development
 status.
 
-### Use version fields
+#### Use version fields
 When a form is created, automatically place a form version field at the top of the form. This will
 be a multiple choice field with a default value of `1.0`.
 
 Static form variable names must be enabled in order to use this feature.
 
-### Version field default annotation/action tags
+#### Version field default annotation/action tags
 Set the default action tags used on version fields when they are created. If this has not been set,
 it will default to `@HIDDEN-SURVEY`.
 
 The action tags `@DEFAULT='1.0' @NOMISSING` will always be appended to these action tags and don't
 need to be included.
 
-### Use form name prefix when creating fields
+#### Use form name prefix when creating fields
 This will populate field names with a prefix based on the form name when new fields are created.
 
 Static form variable names must be enabled in order to use this feature.
 
-### Preserve form labels in instrument zips
+#### Preserve form labels in instrument zips
 This will save the form name label into the data dictionary prior to instrument download, and load
 the name from the data dictionary following an instrument upload.
 
-### Enable the Data Resolution Workflow on new projects
+### Data quality tweaks
+
+#### Enable the Data Resolution Workflow on new projects
 This option will enable the Data Resolution Workflow instead of the Field Comment Log on new
 projects.
 
-### Default missing data codes
+#### Default missing data codes
 This will set the missing data codes on new projects to the codes defined here.
 
-### Require a reason for change on new projects
+#### Require a reason for change on new projects
 This option will enable the reason for change prompts on new projects. If enabled, it can either be
 using REDCap standard functionality (prompts for all changes), or only for forms which have
 previously been marked 'complete'.
 
-### Show the fields that have changed on the change reason popup
+#### Show the fields that have changed on the change reason popup
 This option will amend the reason for change prompt so that all the fields which have been changed
 will be listed along with the old and new values. This can be useful for reminding users of the
 changes they have made when writing the reason.
 
-### Prevent the 'lock this instrument' option being treated as a data change
+#### Prevent the 'lock this instrument' option being treated as a data change
 This option will default new projects to not treat toggling the 'lock this instrument' checkbox as
 a data change. It can still be enabled/disabled on individual projects as required.
 
-### Default data quality rules to execute in real time
+#### Provide enhanced 'Incorrect values for calculated fields' (Rule H) check
+If enabled, users running data quality rules will see a link next to Rule H providing the option to
+do an enhanced check. This provides extra options such as limiting the check to a specific arm, and
+fixing the incorrect values without needing to check for them first.
+
+#### Default data quality rules to execute in real time
 Automatically selects the 'execute in real time' checkbox for new data quality rules on the data
 quality rules page.
 
-### Custom data quality notification header text
+#### Custom data quality notification header text
 This will override the text displayed in the header/title of the popup notification when a record is
 saved with data which violates data quality rules.
 
-### Custom data quality notification text
+#### Custom data quality notification text
 This will override the text displayed within the popup notification when a record is saved with data
 which violates data quality rules. This can be set separately for when data resolution workflow is
 *not* enabled and when it *is* enabled.
 
-### Hide equations on the data quality notification
+#### Hide equations on the data quality notification
 When real-time execution of data quality rules triggers the popup notification of rule violations,
 the rule logic code will be hidden by default. The user will have to click a 'show/hide logic' link
 to toggle the visibility of logic code.
 
-### Use alternate status icons
+### Project appearance tweaks
+
+#### Use alternate status icons
 Replaces some of the record status icons so they can be more easily distinguished by people with
 colour vision deficiency.
 
-### Show the user's role below their username
+#### Show the user's role below their username
 If the user has been added to a role within a project, show their role below their username.
 
-### Hide 'contact administrator' links
+#### Hide 'contact administrator' links
 Hides one or both of the 'contact REDCap administrator' links shown on project pages.
 
-### Hide 'suggest a new feature' link
+#### Hide 'suggest a new feature' link
 Hides the 'suggest a new feature' link shown on project pages.
 
-### Always show autofill option in development status
+#### Always show autofill option in development status
 If the project is in development status, or the server is set as a development server, then the
 option to autofill the forms will be shown to all users.
 
-### Submit options
+#### Add a 'show hidden fields' option in development status
+If the project is in development status, or the server is set as a development server, then an
+option to show hidden fields on the form will be shown to all users.
+
+### Project navigation tweaks
+
+#### Submit options
 On a REDCap data entry form, there are several options available when submitting.
-The **Save & Exit Form** option is always displayed next to a button/list combo of options which can
+The *Save & Exit Form* option is always displayed next to a button/list combo of options which can
 include the following:
 
 * Save & Stay
@@ -271,52 +294,70 @@ include the following:
 * Save & Go To Next Form
 * Save & Exit Record
 * Save & Go To Next Record
+* Save & Mark Survey as Complete
 
 The default REDCap behaviour will order this list depending on which options the user has used most
 recently (if any). This setting allows manipulating this list of options in one of two ways.
 
-* Remove **Save & Go To Next Record**
-* Only display a defined set of options, in the specified order (see the custom submit options for
-  the format)
+* Remove *Save & Go To Next Record*
+* Only display a defined set of options, in the specified order (see the form submit options above,
+  under project-level configuration options, for the format)
 
 Note that some of the options might not be displayed on a particular data entry form if they are not
 relevant.
 
-### Allow custom submit options
-Allow use of the **@SAVEOPTIONS** action tag to specify the options for submitting a data entry form.
+#### Allow custom submit options
+Allow use of the `@SAVEOPTIONS` action tag to specify the options for submitting a data entry form.
 This is applied on a per-form basis by using the action tag on any of the fields on that form.
 
 If custom submit options are enabled, the submit options can also be set project-wide in the module
-project settings (in the same format as for the action tag). If a @SAVEOPTIONS action tag is used,
-it will override the project-wide setting. The @SAVEOPTIONS action tag and the project-wide setting
-will each override the system-wide setting.
+project settings (in the same format as for the action tag). If a `@SAVEOPTIONS` action tag is used,
+it will override the project-wide setting. The `@SAVEOPTIONS` action tag and the project-wide
+setting will each override the system-wide setting.
 
-### Provide 'lock blank form' option
+#### Provide 'lock blank form' option
 Users with the privilege for locking individual forms will see an extra option on forms which are
 blank (appear with a grey status icon on the dashboard), so they can lock the form without saving
 any data on it and thus retaining its blank status.
 
-### Remember the selection of 'all status types' on the record status dashboard
+#### Remember the selection of 'all status types' on the record status dashboard
 If a user selects the 'all status types' option on the record status dashboard, their selection will
 be remembered and auto-selected when they subsequently view the dashboard. This will apply per-user
 and across all projects.
 
-### Additional login page logo URL
+### System appearance tweaks
+
+#### Additional login page logo URL
 Specify the URL of an image file to include it as an additional logo on the login page (on the top
 right of the page, opposite the REDCap logo).
 
-### Show 'My Projects' in alphabetical order
+#### Theme
+Apply a theme to REDCap. This will take the chosen theme hue and add/modify the following page
+elements which can assist in distinguishing different REDCap servers (e.g. dev, test, live).
+
+* **Banner** &ndash; Places a banner across the top of all pages, with the option to add text.
+  * Banner text supports the `[redcap-version]` smart variable.
+* **Border/Edge** &ndash; Places a thin border around the page viewport.
+* **Icon** &ndash; Changes the colour of the 'R' in the REDCap icon displayed in browser tabs and
+  bookmarks.
+
+Select one of the predefined theme hues (recommended) or specify your own as a colour in hex format
+(e.g. `ffcc00`).
+
+### System navigation tweaks
+
+#### Show 'My Projects' in alphabetical order
 If this option is enabled, the list of projects on the 'My Projects' page will be shown in
 alphabetical order by default. Any custom folders the user has defined will be retained, the
 projects will be sorted within the folders.
 
-### Redirect users with one project to that project
+#### Redirect users with one project to that project
 If this option is enabled, users with only one project will be redirected to that project the first
 time they load the *REDCap Home* page or the *My Projects* page following login. If the
 *My Projects* page is the first page shown after login, the user is immediately redirected to their
 project.
 
-### Enable versionless URLs
+#### Enable versionless URLs
 If enabled, this will instruct the user's web browser to strip the version number (the _vX.X.X part)
 from the REDCap URL. This should ensure that bookmarks are always saved without the version number.
 This can make it easier to redirect users from their saved links or bookmarks to the current version
@@ -336,12 +377,16 @@ line. The portion of the URL which will be matched to the regular expression is 
 slash which follows the redcap version directory. Slashes do not need to be escaped in the regular
 expressions for this setting.
 
-### Allow custom from addresses in alerts/ASIs
+### Email tweaks
+
+#### Allow custom from addresses in alerts/ASIs
 Provides an option when adding an alert to enter an email from address that is not provided in the
 dropdown list. If this option is enabled, use the *regular expression to validate custom from
 addresses* option to restrict the addresses which can be used (e.g. to limit to your own domain).
 
-### Alerts simplified view
+### Project simplified views
+
+#### Alerts simplified view
 If enabled, a button will be added to the alerts and notifications page to show a simplified view.
 This will provide an overview of the alerts as a table. Once the simplified view is shown, a button
 to select the table is displayed to make it easier to copy the table e.g. for use in documentation.
@@ -349,14 +394,14 @@ to select the table is displayed to make it easier to copy the table e.g. for us
 Other modules can add information to the alerts simplified view. If you are a module developer, see
 the [alert provider guide](README-AlertProvider.md) for more information.
 
-### Codebook simplified view
+#### Codebook simplified view
 If enabled, a button will be added to the codebook page to show a simplified view. This will hide
 any buttons and icons from the codebook table, remove the field number column, simplify the
 instrument headings and move the field annotations to a separate column. Once the simplified view
 is shown, a button to select the table is displayed to make it easier to copy the table e.g. for use
 in documentation.
 
-### External modules simplified view
+#### External modules simplified view
 If enabled, a button will be added to the external modules page (on projects only) to show a
 simplified view. This will provide a simple table of the external modules and their settings. This
 simplified view can be enabled only for administrators, so that if there are any modules with
@@ -368,20 +413,20 @@ If you are a module developer, you can adjust how your module settings are displ
 modules simplified view, see the [external module settings provider guide](README-ExtModProvider.md)
 for more information.
 
-### Data quality rules simplified view
+#### Data quality rules simplified view
 If enabled, a button will be added to the data quality rules page to show a simplified view. This
 will provide a simple table of the data quality rules, showing a unique ID number, the rule name,
 the rule logic, and whether real-time execution is enabled. Once the simplified view is shown, a
 button to select the table is displayed to make it easier to copy the table e.g. for use in
 documentation.
 
-### Instrument mapping simplified view
+#### Instrument mapping simplified view
 If enabled, a button will be added to the designate instruments for events page to show a simplified
 view. This will provide a simple table of which instruments are on each event, in which all arms are
 shown at once. Once the simplified view is shown, a button to select the table is displayed to make
 it easier to copy the table e.g. for use in documentation.
 
-### Reports simplified view
+#### Reports simplified view
 If enabled, a button will be added to the reports page to show a simplified view. This will provide
 an overview of the reports as a table. Once the simplified view is shown, a button to select the
 table is displayed to make it easier to copy the table e.g. for use in documentation.
@@ -389,7 +434,7 @@ table is displayed to make it easier to copy the table e.g. for use in documenta
 Other modules can add information to the reports simplified view. If you are a module developer, see
 the [report provider guide](README-ReportProvider.md) for more information.
 
-### User rights simplified view
+#### User rights simplified view
 If enabled, a button will be added to the user rights page to show a simplified view.
 This will provide an overview of the user rights as a table showing the rights granted to each role.
 This includes the basic rights and the data viewing/export rights for each data entry instrument.

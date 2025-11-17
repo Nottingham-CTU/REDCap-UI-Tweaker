@@ -173,14 +173,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
-		// If the @SQLCHECKBOX action tag is enabled and saving the SQL, add the SQL to provide the
-		// combined options.
-		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'Design/edit_field.php' &&
-		     $this->getSystemSetting( 'sql-checkbox' ) && $_POST['field_type'] == 'sql' &&
-		     \Form::hasActionTag( '@SQLCHECKBOX',
-		                          str_replace( "\n", ' ', $_POST['field_annotation'] ) ) )
+		// If an edit field submission...
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'Design/edit_field.php' )
 		{
-			$this->sqlCheckboxAddSQL();
+			// If saving a descriptive field, ensure that the field is not set as required.
+			if ( $_POST['field_type'] == 'descriptive' )
+			{
+				$_POST['field_req'] = '0';
+			}
+			// If the @SQLCHECKBOX action tag is enabled and saving the SQL, add the SQL to provide
+			// the combined options.
+			if ( $_POST['field_type'] == 'sql' && $this->getSystemSetting( 'sql-checkbox' ) &&
+			     \Form::hasActionTag( '@SQLCHECKBOX',
+			                          str_replace( "\n", ' ', $_POST['field_annotation'] ) ) )
+			{
+				$this->sqlCheckboxAddSQL();
+			}
 		}
 
 
@@ -342,21 +350,51 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 		// If report namespaces are enabled and this is a report page.
 		$this->reportNamespacing = false;
-		if ( $this->getProjectSetting( 'report-namespaces' ) &&
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' )
+		if ( $this->getProjectSetting( 'report-namespaces' ) )
 		{
-			if ( ! empty( $this->checkReportNamespaceAuth() ) )
+			if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' )
+			{
+				if ( ! empty( $this->checkReportNamespaceAuth() ) )
+				{
+					$GLOBALS['user_rights']['reports'] = 1;
+					$this->reportNamespacing = true;
+				}
+				elseif ( $GLOBALS['user_rights']['reports'] != 1 &&
+				         isset( $_GET['report_id'] ) && isset( $_GET['addedit'] ) )
+				{
+					header( 'Location: ' . APP_PATH_WEBROOT . '/DataExport/index.php?pid=' .
+					        $this->getProjectId() );
+					$this->exitAfterHook();
+				}
+			}
+			elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 33 ) ==
+			                                                'DataExport/report_filter_ajax.php' &&
+			         ! empty( $this->checkReportNamespaceAuth( true ) ) )
 			{
 				$GLOBALS['user_rights']['reports'] = 1;
-				$this->reportNamespacing = true;
 			}
-			elseif ( $GLOBALS['user_rights']['reports'] != 1 &&
-			         isset( $_GET['report_id'] ) && isset( $_GET['addedit'] ) )
-			{
-				header( 'Location: ' . APP_PATH_WEBROOT . '/DataExport/index.php?pid=' .
-				        $this->getProjectId() );
-				$this->exitAfterHook();
-			}
+		}
+
+
+		// If exporting a report with no fields defined, temporarily set the report to include
+		// all project fields.
+		if ( isset( $_SESSION['module_uitweak_remove_report_fields'] ) )
+		{
+			$this->query( 'DELETE FROM redcap_reports_fields WHERE report_id = ?',
+			              [ $_SESSION['module_uitweak_remove_report_fields'] ] );
+		}
+		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
+		     'DataExport/data_export_ajax.php' && isset( $_POST['report_id'] ) &&
+		     $this->query( 'SELECT 1 FROM redcap_reports WHERE report_id = ?',
+		                   [ $_POST['report_id'] ] )->fetch_assoc() &&
+		     ! $this->query( 'SELECT 1 FROM redcap_reports_fields WHERE report_id = ? LIMIT 1',
+		                   [ $_POST['report_id'] ] )->fetch_assoc() )
+		{
+			$_SESSION['module_uitweak_remove_report_fields'] = $_POST['report_id'];
+			$this->query( 'INSERT INTO redcap_reports_fields (report_id, field_name, field_order)' .
+			              ' SELECT ?, field_name, field_order FROM redcap_metadata ' .
+			              'WHERE project_id = ? ORDER BY field_order',
+			              [ $_POST['report_id'], $project_id ] );
 		}
 
 	}
@@ -448,6 +486,57 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			if ( $versionlessURLMatch )
 			{
 				$this->provideVersionlessURLs();
+			}
+		}
+
+
+		// Provide the theme.
+		$themeBanner = $this->getSystemSetting( 'theme-banner' );
+		$themeEdge = $this->getSystemSetting( 'theme-edge' );
+		$themeIcon = $this->getSystemSetting( 'theme-icon' );
+		if ( $themeBanner || $themeEdge || $themeIcon )
+		{
+			$themeHue = '000000';
+			$themeTextHue = 'ffffff';
+			switch ( $this->getSystemSetting( 'theme-hue' ) )
+			{
+				case 'blue':
+					$themeHue = '0064ff';
+					break;
+				case 'orange':
+					$themeHue = 'df8500';
+					break;
+				case 'white':
+					$themeHue = 'ffffff';
+					$themeTextHue = '000000';
+					break;
+				case 'custom':
+					$customThemeHue = $this->getSystemSetting( 'theme-hue-custom' );
+					if ( preg_match( '/^[0-9a-f]{6}$/', $customThemeHue ) )
+					{
+						$themeHue = $customThemeHue;
+						if ( $themeBanner )
+						{
+							$themeLum = ( hexdec( substr( $themeHue, 0, 2 ) ) * 0.3 ) +
+							            ( hexdec( substr( $themeHue, 2, 2 ) ) * 0.59 ) +
+							            ( hexdec( substr( $themeHue, 4, 2 ) ) * 0.11 );
+							$themeTextHue = $themeLum > 186 ? '000000' : 'ffffff';
+						}
+					}
+					break;
+			}
+			if ( $themeIcon )
+			{
+				$this->provideThemeIcon( $themeHue );
+			}
+			if ( $themeEdge )
+			{
+				$this->provideThemeEdge( $themeHue );
+			}
+			if ( $themeBanner )
+			{
+				$this->provideThemeBanner( $this->getSystemSetting( 'theme-banner-text' ),
+				                           $themeTextHue, $themeHue );
 			}
 		}
 
@@ -712,6 +801,17 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+		// If the survey settings page, provide custom alert sender if enabled.
+
+		if ( $this->getSystemSetting( 'custom-alert-sender' ) &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 21 ) == 'Surveys/edit_info.php' &&
+		     isset( $_GET['view'] ) && $_GET['view'] == 'showform' )
+		{
+			$this->provideCustomAlertSender( 'surveyconf' );
+		}
+
+
+
 		// If any data entry page, and alternate status icons enabled.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 10 ) == 'DataEntry/' &&
@@ -752,6 +852,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if ( ! $this->getSystemSetting( 'submit-option-custom' ) )
 		{
 			$listRemoveActionTags[] = '@SAVEOPTIONS';
+		}
+		if ( ! $this->getSystemSetting( 'buttononly' ) )
+		{
+			$listRemoveActionTags[] = '@BUTTONONLY';
 		}
 		if ( ! defined( 'SUPER_USER' ) || ! SUPER_USER ||
 		     ! $this->getSystemSetting( 'sql-descriptive' ) )
@@ -810,6 +914,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			if ( $this->getSystemSetting( 'dq-real-time' ) )
 			{
 				$this->provideDQRealTime();
+			}
+
+			// Add link to the enhanced rule H check.
+			if ( $this->getSystemSetting( 'dq-enhanced-calc' ) )
+			{
+				$this->provideDQEnhancedCalc();
 			}
 
 			// Add simplified view option.
@@ -1046,15 +1156,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			}
 		}
 
-		// Check if autofill links for all users are enabled and this is a development project or
-		// server and provide the autofill link if so.
-		if ( $this->getSystemSetting( 'show-autofill-development' ) &&
-		     ( $this->getProjectStatus() == 'DEV' ||
-		       ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
-		                              'WHERE field_name = ? AND `value` = ?',
-		                              ['is_development_server', '1'] )->fetch_row() ) ) )
+		// If this is a development project/server.
+		if ( $this->getProjectStatus() == 'DEV' ||
+		     ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
+		                            'WHERE field_name = ? AND `value` = ?',
+		                            ['is_development_server', '1'] )->fetch_row() ) )
 		{
-			$this->provideAutofill( false );
+			// Provide the autofill link for all users if enabled.
+			if ( $this->getSystemSetting( 'show-autofill-development' ) )
+			{
+				$this->provideAutofill( false );
+			}
+			// Provide the show hidden fields link if enabled.
+			if ( $this->getSystemSetting( 'show-hidden-fields' ) )
+			{
+				$this->provideShowHiddenFields( false );
+			}
 		}
 
 		// Check if the lock blank form option is enabled and provide it if this is a blank form.
@@ -1077,6 +1194,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$this->provideSQLCheckbox( $instrument );
 		}
 
+		// Check if the @BUTTONONLY action tag is enabled and provide its functionality if so.
+		if( $this->getSystemSetting( 'buttononly' ) )
+		{
+			$this->provideButtonOnly( $record, $event_id, $instrument, $repeat_instance );
+		}
+
 
 	}
 
@@ -1090,21 +1213,34 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 	                             $survey_hash = null, $response_id = null, $repeat_instance = 1 )
 	{
 
-		// Check if autofill links for all users are enabled and this is a development project or
-		// server and provide the autofill link if so.
-		if ( $this->getSystemSetting( 'show-autofill-development' ) &&
-		     ( $this->getProjectStatus() == 'DEV' ||
-		       ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
-		                              'WHERE field_name = ? AND `value` = ?',
-		                              ['is_development_server', '1'] )->fetch_row() ) ) )
+		// If this is a development project/server.
+		if ( $this->getProjectStatus() == 'DEV' ||
+		     ! empty( $this->query( 'SELECT 1 FROM redcap_config ' .
+		                            'WHERE field_name = ? AND `value` = ?',
+		                            ['is_development_server', '1'] )->fetch_row() ) )
 		{
-			$this->provideAutofill( true );
+			// Provide the autofill link for all users if enabled.
+			if ( $this->getSystemSetting( 'show-autofill-development' ) )
+			{
+				$this->provideAutofill( true );
+			}
+			// Provide the show hidden fields link if enabled.
+			if ( $this->getSystemSetting( 'show-hidden-fields' ) )
+			{
+				$this->provideShowHiddenFields( true );
+			}
 		}
 
 		// Check if the @SQLCHECKBOX action tag is enabled and provide its functionality if so.
 		if( $this->getSystemSetting( 'sql-checkbox' ) )
 		{
 			$this->provideSQLCheckbox( $instrument );
+		}
+
+		// Check if the @BUTTONONLY action tag is enabled and provide its functionality if so.
+		if( $this->getSystemSetting( 'buttononly' ) )
+		{
+			$this->provideButtonOnly( $record, $event_id, $instrument, $repeat_instance, true );
 		}
 
 	}
@@ -1250,13 +1386,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 	// Check if the user is authorised to edit a namespaced report.
 
-	function checkReportNamespaceAuth()
+	function checkReportNamespaceAuth( $roleOnly = false )
 	{
+		// Get the user's role name.
 		$userRights = $this->getUser()->getRights();
 		$roleName = ( isset( $userRights ) && isset( $userRights['role_name'] ) &&
 		              $userRights['role_name'] != '' ? $userRights['role_name'] : null );
+		// User must be in a role to be authorised to edit namespaced reports.
 		if ( $roleName !== null )
 		{
+			// Get a list of the namespaces the user belongs to.
 			$listNS = [];
 			$reportNSRoles = $this->getProjectSetting( 'report-namespace-roles' );
 			foreach ( $reportNSRoles as $i => $roleNames )
@@ -1268,6 +1407,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 					              'roles' => $roleNames ];
 				}
 			}
+			// If checking the role only (not checking report access), return the NS list here.
+			if ( $roleOnly )
+			{
+				return $listNS;
+			}
+			// Get the report ID.
 			if ( isset( $_POST['report_id'] ) )
 			{
 				if ( isset( $_GET['report_id'] ) )
@@ -1276,8 +1421,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				$_GET['report_id'] = $_POST['report_id'];
 			}
+			// If editing an existing report...
 			if ( ! empty( $listNS ) && isset( $_GET['report_id'] ) && $_GET['report_id'] != 0 )
 			{
+				// Get the report's folder names.
 				$queryReportFolders =
 					$this->query( 'SELECT rf.folder_id, rf.name FROM redcap_reports_folders_items' .
 					              ' rfi JOIN redcap_reports_folders rf ON rfi.folder_id = ' .
@@ -1288,6 +1435,7 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				{
 					$listReportFolders[] = $itemReportFolder['name'];
 				}
+				// Remove namespaces from the list if the report not in a matching folder.
 				foreach ( $listNS as $i => $infoNS )
 				{
 					if ( ! in_array( $infoNS['name'], $listReportFolders ) )
@@ -1297,8 +1445,10 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				$listNS = array_values( $listNS );
 			}
+			// Return the NS list.
 			return $listNS;
 		}
+		// Not authorised, return empty list.
 		return [];
 	}
 
@@ -1610,6 +1760,95 @@ $(function()
 
 
 
+	// Output JavaScript to provide the @BUTTONONLY action tag functionality.
+
+	function provideButtonOnly( $record, $eventID, $instrument, $repeatInstance, $survey = false )
+	{
+		$listFields = \REDCap::getDataDictionary( 'array', false, null, $instrument );
+		$listFieldsButtonOnly = [];
+
+		foreach ( $listFields as $infoField )
+		{
+			if ( $infoField['field_type'] == 'text' &&
+			     strpos( $infoField['text_validation_type_or_show_slider_number'],
+			             'date' ) !== false )
+			{
+				$fieldAnnotationEIf = $this->replaceIfActionTag( $infoField['field_annotation'],
+				                                                 $this->getProjectId(), $record,
+				                                                 $eventID, $instrument,
+				                                                 $repeatInstance );
+				if ( preg_match( '/@BUTTONONLY(?= |\\(|$)(?:\\(\\s*(?:\'([^\']*)\'|"([^"]*)")' .
+				                 '(?:\\s*,\\s*(?:\'([^\']*)\'|"([^"]*)"))?\\s*\\))?/',
+				                 $fieldAnnotationEIf, $buttonOnly ) )
+				{
+					$buttonText = $buttonOnly[1] . $buttonOnly[2];
+					$buttonSave = $buttonOnly[3] . $buttonOnly[4];
+					if ( ! in_array( $buttonSave, self::SUBMIT_TYPES ) )
+					{
+						$buttonSave = '';
+					}
+					elseif ( $survey )
+					{
+						$buttonSave = 'record';
+					}
+					$listFieldsButtonOnly[] = [ 'name' => $infoField['field_name'],
+					                            'text' => $buttonText,
+					                            'save' => $buttonSave ];
+				}
+			}
+		}
+		if ( empty( $listFieldsButtonOnly ) )
+		{
+			return;
+		}
+		$fieldsJSON = $this->escapeJSString( json_encode( $listFieldsButtonOnly ) );
+
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setTimeout(function()
+    {
+      var vListFields = JSON.parse(<?php echo $fieldsJSON; ?>)
+      for ( var i = 0; i < vListFields.length; i++ )
+      {
+        let vFieldName = vListFields[i].name
+        let vButtonText = vListFields[i].text
+        let vSaveOption = vListFields[i].save
+        let vTextbox = $( 'input[name="' + vFieldName + '"]' )
+        let vButton = $( '.today-now-btn[onclick*="(\'' + vFieldName + '\'"]' )
+        let vDatePicker = $( vTextbox ).parent().find('.ui-datepicker-trigger')
+        let vDateFormat = $( vButton ).parent().find('.df')
+        vTextbox.css('display', 'none')
+        vDatePicker.css('display', 'none')
+        vDateFormat.css('display', 'none')
+        vButton.css('font-size', 'unset')
+        if ( vButtonText != '' )
+        {
+          vButton.text( vButtonText )
+        }
+        if ( vSaveOption != '' )
+        {
+          vButton.on( 'click', function()
+          {
+            setTimeout( function()
+            {
+              dataEntrySubmit( 'submit-btn-save' + vSaveOption )
+            }, 250 )
+          })
+        }
+      }
+    },100)
+  })
+</script>
+<?php
+
+	}
+
+
+
+
+
 	// Output JavaScript to set the requirement for a change reason based on the form's previous
 	// 'complete' status.
 
@@ -1694,8 +1933,18 @@ $(function()
 
 	function provideCustomAlertSender( $for = 'alerts' )
 	{
-		$selectFields = ( $for == 'alerts' ? 'select[name="email-from"], select[name="email-failed"]'
-		                                   : 'select[name="email_sender"]' );
+		switch ( $for )
+		{
+			case 'alerts':
+				$selectFields = 'select[name="email-from"], select[name="email-failed"]';
+				break;
+			case 'ASI':
+				$selectFields = 'select[name="email_sender"]';
+				break;
+			case 'surveyconf':
+				$selectFields = 'select[name="confirmation_email_from"]';
+				break;
+		}
 
 ?>
 <script type="text/javascript">
@@ -1815,6 +2064,32 @@ $(function()
 <?php
 
 	}
+	elseif ( $for == 'surveyconf' )
+	{
+
+?>
+    vSelectFields.find('[value="999"]').remove()
+    vSelectFields.append( '<option value="*">Enter a different email address...</option>' )
+    vSelectFields.on('click',function()
+    {
+      var vField = $(this)
+      vOldVal = vField.val()
+      vField.find('option[value="*"]').appendTo(vField)
+    })
+    vSelectFields.on('change',function()
+    {
+      if ( $(this).val() == '*' )
+      {
+        vActiveSelect = $(this)
+        vActiveSelect.val( vOldVal )
+        vDialog.find('input').val('')
+        vDialog.find('span').text('')
+        vDialog.dialog('open')
+      }
+    })
+<?php
+
+	}
 
 ?>
 
@@ -1873,6 +2148,26 @@ $(function()
 ?>
       $('#customizeprojectform').submit()
     }, 1000 )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to add a link to the enhanced DQ rule H check.
+
+	function provideDQEnhancedCalc()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('#rulename_pd-10')
+      .append('<br><a href="<?php echo addslashes( $this->getUrl('quality_rules_ecalc.php') ); ?>">' +
+              '<i class="fas fa-wand-sparkles"></i> Enhanced check</a>')
   })
 </script>
 <?php
@@ -2525,6 +2820,71 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript to add the show hidden fields option for all users if the project is in
+	// development status or the server is a development/testing server.
+
+	function provideShowHiddenFields( $survey = false )
+	{
+		if ( $survey )
+		{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( $('#admin-controls-div').length == 0 )
+    {
+      $('#pagecontent').append('<div id="admin-controls-div" style="position:absolute;top:0px;' +
+                               'left:calc(100%);margin:5px 0px 0px 7px;width:max-content"></div>')
+    }
+    else
+    {
+      $('#admin-controls-div').append('<br>')
+    }
+    $('#admin-controls-div').append('<a id="show-hidden-btn" class="btn btn-link btn-xs fs11" ' +
+                                    'href="javascript:;" onclick="$(\'head\').append(\'<style ' +
+                                    'type=&quot;text/css&quot;>.\\\\@HIDDEN,.\\\\@HIDDEN-SURVEY' +
+                                    '{display:revert;filter:blur(0.6px) contrast(0.07) ' +
+                                    'brightness(1.3)}.\\\\@HIDDEN:hover,.\\\\@HIDDEN-SURVEY:hover' +
+                                    '{display:revert;filter:brightness(0.95)}</style>\');' +
+                                    '$(\'#show-hidden-btn\').css(\'display\',\'none\')" ' +
+                                    'style="color:rgb(136, 136, 136)"><i class="fs10 fa-solid ' +
+                                    'fa-eye"></i> Show hidden fields</a>')
+  })
+</script>
+<?php
+		}
+		else
+		{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    setInterval( function()
+    {
+      if ( $('#show-hidden-btn').length == 0 )
+      {
+        $('#formSaveTip').append('<div id="show-hidden-btn"><button class="btn btn-link ' +
+                                 'btn-xs" style="font-size:11px !important;padding:1px 5px ' +
+                                 '!important;margin:0 !important;color:#007bffcc;" onclick=' +
+                                 '"$(\'head\').append(\'<style type=&quot;text/css&quot;>.' +
+                                 '\\\\@HIDDEN,.\\\\@HIDDEN-FORM{display:revert;filter:blur(0.6px)' +
+                                 ' contrast(0.07) brightness(1.3)} .\\\\@HIDDEN:hover,' +
+                                 '.\\\\@HIDDEN-FORM:hover{display:revert;filter:brightness(0.95)}' +
+                                 '</style>\');$(\'#show-hidden-btn\').css(\'display\',\'none\')">' +
+                                 '<i class="fs10 fa-solid fa-eye mr-1"></i> ' +
+                                 'Show hidden fields</button></div>')
+      }
+    }, 5010 )
+  })
+</script>
+<?php
+		}
 	}
 
 
@@ -3229,6 +3589,71 @@ $(function()
 
 
 
+	// Output JavaScript to provide the themed banner.
+
+	function provideThemeBanner( $text, $fg, $bg )
+	{
+		$text = str_replace( '[redcap-version]', $GLOBALS['redcap_version'], $text );
+		$text = $this->escapeJSString( $this->escapeHTML( $text ) );
+		$fg = $this->escapeJSString( '#' . $fg );
+		$bg = $this->escapeJSString( '#' . $bg );
+?>
+<script type="text/javascript">
+  $('head').append('<style type="text/css">:root{--page-top:25px}' +
+                   '.navbar.fixed-top,#formSaveTip{top:calc(var(--page-top) - 6px)}' +
+                   '.mainwindow,#pagecontainer{margin-top:calc(var(--page-top) - 4px)}' +
+                   '.message-center-container{top:calc(var(--page-top) - 4px) !important}' +
+                   'body>.red[style*="width:100%"]{margin-top:var(--page-top)}</style>')
+  $('body').prepend( $('<div style="position:fixed;top:0px;left:0px;right:0px;' +
+                       'height:var(--page-top);z-index:1000000;' +
+                       'text-align:center;font-size:calc(var(--page-top) - 8px)">' +
+                       <?php echo $text; ?> + '</div>')
+                     .css('color', <?php echo $fg; ?>).css('background-color', <?php echo $bg; ?>) )
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to provide the themed border/edge.
+
+	function provideThemeEdge( $c )
+	{
+		$c = $this->escapeJSString( '#' . $c );
+?>
+<script type="text/javascript">
+  $('body').prepend( $('<div style="position:fixed;top:0px;bottom:0px;left:0px;right:0px;' +
+                       'z-index:999999;pointer-events:none;border:solid 4px"></div>')
+                     .css('border-color', <?php echo $c; ?>) )
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to provide the themed icon.
+
+	function provideThemeIcon( $c )
+	{
+		$icon = preg_replace( '!^https?://[^/]*!', '',
+		                      preg_replace( '/&pid=[1-9][0-9]*/', '',
+		                                    $this->getUrl( "redcap_icon.php?c=$c", true ) ) );
+		$icon = $this->escapeJSString( $icon );
+?>
+<script type="text/javascript">
+  $('link[rel~="icon"]').attr('href',<?php echo $icon; ?>)
+</script>
+<?php
+	}
+
+
+
+
+
 	// Output the current user role name
 
 	function provideUserRoleName()
@@ -3605,15 +4030,31 @@ $(function()
     $('img[src$="circle_gray.png"]').attr('src','<?php echo $this->getIconUrl('gray'); ?>')
     $('img[src$="circle_red.png"]').attr('src','<?php echo $this->getIconUrl('red'); ?>')
     $('img[src$="circle_yellow.png"]').attr('src','<?php echo $this->getIconUrl('yellow'); ?>')
+    $('img[src$="circle_gray_stack.png"]').attr('src','<?php echo $this->getIconUrl('grays'); ?>')
     $('img[src$="circle_red_stack.png"]').attr('src','<?php echo $this->getIconUrl('reds'); ?>')
     $('img[src$="circle_yellow_stack.png"]').attr('src', '<?php echo $this->getIconUrl('yellows'); ?>')
     $('img[src$="circle_blue_stack.png"]').attr('src','<?php echo $this->getIconUrl('blues'); ?>')
     $('img[src$="circle_orange_tick.png"]').attr('src','<?php echo $this->getIconUrl('orange'); ?>')
+    $('.rc-instance-selector-status-icon[data-rc-status="0"]')
+      .removeClass('rc-instance-selector-status-icon').html($('<img>')
+      .attr('src','<?php echo $this->getIconUrl('red'); ?>'))
+    $('.rc-instance-selector-status-icon[data-rc-status="1"]')
+      .removeClass('rc-instance-selector-status-icon').html($('<img>')
+      .attr('src','<?php echo $this->getIconUrl('yellow'); ?>'))
+    $('.rc-instance-selector-status-icon[data-rc-status="S0"]')
+      .removeClass('rc-instance-selector-status-icon').html($('<img>')
+      .attr('src','<?php echo $this->getIconUrl('orange'); ?>'))
   }
   $(function(){
     $('img[src$="circle_red_stack.png"], img[src$="circle_yellow_stack.png"], ' +
       'img[src$="circle_blue_stack.png"]').on('click',
       function(){setTimeout(vFuncNewIcons,500);setTimeout(vFuncNewIcons,1000)})
+    var vShowInstSel = showFormInstanceSelector
+    showFormInstanceSelector = function ( el, pid, recordId, formName, eventId )
+    {
+      vShowInstSel( el, pid, recordId, formName, eventId )
+      vFuncNewIcons()
+    }
   })
   $(vFuncNewIcons)
 })()

@@ -69,6 +69,16 @@ class TestT17Customfromaddresses():
     value = self.driver.find_element(By.ID, "email_sender").get_attribute("value")
     assert value == "example3@test.email.example.com"
     self.driver.find_element(By.XPATH, "//div[@aria-describedby=\'popupSetUpCondInvites\']//button[contains(.,\'Cancel\')]").click()
+    self.driver.find_element(By.CSS_SELECTOR, "button[onclick*=\"Surveys/edit_info.php\"][onclick*=\"page=demographics\"]").click()
+    dropdown = self.driver.find_element(By.ID, "confirmation_email_enable")
+    dropdown.find_element(By.CSS_SELECTOR, "*[value='1']").click()
+    dropdown = self.driver.find_element(By.ID, "confirmation_email_from")
+    dropdown.find_element(By.XPATH, "//option[. = 'Enter a different email address...']").click()
+    self.driver.find_element(By.CSS_SELECTOR, ".ui-dialog [type=\"text\"]").click()
+    self.driver.find_element(By.CSS_SELECTOR, ".ui-dialog [type=\"text\"]").send_keys("example4@test.email.example.com")
+    self.driver.find_element(By.CSS_SELECTOR, ".ui-dialog button:not(.ui-dialog-titlebar-close)").click()
+    value = self.driver.find_element(By.ID, "confirmation_email_from").get_attribute("value")
+    assert value == "example4@test.email.example.com"
     self.driver.find_element(By.CSS_SELECTOR, "a[href$=\"ControlCenter/index.php\"]").click()
     self.driver.find_element(By.CSS_SELECTOR, "a[href$=\"ExternalModules/manager/control_center.php\"]").click()
     WebDriverWait(self.driver, 30).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "tr[data-module=\"redcap_ui_tweaker\"] button.external-modules-configure-button")))
