@@ -634,6 +634,10 @@ foreach ( $listForms as $formUniqueName => $infoForm )
 }
 ?>
 </table>
+<script type="text/javascript">
+ $('head').append('<style type="text/css">.simpRolesTable th ' +
+                  '{position:sticky;top:calc(var(--page-top, 0px) - 2px)}</style>')
+</script>
 <?php
 }
 $module->provideSimplifiedViewDiff( '.svu' );
