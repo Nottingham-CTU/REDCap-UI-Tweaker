@@ -238,5 +238,11 @@
 		"name" : "Theme hue, banner, edge, icon",
 		"expected" : "The banner, edge and icon are displayed in the selected hue, any banner text is displayed correctly within the banner",
 		"scenario" : "Activate the banner and check it is displayed in a dark and light hue with appropriately contrasting text. Activate the edge and icon and check these are displayed."
+	},
+	{
+		"file" : "test_41-BUTTONONLY_action_tag.py",
+		"name" : "BUTTONONLY action tag",
+		"expected" : "Only the today/now button is shown for a field with the action tag, not the date field itself",
+		"scenario" : "Check that the field is hidden but the button is shown and that clicking the button populates the field as normal. Check that the form is submitted if a submit option is provided."
 	}
 ]
