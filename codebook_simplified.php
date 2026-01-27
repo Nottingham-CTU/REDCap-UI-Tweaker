@@ -656,7 +656,7 @@ foreach ( $listCodebook as $infoCodebook )
 
 	// Set default field rowspan.
 	$rowspan = 2;
-	// For dropdown/radio/checkbox fields, get the options and increment the rowspan.
+	// For new and old values...
 	for ( $r = 0; $r <= 1; $r++ )
 	{
 		if ( $r > 0 && ! isset( $infoCodebook['field_oldvals'] ) )
@@ -671,7 +671,10 @@ foreach ( $listCodebook as $infoCodebook )
 		{
 			$infoTemp =& $infoCodebook['field_oldvals'];
 		}
-		if ( in_array( $infoTemp['element_type'], [ 'dropdown', 'radio', 'checkbox' ] ) )
+		// For dropdown/radio/checkbox fields, get the options and increment the rowspan.
+		// Don't do this if the field type is changed and is no longer one of these.
+		if ( in_array( $infoTemp['element_type'], [ 'dropdown', 'radio', 'checkbox' ] ) &&
+		     in_array( $infoCodebook['element_type'], [ 'dropdown', 'radio', 'checkbox' ] ) )
 		{
 			if ( $infoTemp['element_type'] == 'checkbox' &&
 			     strpos( $infoTemp['misc'], '@SQLCHECKBOX' ) !== false )
@@ -775,6 +778,13 @@ foreach ( $listCodebook as $infoCodebook )
 					              '@CALCDATE', $infoTemp['misc'] );
 				$rowspan = 3;
 			}
+		}
+		// If the field type has been changed to a dropdown/radio/checkbox field, show any old
+		// calculation as a removed option.
+		if ( is_array( $infoCodebook['element_enum'] ) && ! is_array( $infoTemp['element_enum'] ) )
+		{
+			$infoCodebook['element_enum'][] = [ '', $infoTemp['element_enum'], 'del' ];
+			$rowspan++;
 		}
 		unset( $infoTemp );
 	}
