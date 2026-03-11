@@ -12,6 +12,8 @@ if ( !isset( $_GET['pid'] ) || ! $module->getSystemSetting('user-rights-simplifi
 $svbr = REDCapUITweaker::SVBR;
 
 $lookupYN = [ '1' => $GLOBALS['lang']['design_100'], '0' => '' ];
+$lookupUserRights = [ '0' => '', '1' => $GLOBALS['lang']['rights_440'],
+                      '2' => $GLOBALS['lang']['rights_61'] ];
 $lookupDRW = [ '0' => '',
                '1' => $GLOBALS['lang']['dataqueries_143'],
                '2' => $GLOBALS['lang']['dataqueries_138'],
@@ -304,7 +306,7 @@ foreach ( array_merge( [
             // - Project design and setup
             [ $GLOBALS['lang']['rights_135'], 'design', $lookupYN ],
             // - User rights
-            [ $GLOBALS['lang']['app_05'], 'user_rights', $lookupYN ],
+            [ $GLOBALS['lang']['app_05'], 'user_rights', $lookupUserRights ],
             // - Data access groups
             [ $GLOBALS['lang']['global_22'], 'data_access_groups', $lookupYN ],
             // Basic Privileges header
@@ -632,6 +634,10 @@ foreach ( $listForms as $formUniqueName => $infoForm )
 }
 ?>
 </table>
+<script type="text/javascript">
+ $('head').append('<style type="text/css">.simpRolesTable th ' +
+                  '{position:sticky;top:calc(var(--page-top, 0px) - 2px)}</style>')
+</script>
 <?php
 }
 $module->provideSimplifiedViewDiff( '.svu' );
