@@ -4050,10 +4050,11 @@ $(function()
       'img[src$="circle_blue_stack.png"]').on('click',
       function(){setTimeout(vFuncNewIcons,500);setTimeout(vFuncNewIcons,1000)})
     var vShowInstSel = showFormInstanceSelector
-    showFormInstanceSelector = function ( el, pid, recordId, formName, eventId )
+    showFormInstanceSelector = function ( ...vInstSelArgs )
     {
-      vShowInstSel( el, pid, recordId, formName, eventId )
+      vShowInstSel( ...vInstSelArgs )
       vFuncNewIcons()
+      setTimeout( function() {vFuncNewIcons()}, 300 )
     }
   })
   $(vFuncNewIcons)

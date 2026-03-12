@@ -23,10 +23,15 @@ $lookupDRW = [ '0' => '',
 $lookupLock = [ '0' => '',
                 '1' => $GLOBALS['lang']['global_89'],
                 '2' => $GLOBALS['lang']['global_89'] . ' (' . $GLOBALS['lang']['global_34'] . ')' ];
-$lookupDataEntry = [ '1' => $GLOBALS['lang']['rights_138'],
-                     '2' => $GLOBALS['lang']['rights_61'],
-                     '3' => $GLOBALS['lang']['rights_138'] .
-                            ' (+' . $GLOBALS['lang']['rights_137'] . ')'];
+$lookupDataEntry = [ '130' => $GLOBALS['lang']['rights_138'],
+                     '129' => $GLOBALS['lang']['rights_61'],
+                     '138' => $GLOBALS['lang']['rights_138'] .
+                            ' (+' . $GLOBALS['lang']['dashboard_79'] . ')',
+                     '146' => $GLOBALS['lang']['rights_138'] .
+                            ' (+' . $GLOBALS['lang']['global_19'] . ')',
+                     '154' => $GLOBALS['lang']['rights_138'] .
+                            ' (+' . $GLOBALS['lang']['dashboard_79'] .
+                            ', +' . $GLOBALS['lang']['global_19'] . ')'];
 $lookupExport = [ '1' => $GLOBALS['lang']['rights_49'],
                   '2' => $GLOBALS['lang']['rights_48'],
                   '3' => $GLOBALS['lang']['data_export_tool_182']
@@ -534,16 +539,24 @@ foreach ( $listForms as $formUniqueName => $infoForm )
 		$dataExportOld = '';
 		if ( strpos( $infoRole['data_entry'], "[$formUniqueName," ) !== false )
 		{
-			preg_match( '/' . preg_quote("[$formUniqueName,", '/') . '([0-3])\\]/',
+			preg_match( '/' . preg_quote("[$formUniqueName,", '/') . '([0-9]+)\\]/',
 			            $infoRole['data_entry'], $m );
 			$dataEntry = $m[1];
+			if ( $dataEntry == '3' ) $dataEntry = '138';
+			elseif ( $dataEntry == '2' ) $dataEntry = '129';
+			elseif ( $dataEntry == '1' ) $dataEntry = '130';
+			elseif ( $dataEntry == '0' ) $dataEntry = '128';
 		}
 		if ( ! $infoRole['role_new'] && ! $infoRole['role_deleted'] &&
 		     strpos( $infoRole['role_oldvals']['data_entry'], "[$formUniqueName," ) !== false )
 		{
-			preg_match( '/' . preg_quote("[$formUniqueName,", '/') . '([0-3])\\]/',
+			preg_match( '/' . preg_quote("[$formUniqueName,", '/') . '([0-9]+)\\]/',
 			            $infoRole['role_oldvals']['data_entry'], $m );
 			$dataEntryOld = $m[1];
+			if ( $dataEntryOld == '3' ) $dataEntryOld = '138';
+			elseif ( $dataEntryOld == '2' ) $dataEntryOld = '129';
+			elseif ( $dataEntryOld == '1' ) $dataEntryOld = '130';
+			elseif ( $dataEntryOld == '0' ) $dataEntryOld = '128';
 		}
 		if ( isset( $infoRole['data_export_instruments'] ) &&
 		     strpos( $infoRole['data_export_instruments'], "[$formUniqueName," ) !== false )
