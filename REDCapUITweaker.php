@@ -947,11 +947,13 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if ( $this->reportNamespacing )
 		{
 			echo '<script type="text/javascript">',
-			     '$(document).on(\'ajaxSend\',function(e,x,s){s.url=s.url.replace(\'DataExport' .
-			     '/report_edit_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=' .
-			     'ajax_reports_ns&rcpage=report_edit_ajax&\').replace(\'DataExport/report_delete' .
-			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=' .
-			     'ajax_reports_ns&rcpage=report_delete_ajax&\')})',
+			     '$(document).on(\'ajaxSend\',function(e,x,s){s.url=s.url.replace(\'DataExport',
+			     '/report_edit_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=',
+			     'ajax_reports_ns&rcpage=report_edit_ajax&\').replace(\'DataExport/report_delete',
+			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=',
+			     'ajax_reports_ns&rcpage=report_delete_ajax&\').replace(\'DataExport/report_filter',
+			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=',
+			     'ajax_reports_ns&rcpage=report_filter_ajax&\')})',
 			     "</script>\n";
 		}
 
