@@ -148,7 +148,13 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		{
 			if ( ! preg_match( '!^https?://!', $projectHomeRedirect ) )
 			{
+				$firstProjDashID = $this->query( 'SELECT dash_id FROM redcap_project_dashboards' .
+				                                 ' WHERE project_id = ? ORDER BY dash_order ' .
+				                                 'LIMIT 1', [ $project_id ] )->fetch_assoc();
+				$firstProjDashID = ( $firstProjDashID ? (string)$firstProjDashID['dash_id'] : '*' );
 				$projectHomeRedirect = str_replace( 'pid=*', 'pid=' . $project_id,
+				                                    $projectHomeRedirect );
+				$projectHomeRedirect = str_replace( 'dash_id=*', 'dash_id=' . $firstProjDashID,
 				                                    $projectHomeRedirect );
 				$projectHomeRedirect = APP_PATH_WEBROOT_FULL . 'redcap_v' . REDCAP_VERSION .
 				                       ( substr( $projectHomeRedirect, 0, 1 ) == '/' ? '' : '/' ) .
