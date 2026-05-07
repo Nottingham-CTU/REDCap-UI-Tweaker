@@ -3665,7 +3665,15 @@ $(function()
 			return;
 		}
 
-		$userRights = $this->getUser()->getRights();
+		try
+		{
+			$userRights = $this->getUser()->getRights();
+		}
+		catch ( \Exception $e )
+		{
+			return;
+		}
+
 		if ( !isset( $userRights ) ||
 		     !isset( $userRights['role_name'] ) || $userRights['role_name'] == '' )
 		{
