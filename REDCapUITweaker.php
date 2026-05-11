@@ -168,14 +168,24 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// If custom from addresses are allowed in alerts, and the supplied from address passes
 		// the validation, ensure the built-in validation allows the address.
 
-		if ( $this->getSystemSetting( 'custom-alert-sender' ) &&
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
-		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:saveAlert' &&
-		     isset( $_POST['email-from'] ) &&
-		     preg_match( '/' . $this->getSystemSetting( 'custom-alert-sender-regex' ) . '/',
-		                 $_POST['email-from'] ) )
+		if ( $this->getSystemSetting( 'custom-alert-sender' ) )
 		{
-			$GLOBALS['user_email'] = $_POST['email-from'];
+			if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
+			     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:saveAlert' &&
+			     isset( $_POST['email-from'] ) &&
+			     preg_match( '/' . $this->getSystemSetting( 'custom-alert-sender-regex' ) . '/',
+			                 $_POST['email-from'] ) )
+			{
+				$GLOBALS['user_email'] = $_POST['email-from'];
+			}
+			elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 39 ) ==
+			                                            'Surveys/automated_invitations_setup.php' &&
+			     isset( $_POST['email_sender'] ) &&
+			     preg_match( '/' . $this->getSystemSetting( 'custom-alert-sender-regex' ) . '/',
+			                 $_POST['email_sender'] ) )
+			{
+				$GLOBALS['user_email'] = $_POST['email_sender'];
+			}
 		}
 
 
