@@ -41,7 +41,8 @@ if ( isset( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] ) )
 	// Get the list of records to check/update.
 	if ( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] == 'records' )
 	{
-		$queryRecords = 'SELECT record FROM redcap_record_list WHERE project_id = ?';
+		$queryRecords = 'SELECT record FROM redcap_record_list WHERE project_id = ? ' .
+		                "ORDER BY right(concat('000000000000000',record),15)";
 		$paramsRecords = [ $module->getProjectId() ];
 		if ( preg_match( '/^[0-9]+$/', $_POST['arm'] ?? '' ) )
 		{
@@ -70,7 +71,7 @@ if ( isset( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] ) )
 		if ( $_POST['record'] ?? '' != '' )
 		{
 			$dq = new \DataQuality();
-			$dq->executeRule( 'pd-10', $_POST['record'] );
+			$dq->executeRule( 'pd-10', [ $_POST['record'] ] );
 			$dqResults = [ 'record' => $_POST['record'],
 			               'results' => $dq->logicCheckResults['pd-10'],
 			               'valuesFixed' => $dq->valuesFixed,
@@ -78,7 +79,7 @@ if ( isset( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] ) )
 			if ( $_POST['action'] ?? '' == 'fixCalcs' )
 			{
 				$_POST['action'] = '';
-				$dq->executeRule( 'pd-10', $_POST['record'] );
+				$dq->executeRule( 'pd-10', [ $_POST['record'] ] );
 				$dqResults['results'] = $dq->logicCheckResults['pd-10'];
 			}
 			foreach ( $dqResults['results'] as $key => $val )
