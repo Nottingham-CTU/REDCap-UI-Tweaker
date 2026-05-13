@@ -41,8 +41,7 @@ if ( isset( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] ) )
 	// Get the list of records to check/update.
 	if ( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] == 'records' )
 	{
-		$queryRecords = 'SELECT record FROM redcap_record_list WHERE project_id = ? ' .
-		                "ORDER BY right(concat('000000000000000',record),15)";
+		$queryRecords = 'SELECT record FROM redcap_record_list WHERE project_id = ?';
 		$paramsRecords = [ $module->getProjectId() ];
 		if ( preg_match( '/^[0-9]+$/', $_POST['arm'] ?? '' ) )
 		{
@@ -54,6 +53,7 @@ if ( isset( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] ) )
 			$queryRecords .= ' AND dag_id = ?';
 			$paramsRecords[] = $_POST['dag'];
 		}
+		$queryRecords .= " ORDER BY right(concat('000000000000000',record),15)";
 		$queryRecords = $module->query( $queryRecords, $paramsRecords );
 		echo '[';
 		$first = true;
