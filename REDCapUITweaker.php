@@ -148,7 +148,13 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		{
 			if ( ! preg_match( '!^https?://!', $projectHomeRedirect ) )
 			{
+				$firstProjDashID = $this->query( 'SELECT dash_id FROM redcap_project_dashboards' .
+				                                 ' WHERE project_id = ? ORDER BY dash_order ' .
+				                                 'LIMIT 1', [ $project_id ] )->fetch_assoc();
+				$firstProjDashID = ( $firstProjDashID ? (string)$firstProjDashID['dash_id'] : '*' );
 				$projectHomeRedirect = str_replace( 'pid=*', 'pid=' . $project_id,
+				                                    $projectHomeRedirect );
+				$projectHomeRedirect = str_replace( 'dash_id=*', 'dash_id=' . $firstProjDashID,
 				                                    $projectHomeRedirect );
 				$projectHomeRedirect = APP_PATH_WEBROOT_FULL . 'redcap_v' . REDCAP_VERSION .
 				                       ( substr( $projectHomeRedirect, 0, 1 ) == '/' ? '' : '/' ) .
@@ -162,14 +168,24 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		// If custom from addresses are allowed in alerts, and the supplied from address passes
 		// the validation, ensure the built-in validation allows the address.
 
-		if ( $this->getSystemSetting( 'custom-alert-sender' ) &&
-		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
-		     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:saveAlert' &&
-		     isset( $_POST['email-from'] ) &&
-		     preg_match( '/' . $this->getSystemSetting( 'custom-alert-sender-regex' ) . '/',
-		                 $_POST['email-from'] ) )
+		if ( $this->getSystemSetting( 'custom-alert-sender' ) )
 		{
-			$GLOBALS['user_email'] = $_POST['email-from'];
+			if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&
+			     isset( $_GET['route'] ) && $_GET['route'] == 'AlertsController:saveAlert' &&
+			     isset( $_POST['email-from'] ) &&
+			     preg_match( '/' . $this->getSystemSetting( 'custom-alert-sender-regex' ) . '/',
+			                 $_POST['email-from'] ) )
+			{
+				$GLOBALS['user_email'] = $_POST['email-from'];
+			}
+			elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 39 ) ==
+			                                            'Surveys/automated_invitations_setup.php' &&
+			     isset( $_POST['email_sender'] ) &&
+			     preg_match( '/' . $this->getSystemSetting( 'custom-alert-sender-regex' ) . '/',
+			                 $_POST['email_sender'] ) )
+			{
+				$GLOBALS['user_email'] = $_POST['email_sender'];
+			}
 		}
 
 
@@ -947,11 +963,13 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if ( $this->reportNamespacing )
 		{
 			echo '<script type="text/javascript">',
-			     '$(document).on(\'ajaxSend\',function(e,x,s){s.url=s.url.replace(\'DataExport' .
-			     '/report_edit_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=' .
-			     'ajax_reports_ns&rcpage=report_edit_ajax&\').replace(\'DataExport/report_delete' .
-			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=' .
-			     'ajax_reports_ns&rcpage=report_delete_ajax&\')})',
+			     '$(document).on(\'ajaxSend\',function(e,x,s){s.url=s.url.replace(\'DataExport',
+			     '/report_edit_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=',
+			     'ajax_reports_ns&rcpage=report_edit_ajax&\').replace(\'DataExport/report_delete',
+			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=',
+			     'ajax_reports_ns&rcpage=report_delete_ajax&\').replace(\'DataExport/report_filter',
+			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=',
+			     'ajax_reports_ns&rcpage=report_filter_ajax&\')})',
 			     "</script>\n";
 		}
 
@@ -3663,7 +3681,15 @@ $(function()
 			return;
 		}
 
-		$userRights = $this->getUser()->getRights();
+		try
+		{
+			$userRights = $this->getUser()->getRights();
+		}
+		catch ( \Exception $e )
+		{
+			return;
+		}
+
 		if ( !isset( $userRights ) ||
 		     !isset( $userRights['role_name'] ) || $userRights['role_name'] == '' )
 		{

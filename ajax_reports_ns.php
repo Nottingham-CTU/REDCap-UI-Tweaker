@@ -20,6 +20,9 @@ switch ( $_GET['rcpage'] )
 	case 'report_delete_ajax':
 		$includePage = 'report_delete_ajax';
 		break;
+	case 'report_filter_ajax':
+		$includePage = 'report_filter_ajax';
+		break;
 }
 
 $listReportNS = $module->checkReportNamespaceAuth();

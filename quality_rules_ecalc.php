@@ -53,6 +53,7 @@ if ( isset( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] ) )
 			$queryRecords .= ' AND dag_id = ?';
 			$paramsRecords[] = $_POST['dag'];
 		}
+		$queryRecords .= " ORDER BY right(concat('000000000000000',record),15)";
 		$queryRecords = $module->query( $queryRecords, $paramsRecords );
 		echo '[';
 		$first = true;
@@ -70,7 +71,7 @@ if ( isset( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] ) )
 		if ( $_POST['record'] ?? '' != '' )
 		{
 			$dq = new \DataQuality();
-			$dq->executeRule( 'pd-10', $_POST['record'] );
+			$dq->executeRule( 'pd-10', [ $_POST['record'] ] );
 			$dqResults = [ 'record' => $_POST['record'],
 			               'results' => $dq->logicCheckResults['pd-10'],
 			               'valuesFixed' => $dq->valuesFixed,
@@ -78,7 +79,7 @@ if ( isset( $_SERVER['HTTP_X_RC_UITWEAK_DQR'] ) )
 			if ( $_POST['action'] ?? '' == 'fixCalcs' )
 			{
 				$_POST['action'] = '';
-				$dq->executeRule( 'pd-10', $_POST['record'] );
+				$dq->executeRule( 'pd-10', [ $_POST['record'] ] );
 				$dqResults['results'] = $dq->logicCheckResults['pd-10'];
 			}
 			foreach ( $dqResults['results'] as $key => $val )
