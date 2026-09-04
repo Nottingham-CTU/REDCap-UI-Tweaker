@@ -68,6 +68,8 @@ setting allows it to be further adjusted so only the logo or only the institutio
 This setting is only available to administrators.
 
 ### Form navigation fix
+*This option is deprecated and will be removed in a future version of this module.*
+
 When submitting a form and navigating away from the form (e.g. *Save & Go To Next Form*), a
 *Save & Stay* will be performed first if this option is enabled. This can be used to work around
 issues in REDCap or other modules if data needs to be saved first for the form navigation to work
@@ -95,8 +97,12 @@ listed below.
 7. Yes-No
 8. True-False
 9. Signature
-10. File Upload
-11. Slider / Visual Analog Scale
+10. Enhanced signature
+11. File Upload
+12. Slider / Visual Analog Scale
+
+*Note: Enhanced signature was added in REDCap 17.1.0, prior to this File Upload and Slider/VAS were
+10 and 11 respectively.*
 
 The field types you specify will be shown at the top of the field type list, under the heading
 *Common Field Types*. This will be followed by the *Headers and Descriptions* section (which
@@ -358,6 +364,11 @@ time they load the *REDCap Home* page or the *My Projects* page following login.
 project.
 
 #### Enable versionless URLs
+*This feature is deprecated and will be removed in a future version of this module. The REDCap
+Version Redirect can be set up to redirect users from a saved link or bookmark containing the old
+version number to the current REDCap version. See the instructions on the REDCap Configuration Check
+page.*
+
 If enabled, this will instruct the user's web browser to strip the version number (the _vX.X.X part)
 from the REDCap URL. This should ensure that bookmarks are always saved without the version number.
 This can make it easier to redirect users from their saved links or bookmarks to the current version
@@ -385,6 +396,8 @@ dropdown list. If this option is enabled, use the *regular expression to validat
 addresses* option to restrict the addresses which can be used (e.g. to limit to your own domain).
 
 ### Project simplified views
+
+*Project simplified views are deprecated and will be removed in a future version of this module.*
 
 #### Alerts simplified view
 If enabled, a button will be added to the alerts and notifications page to show a simplified view.

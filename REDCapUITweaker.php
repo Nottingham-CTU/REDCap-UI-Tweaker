@@ -392,19 +392,22 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
-		// If exporting a report with no fields defined, temporarily set the report to include
-		// all project fields.
+		// If viewing/exporting a report with no fields defined, temporarily set the report to
+		// include all project fields.
 		if ( isset( $_SESSION['module_uitweak_remove_report_fields'] ) )
 		{
 			$this->query( 'DELETE FROM redcap_reports_fields WHERE report_id = ?',
 			              [ $_SESSION['module_uitweak_remove_report_fields'] ] );
 		}
-		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
-		     'DataExport/data_export_ajax.php' && isset( $_POST['report_id'] ) &&
+		if ( ( ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
+		         'DataExport/data_export_ajax.php' && isset( $_POST['report_id'] ) ) ||
+		       ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' &&
+		         isset( $_GET['report_id'] ) && ! isset( $_GET['addedit'] ) ) ) &&
 		     $this->query( 'SELECT 1 FROM redcap_reports WHERE report_id = ?',
 		                   [ $_POST['report_id'] ] )->fetch_assoc() &&
-		     ! $this->query( 'SELECT 1 FROM redcap_reports_fields WHERE report_id = ? LIMIT 1',
-		                   [ $_POST['report_id'] ] )->fetch_assoc() )
+		     ! $this->query( "SELECT 1 FROM redcap_reports_fields WHERE report_id = ? " .
+		                     "AND field_name <> '' LIMIT 1",
+		                     [ $_POST['report_id'] ] )->fetch_assoc() )
 		{
 			$_SESSION['module_uitweak_remove_report_fields'] = $_POST['report_id'];
 			$this->query( 'INSERT INTO redcap_reports_fields (report_id, field_name, field_order)' .
@@ -3798,10 +3801,18 @@ $(function()
 			return;
 		}
 
+		$newSectionOption = '14';
+		$descTextOption = '13';
+		if ( \REDCap::versionCompare( REDCAP_VERSION, '17.1.0', '<' ) )
+		{
+			$newSectionOption = '13';
+			$descTextOption = '12';
+		}
+
 		$fieldTypesAll = explode( '|', $fieldTypesOrder );
 		$fieldTypesCommon = explode( ',', $fieldTypesAll[0] );
 		$fieldTypesOther = isset( $fieldTypesAll[1] ) ? explode( ',', $fieldTypesAll[1] ) : '';
-		$fieldTypesUsed = [ '12' => true, '13' => true ];
+		$fieldTypesUsed = [ $descTextOption => true, $newSectionOption => true ];
 
 ?>
 <script type="text/javascript">
@@ -3859,8 +3870,8 @@ $(function()
 		}
 
 ?>
-      vHeaderTypeList.append( vTypeOptions[13] ) // new section
-      vHeaderTypeList.append( vTypeOptions[12] ) // desc. text
+      vHeaderTypeList.append( vTypeOptions[<?php echo $newSectionOption; ?>] )
+      vHeaderTypeList.append( vTypeOptions[<?php echo $descTextOption; ?>] )
       vTypeList.append( vCommonTypeList )
       vTypeList.append( vHeaderTypeList )
       vTypeList.append( vOtherTypeList )

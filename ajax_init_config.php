@@ -26,8 +26,8 @@ if ( $module->getSystemSetting( 'field-default-required' ) != '' ||
 if ( isset( $_POST['fieldtypes'] ) )
 {
 	// Set field types order to text, notes, yes/no, radio, checkbox, slider, calculated |
-	// dropdown, true/false, upload, signature.
-	$module->setSystemSetting( 'field-types-order', '1,2,7,5,6,11,3|4,8,10,9' );
+	// dropdown, true/false, upload, signature, enhanced signature.
+	$module->setSystemSetting( 'field-types-order', '1,2,7,5,6,12,3|4,8,11,9,10' );
 }
 
 if ( isset( $_POST['requiredfields'] ) )
