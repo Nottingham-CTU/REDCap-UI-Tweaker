@@ -3801,10 +3801,18 @@ $(function()
 			return;
 		}
 
+		$newSectionOption = '14';
+		$descTextOption = '13';
+		if ( \REDCap::versionCompare( REDCAP_VERSION, '17.1.0', '<' ) )
+		{
+			$newSectionOption = '13';
+			$descTextOption = '12';
+		}
+
 		$fieldTypesAll = explode( '|', $fieldTypesOrder );
 		$fieldTypesCommon = explode( ',', $fieldTypesAll[0] );
 		$fieldTypesOther = isset( $fieldTypesAll[1] ) ? explode( ',', $fieldTypesAll[1] ) : '';
-		$fieldTypesUsed = [ '12' => true, '13' => true ];
+		$fieldTypesUsed = [ $descTextOption => true, $newSectionOption => true ];
 
 ?>
 <script type="text/javascript">
@@ -3862,8 +3870,8 @@ $(function()
 		}
 
 ?>
-      vHeaderTypeList.append( vTypeOptions[13] ) // new section
-      vHeaderTypeList.append( vTypeOptions[12] ) // desc. text
+      vHeaderTypeList.append( vTypeOptions[<?php echo $newSectionOption; ?>] )
+      vHeaderTypeList.append( vTypeOptions[<?php echo $descTextOption; ?>] )
       vTypeList.append( vCommonTypeList )
       vTypeList.append( vHeaderTypeList )
       vTypeList.append( vOtherTypeList )

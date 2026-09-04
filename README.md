@@ -97,8 +97,12 @@ listed below.
 7. Yes-No
 8. True-False
 9. Signature
-10. File Upload
-11. Slider / Visual Analog Scale
+10. Enhanced signature
+11. File Upload
+12. Slider / Visual Analog Scale
+
+*Note: Enhanced signature was added in REDCap 17.1.0, prior to this File Upload and Slider/VAS were
+10 and 11 respectively.*
 
 The field types you specify will be shown at the top of the field type list, under the heading
 *Common Field Types*. This will be followed by the *Headers and Descriptions* section (which
