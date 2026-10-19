@@ -50,7 +50,8 @@ relative to the REDCap version directory.
 * Example relative URL: `DataEntry/record_status_dashboard.php?pid=*`
 
 If the URL is a relative URL and it contains `pid=*`, the `*` will be replaced with the current
-project ID. This does not apply to absolute URLs.
+project ID; if it contains `dash_id=*`, the `*` will be replaced with the ID of the first project
+dashboard. This does not apply to absolute URLs.
 
 Only administrators can set the URL to an absolute URL or a relative URL for a different project
 (where `pid` has a value other than `*`).
@@ -59,6 +60,10 @@ Only administrators can set the URL to an absolute URL or a relative URL for a d
 This setting allows namespaces or sandboxes to be set up for reports. User roles can be entered so
 that those roles can create, edit and delete reports *only in the namespace*. For this to work
 correctly, the specified roles *should not* have the reports privilege set in User Rights.
+
+### Hide Project Dashboards list in navigation
+If enabled, the *Project Dashboards* section in the left hand navigation will be hidden. The Project
+Dashboards will still be accessible using the link in the *Applications* section.
 
 ### If custom logo/name is displayed
 Within the project settings in the REDCap control center, there is an option to display the custom

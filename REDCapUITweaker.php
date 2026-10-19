@@ -670,6 +670,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// All pages, if the Project Dashboards navigation section is hidden.
+
+		if ( $this->getProjectSetting( 'hide-project-dashboards' ) )
+		{
+			echo '<script type="text/javascript">$(\'#dashboard_panel\').css(\'display\',\'none\')',
+			     '</script>';
+		}
+
+
 		// If the alerts page.
 
 		if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 9 ) == 'index.php' &&

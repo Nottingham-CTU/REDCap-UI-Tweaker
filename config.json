@@ -517,6 +517,11 @@
 			"repeatable" : true
 		},
 		{
+			"key" : "hide-project-dashboards",
+			"name" : "Hide Project Dashboards list in navigation",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "pfmt1",
 			"name" : "<script type=\"text/javascript\">$('[field=hide-unverified-option] td').first().css('width','51%')</script>",
 			"type" : "descriptive"
