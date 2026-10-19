@@ -614,6 +614,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// All pages, if the force DAG confirmation option is enabled.
+		if ( $this->getSystemSetting( 'dag-confirm' ) &&
+		     ( ! isset( $_SESSION['module_uitweak_dag_confirm'] ) ||
+		       $_SESSION['module_uitweak_dag_confirm'] != $project_id ) )
+		{
+			$this->provideDAGConfirm();
+			$_SESSION['module_uitweak_dag_confirm'] = $project_id;
+		}
+
+
 		// All pages, if the option to show the role name is enabled.
 		if ( $this->getSystemSetting( 'show-role-name' ) )
 		{
@@ -2158,6 +2168,39 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript to prompt the user to confirm their DAG.
+
+	function provideDAGConfirm()
+	{
+		if ( \UserRights::isImpersonatingUser() )
+		{
+			return;
+		}
+		$dagID = $GLOBALS['user_rights']['group_id'];
+		$dagID = ( $dagID == '' ) ? '0' : \REDCap::getGroupNames( true, $dagID );
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( $('#dag-switcher-change-button').length > 0 )
+    {
+      $('#dag-switcher-change-select').prepend('<option value="<?php echo $dagID; ?>"></option>')
+                                      .val('<?php echo $dagID; ?>')
+      $('#dag-switcher-change-select option').first()
+        .text($('#dag-switcher-current-dag-block b').text())
+      $('#dag-switcher-change-button').trigger('click')
+      $('[aria-describedby="dag-switcher-change-dialog"]')
+        .find('.close-button, .ui-dialog-titlebar-close').css('display','none')
+    }
+  })
+</script>
+<?php
 	}
 
 

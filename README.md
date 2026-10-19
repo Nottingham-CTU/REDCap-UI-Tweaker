@@ -345,6 +345,11 @@ If a user selects the 'all status types' option on the record status dashboard, 
 be remembered and auto-selected when they subsequently view the dashboard. This will apply per-user
 and across all projects.
 
+#### Force DAG confirmation
+When a user opens a project for which they have been assigned more than one DAG using the DAG
+switcher, the Switch DAG popup will be displayed and they will be required to choose which DAG to
+use (either their current DAG or a different DAG).
+
 ### System appearance tweaks
 
 #### Additional login page logo URL
