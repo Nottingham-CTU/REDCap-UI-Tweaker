@@ -1222,6 +1222,18 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			$this->provideButtonOnly( $record, $event_id, $instrument, $repeat_instance );
 		}
 
+		// If the outstanding data queries banner is enabled then display it if applicable.
+		if ( $this->getSystemSetting( 'dq-form-banner' ) &&
+		     $this->query( 'SELECT 1 FROM redcap_data_quality_status WHERE project_id = ? AND ' .
+		                   'record = ? AND event_id = ? AND field_name IN( SELECT field_name ' .
+		                   'FROM redcap_metadata WHERE project_id = ? AND form_name = ? ) AND ' .
+		                   'instance = ? AND query_status = ? LIMIT 1',
+		                   [ $project_id, $record, $event_id, $project_id, $instrument,
+		                     $repeat_instance, 'OPEN' ] )->fetch_assoc() )
+		{
+			$this->provideDataQueriesBanner( $this->getSystemSetting( 'dq-form-banner-text' ) );
+		}
+
 
 	}
 
@@ -2119,6 +2131,30 @@ $(function()
 </script>
 <?php
 
+	}
+
+
+
+
+
+	// Output JavaScript to show the outstanding data queries banner.
+
+	function provideDataQueriesBanner( $bannerText )
+	{
+		if ( $bannerText == '' )
+		{
+			$bannerText = 'There are outstanding data queries for this form.';
+		}
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('#form-title').after($('<div class="yellow"></div>').html('<img src="<?php
+		echo APP_PATH_WEBROOT; ?>/Resources/images/exclamation_orange.png"> <?php
+		echo $this->escape( $bannerText ); ?>'))
+  })
+</script>
+<?php
 	}
 
 

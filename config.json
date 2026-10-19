@@ -134,6 +134,17 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "dq-form-banner",
+			"name" : "Display outstanding data queries banner on data entry forms",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "dq-form-banner-text",
+			"name" : "Custom data queries banner text",
+			"type" : "textarea",
+			"branchingLogic" : { "field" : "dq-form-banner", "value" : true }
+		},
+		{
 			"key" : "dq-enhanced-calc",
 			"name" : "Provide enhanced 'Incorrect values for calculated fields' (Rule H) check",
 			"type" : "checkbox"

@@ -242,6 +242,11 @@ changes they have made when writing the reason.
 This option will default new projects to not treat toggling the 'lock this instrument' checkbox as
 a data change. It can still be enabled/disabled on individual projects as required.
 
+#### Display outstanding data queries banner on data entry forms
+If enabled, a banner will be shown at the top of data entry forms where there is at least one field
+that has an outstanding data query. Custom text can be entered for this banner, otherwise it will
+default to 'There are outstanding data queries for this form'.
+
 #### Provide enhanced 'Incorrect values for calculated fields' (Rule H) check
 If enabled, users running data quality rules will see a link next to Rule H providing the option to
 do an enhanced check. This provides extra options such as limiting the check to a specific arm, and
