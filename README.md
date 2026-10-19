@@ -299,6 +299,9 @@ option to autofill the forms will be shown to all users.
 If the project is in development status, or the server is set as a development server, then an
 option to show hidden fields on the form will be shown to all users.
 
+#### Use smart apostrophe in DAG names
+Automatically replace apostrophe `'` with the smart quotes equivalent `’` when entering DAG names.
+
 ### Project navigation tweaks
 
 #### Submit options

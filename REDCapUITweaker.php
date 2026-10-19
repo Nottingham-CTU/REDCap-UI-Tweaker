@@ -418,6 +418,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			              [ $_POST['report_id'], $project_id ] );
 		}
 
+
+		// Replace apostrophes in DAG names with smart quotes.
+		if ( $this->getSystemSetting( 'dag-replace-apos' ) &&
+		     $this->isRoute('DataAccessGroupsController:ajax') && isset( $_GET['action'] ) &&
+		     in_array( $_GET['action'], [ 'add', 'rename' ] ) )
+		{
+			$_POST['item'] = str_replace( "'", '’', $_POST['item'] );
+		}
+
 	}
 
 

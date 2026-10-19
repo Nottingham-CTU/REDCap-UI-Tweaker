@@ -226,6 +226,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "dag-replace-apos",
+			"name" : "Use smart apostrophe in DAG names",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-nav-proj",
 			"name" : "<b>Project navigation tweaks</b>",
 			"type" : "descriptive"
