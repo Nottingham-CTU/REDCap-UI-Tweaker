@@ -11,10 +11,10 @@
 			"institution": "University of Nottingham"
 		}
 	],
-	"framework-version" : 14,
+	"framework-version" : 16,
 	"compatibility" : {
-		"redcap-version-min" : "13.7.0",
-		"php-version-min" : "8.0.0",
+		"redcap-version-min" : "15.5.0",
+		"php-version-min" : "8.1.0",
 		"php-version-max" : "8.99.99"
 	},
 	"system-settings" : [
@@ -65,7 +65,7 @@
 		},
 		{
 			"key" : "static-form-names",
-			"name" : "Static form variable names",
+			"name" : "Prompt for form name when creating new instruments",
 			"type" : "checkbox"
 		},
 		{
@@ -95,8 +95,7 @@
 		{
 			"key" : "preserve-form-labels",
 			"name" : "Preserve form labels in instrument zips",
-			"type" : "checkbox",
-			"branchingLogic" : { "field" : "static-form-names", "value" : true }
+			"type" : "checkbox"
 		},
 		{
 			"key" : "hdr-data-qual",

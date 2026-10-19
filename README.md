@@ -197,16 +197,15 @@ maximum number of options for an `@SQLCHECKBOX` field is therefore limited to 60
 *The previous implementation of* `@SQLCHECKBOX` *where the tag is applied to checkbox fields is now
 deprecated and will be removed in a future version of this module.*
 
-#### Static form variable names
-This option will allow the form variable name (as used in the \*_complete variable) to be set
-explicitly when forms are created, and remain unchanged even when projects are in development
-status.
+#### Prompt for form name when creating new instruments
+This option will allow the form name (as used in the \*_complete variable) to be set explicitly when
+forms are created.
 
 #### Use version fields
 When a form is created, automatically place a form version field at the top of the form. This will
 be a multiple choice field with a default value of `1.0`.
 
-Static form variable names must be enabled in order to use this feature.
+To use this feature, *prompt for form name when creating new instruments* must be enabled.
 
 #### Version field default annotation/action tags
 Set the default action tags used on version fields when they are created. If this has not been set,
@@ -218,7 +217,7 @@ need to be included.
 #### Use form name prefix when creating fields
 This will populate field names with a prefix based on the form name when new fields are created.
 
-Static form variable names must be enabled in order to use this feature.
+To use this feature, *prompt for form name when creating new instruments* must be enabled.
 
 #### Preserve form labels in instrument zips
 This will save the form name label into the data dictionary prior to instrument download, and load

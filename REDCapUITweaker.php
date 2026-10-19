@@ -323,42 +323,36 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				$this->exitAfterHook();
 			}
-			elseif ( \REDCap::versionCompare( REDCAP_VERSION, '15.1.0', '<' ) &&
-			         isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
-			         ! isset( $_GET['internal_name'] ) &&
-			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
+		}
+
+
+		// If preserve form labels enabled.
+
+		if ( $this->getSystemSetting( 'preserve-form-labels' ) )
+		{
+			if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 34 ) ==
+			     'Design/zip_instrument_download.php' )
 			{
-				$this->renameForm( $_POST['page'], $_POST['menu_description'] );
-				echo $this->escapeHTML( strip_tags( $_POST['page'] ) ), "\n",
-				     $this->escapeHTML( strip_tags( $_POST['menu_description'] ) );
-				$this->exitAfterHook();
-			}
-			if ( $this->getSystemSetting( 'preserve-form-labels' ) )
-			{
-				if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 34 ) ==
-				     'Design/zip_instrument_download.php' )
+				foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
 				{
-					foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
-					{
-						$this->query( 'UPDATE ' . $metadataTable .
-						              ' SET misc = concat(\'##UITweaker-FormName:\',' .
-						              'form_menu_description,\'\n\',ifnull(misc,\'\')) ' .
-						              'WHERE project_id = ? AND form_name = ? ' .
-						              'AND form_menu_description IS NOT NULL',
-						              [ $project_id, $_GET['page'] ] );
-					}
+					$this->query( 'UPDATE ' . $metadataTable .
+					              ' SET misc = concat(\'##UITweaker-FormName:\',' .
+					              'form_menu_description,\'\n\',ifnull(misc,\'\')) ' .
+					              'WHERE project_id = ? AND form_name = ? ' .
+					              'AND form_menu_description IS NOT NULL',
+					              [ $project_id, $_GET['page'] ] );
 				}
-				elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 7 ) == 'Design/' )
+			}
+			elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 7 ) == 'Design/' )
+			{
+				foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
 				{
-					foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
-					{
-						$this->query( 'UPDATE ' . $metadataTable .
-						              ' SET form_menu_description = regexp_substr(substring(misc,' .
-						              '22),\'[^\n]+$\',1,1,\'m\'), misc = regexp_replace(misc,' .
-						              '\'^[^\n]+\n\',\'\') WHERE project_id = ? AND ' .
-						              'form_menu_description IS NOT NULL AND left(misc,21) = ' .
-						              '\'##UITweaker-FormName:\'', [ $project_id ] );
-					}
+					$this->query( 'UPDATE ' . $metadataTable .
+					              ' SET form_menu_description = regexp_substr(substring(misc,' .
+					              '22),\'[^\n]+$\',1,1,\'m\'), misc = regexp_replace(misc,' .
+					              '\'^[^\n]+\n\',\'\') WHERE project_id = ? AND ' .
+					              'form_menu_description IS NOT NULL AND left(misc,21) = ' .
+					              '\'##UITweaker-FormName:\'', [ $project_id ] );
 				}
 			}
 		}
@@ -3623,54 +3617,12 @@ $(function()
 
 	function provideStaticFormVarName()
 	{
+		$formVarFieldDesc = $this->escape( $GLOBALS['lang']['design_1370'] );
+		$formVarFieldPH = preg_replace( '/[,].*/', '...', $formVarFieldDesc );
 ?>
 <script type="text/javascript">
   $(function()
   {
-<?php
-		if ( \REDCap::versionCompare( REDCAP_VERSION, '15.1.0', '<' ) )
-		{
-?>
-    if ( status == '0' )
-    {
-      $('#table-forms_surveys tr').find('td:eq(1)').each(function()
-      {
-        var vFormLink = $(this).find('a.formLink')
-        var vFormName = vFormLink.find('span[id^="formlabel-"]').attr('id').substring(10)
-        vFormLink.after( ' <i>(' + vFormName + ')</i>' )
-        vFormLink.css('display', 'inline-block')
-        var vSaveBtn = $(this).find( '#form_menu_save_btn-' + vFormName )
-        var vChgName = $('<a href="#"><i class="fas fa-pencil-alt fs8"></i></a>')
-        vChgName.attr('title', 'Edit form variable name')
-        vChgName.click(function()
-        {
-          var vNewFormName = prompt( 'New form variable name for ' + vFormName, vFormName )
-          if ( vNewFormName !== null && vNewFormName !== '' )
-          {
-            $.post( app_path_webroot + 'Design/set_form_name.php?internal_name=1&pid=' + pid,
-                    { page: vFormName, action: 'set_menu_name', menu_description: vNewFormName },
-                    function ( vResult )
-                    {
-                      var vUpdatedFormName = vResult.replace( /\n.*$/s, '' )
-                      var vNewFormLabel = $( '#form_menu_description_input-' + vFormName ).val()
-                      $.post( app_path_webroot + 'Design/set_form_name.php?pid=' + pid,
-                              { page: vUpdatedFormName, action: 'set_menu_name',
-                                menu_description: vNewFormLabel },
-                              function ()
-                              {
-                                window.location.reload()
-                              })
-                    } )
-          }
-          return false
-        })
-        vSaveBtn.after( vChgName )
-        vSaveBtn.after( ' &nbsp;&nbsp;' )
-      })
-    }
-<?php
-		}
-?>
     var vAddNewFormReveal = addNewFormReveal
     var vAddNewForm = addNewForm
     var vClickedBtnName = ''
@@ -3679,9 +3631,11 @@ $(function()
       vAddNewFormReveal( vFormName )
       var vCreateBtn = $( '#new-' + vFormName + ' [type="button"]' )
       vCreateBtn.before( '<br><span style="margin:0 5px 0 25px;font-weight:bold">' +
-                         'Form variable name:</span>' )
+                         'Form name:</span>' )
       var vFormVarField = $( '<input type="text" class="x-form-text x-form-field" ' +
-                             'style="font-size:13px;" id="new_form_var-' + vFormName + '">' )
+                             'style="font-size:13px;" id="new_form_var-' + vFormName + '" ' +
+                             'title="<?php echo $formVarFieldDesc; ?>" ' +
+                             'placeholder="<?php echo $formVarFieldPH; ?>">' )
       vFormVarField.keyup( function()
       {
         var vVal = $(this).val()
