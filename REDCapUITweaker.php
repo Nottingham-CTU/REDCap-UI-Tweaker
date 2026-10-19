@@ -398,11 +398,12 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		{
 			$this->query( 'DELETE FROM redcap_reports_fields WHERE report_id = ?',
 			              [ $_SESSION['module_uitweak_remove_report_fields'] ] );
+			unset( $_SESSION['module_uitweak_remove_report_fields'] );
 		}
 		if ( ( ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
 		         'DataExport/data_export_ajax.php' && isset( $_POST['report_id'] ) ) ||
-		       ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' &&
-		         isset( $_GET['report_id'] ) && ! isset( $_GET['addedit'] ) ) ) &&
+		       ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) ==
+		         'DataExport/report_ajax.php' && isset( $_POST['report_id'] ) ) ) &&
 		     $this->query( 'SELECT 1 FROM redcap_reports WHERE report_id = ?',
 		                   [ $_POST['report_id'] ] )->fetch_assoc() &&
 		     ! $this->query( "SELECT 1 FROM redcap_reports_fields WHERE report_id = ? " .
