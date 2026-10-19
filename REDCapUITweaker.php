@@ -400,7 +400,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			              [ $_SESSION['module_uitweak_remove_report_fields'] ] );
 			unset( $_SESSION['module_uitweak_remove_report_fields'] );
 		}
-		if ( ( ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
+		if ( $this->getSystemSetting( 'empty-reports-all-fields' ) &&
+		     ( ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
 		         'DataExport/data_export_ajax.php' && isset( $_POST['report_id'] ) ) ||
 		       ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) ==
 		         'DataExport/report_ajax.php' && isset( $_POST['report_id'] ) ) ) &&
@@ -959,6 +960,23 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		     $this->getSystemSetting( 'reports-simplified-view' ) )
 		{
 			$this->provideSimplifiedReports();
+		}
+
+
+
+		// If the edit report page, and reports with no defined fields should show all fields, then
+		// ensure the report can be saved with no fields.
+
+		if ( $this->getSystemSetting( 'empty-reports-all-fields' ) &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' &&
+		     isset( $_GET['report_id'] ) && isset( $_GET['addedit'] ) )
+		{
+			echo '<script type="text/javascript">',
+			     '$(function(){var vOldValidateCreateReport=validateCreateReport;',
+			     'validateCreateReport=function(){$(\'body\').append(\'<input type="hidden" ',
+			     'class="field-hidden" value="_temp">\');return vOldValidateCreateReport()}',
+			     '})',
+			     "</script>\n";
 		}
 
 

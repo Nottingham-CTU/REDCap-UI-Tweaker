@@ -175,6 +175,16 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "hdr-report",
+			"name" : "<b>Reports tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "empty-reports-all-fields",
+			"name" : "Reports with no defined fields will show all fields",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-appr-proj",
 			"name" : "<b>Project appearance tweaks</b>",
 			"type" : "descriptive"

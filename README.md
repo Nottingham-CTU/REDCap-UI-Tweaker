@@ -270,6 +270,12 @@ When real-time execution of data quality rules triggers the popup notification o
 the rule logic code will be hidden by default. The user will have to click a 'show/hide logic' link
 to toggle the visibility of logic code.
 
+### Reports tweaks
+
+#### Reports with no defined fields will show all fields
+If enabled, REDCap will allow reports with no fields to be created, and reports with no fields
+defined will show all fields from the project (subject to the user's data export rights).
+
 ### Project appearance tweaks
 
 #### Use alternate status icons
