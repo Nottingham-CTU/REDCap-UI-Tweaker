@@ -1018,6 +1018,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+
+		// If the Delete ASI option is enabled.
+
+		if ( $this->getSystemSetting( 'asi-delete' ) )
+		{
+			$this->provideDeleteASI();
+		}
+
+
 	}
 
 
@@ -2279,6 +2288,54 @@ $(function()
 ?>
       $('#customizeprojectform').submit()
     }, 1000 )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to provide a link to delete an existing Automated Survey Invitation.
+
+	function provideDeleteASI()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vOldSetUpConditionalInvites = setUpConditionalInvites
+    setUpConditionalInvites = function( survey_id, event_id, form )
+    {
+      var vAddDelLink = function()
+      {
+        if ( $('[aria-describedby="popupSetUpCondInvites"]').length == 0 )
+        {
+          setTimeout( vAddDelLink, 500 )
+        }
+        else if ( $('#condSurvPopupActiveBox.gray').length == 0 )
+        {
+          $('#condSurvPopupActiveBox .boldish')
+            .append($('<a href="#" style="color:#c00;float:right">Delete ASI</a>')
+                      .on('click', function(ev)
+                                   {
+                                     ev.preventDefault()
+                                     if ( confirm('Are you sure you want to delete this ASI?') )
+                                     {
+                                       showProgress(true)
+                                       $.post( '<?php echo $this->getUrl('ajax_asi_del.php'); ?>',
+                                               { 'survey_id' : survey_id, 'event_id' : event_id },
+                                               function() { window.location.reload() } )
+                                     }
+                                   }
+                         )
+                   )
+        }
+      }
+      setTimeout( vAddDelLink, 500 )
+      return vOldSetUpConditionalInvites( survey_id, event_id, form )
+    }
   })
 </script>
 <?php

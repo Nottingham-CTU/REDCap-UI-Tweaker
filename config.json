@@ -98,6 +98,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "asi-delete",
+			"name" : "Show a 'Delete ASI' option",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-data-qual",
 			"name" : "<b>Data quality tweaks</b>",
 			"type" : "descriptive"

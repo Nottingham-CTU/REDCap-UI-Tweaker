@@ -223,6 +223,9 @@ To use this feature, *prompt for form name when creating new instruments* must b
 This will save the form name label into the data dictionary prior to instrument download, and load
 the name from the data dictionary following an instrument upload.
 
+#### Show a 'Delete ASI' option
+Provides an option to delete an Automated Survey Invitation (instead of merely deactivating it).
+
 ### Data quality tweaks
 
 #### Enable the Data Resolution Workflow on new projects
