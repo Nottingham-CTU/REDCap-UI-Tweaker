@@ -11,10 +11,10 @@
 			"institution": "University of Nottingham"
 		}
 	],
-	"framework-version" : 14,
+	"framework-version" : 16,
 	"compatibility" : {
-		"redcap-version-min" : "13.7.0",
-		"php-version-min" : "8.0.0",
+		"redcap-version-min" : "15.5.0",
+		"php-version-min" : "8.1.0",
 		"php-version-max" : "8.99.99"
 	},
 	"system-settings" : [
@@ -65,7 +65,7 @@
 		},
 		{
 			"key" : "static-form-names",
-			"name" : "Static form variable names",
+			"name" : "Prompt for form name when creating new instruments",
 			"type" : "checkbox"
 		},
 		{
@@ -95,8 +95,12 @@
 		{
 			"key" : "preserve-form-labels",
 			"name" : "Preserve form labels in instrument zips",
-			"type" : "checkbox",
-			"branchingLogic" : { "field" : "static-form-names", "value" : true }
+			"type" : "checkbox"
+		},
+		{
+			"key" : "asi-delete",
+			"name" : "Show a 'Delete ASI' option",
+			"type" : "checkbox"
 		},
 		{
 			"key" : "hdr-data-qual",
@@ -134,6 +138,17 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "dq-form-banner",
+			"name" : "Display outstanding data queries banner on data entry forms",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "dq-form-banner-text",
+			"name" : "Custom data queries banner text",
+			"type" : "textarea",
+			"branchingLogic" : { "field" : "dq-form-banner", "value" : true }
+		},
+		{
 			"key" : "dq-enhanced-calc",
 			"name" : "Provide enhanced 'Incorrect values for calculated fields' (Rule H) check",
 			"type" : "checkbox"
@@ -161,6 +176,16 @@
 		{
 			"key" : "dq-notify-hide-eq",
 			"name" : "Hide equations on the data quality notification",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "hdr-report",
+			"name" : "<b>Reports tweaks</b>",
+			"type" : "descriptive"
+		},
+		{
+			"key" : "empty-reports-all-fields",
+			"name" : "Reports with no defined fields will show all fields",
 			"type" : "checkbox"
 		},
 		{
@@ -205,6 +230,11 @@
 			"type" : "checkbox"
 		},
 		{
+			"key" : "dag-replace-apos",
+			"name" : "Use smart apostrophe in DAG names",
+			"type" : "checkbox"
+		},
+		{
 			"key" : "hdr-nav-proj",
 			"name" : "<b>Project navigation tweaks</b>",
 			"type" : "descriptive"
@@ -239,6 +269,11 @@
 		{
 			"key" : "all-status-types",
 			"name" : "Remember the selection of 'all status types' on the record status dashboard",
+			"type" : "checkbox"
+		},
+		{
+			"key" : "dag-confirm",
+			"name" : "Force DAG confirmation",
 			"type" : "checkbox"
 		},
 		{
@@ -484,6 +519,11 @@
 			],
 			"branchingLogic" : { "field" : "report-namespaces", "value" : true },
 			"repeatable" : true
+		},
+		{
+			"key" : "hide-project-dashboards",
+			"name" : "Hide Project Dashboards list in navigation",
+			"type" : "checkbox"
 		},
 		{
 			"key" : "pfmt1",

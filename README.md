@@ -50,7 +50,8 @@ relative to the REDCap version directory.
 * Example relative URL: `DataEntry/record_status_dashboard.php?pid=*`
 
 If the URL is a relative URL and it contains `pid=*`, the `*` will be replaced with the current
-project ID. This does not apply to absolute URLs.
+project ID; if it contains `dash_id=*`, the `*` will be replaced with the ID of the first project
+dashboard. This does not apply to absolute URLs.
 
 Only administrators can set the URL to an absolute URL or a relative URL for a different project
 (where `pid` has a value other than `*`).
@@ -59,6 +60,10 @@ Only administrators can set the URL to an absolute URL or a relative URL for a d
 This setting allows namespaces or sandboxes to be set up for reports. User roles can be entered so
 that those roles can create, edit and delete reports *only in the namespace*. For this to work
 correctly, the specified roles *should not* have the reports privilege set in User Rights.
+
+### Hide Project Dashboards list in navigation
+If enabled, the *Project Dashboards* section in the left hand navigation will be hidden. The Project
+Dashboards will still be accessible using the link in the *Applications* section.
 
 ### If custom logo/name is displayed
 Within the project settings in the REDCap control center, there is an option to display the custom
@@ -192,16 +197,15 @@ maximum number of options for an `@SQLCHECKBOX` field is therefore limited to 60
 *The previous implementation of* `@SQLCHECKBOX` *where the tag is applied to checkbox fields is now
 deprecated and will be removed in a future version of this module.*
 
-#### Static form variable names
-This option will allow the form variable name (as used in the \*_complete variable) to be set
-explicitly when forms are created, and remain unchanged even when projects are in development
-status.
+#### Prompt for form name when creating new instruments
+This option will allow the form name (as used in the \*_complete variable) to be set explicitly when
+forms are created.
 
 #### Use version fields
 When a form is created, automatically place a form version field at the top of the form. This will
 be a multiple choice field with a default value of `1.0`.
 
-Static form variable names must be enabled in order to use this feature.
+To use this feature, *prompt for form name when creating new instruments* must be enabled.
 
 #### Version field default annotation/action tags
 Set the default action tags used on version fields when they are created. If this has not been set,
@@ -213,11 +217,14 @@ need to be included.
 #### Use form name prefix when creating fields
 This will populate field names with a prefix based on the form name when new fields are created.
 
-Static form variable names must be enabled in order to use this feature.
+To use this feature, *prompt for form name when creating new instruments* must be enabled.
 
 #### Preserve form labels in instrument zips
 This will save the form name label into the data dictionary prior to instrument download, and load
 the name from the data dictionary following an instrument upload.
+
+#### Show a 'Delete ASI' option
+Provides an option to delete an Automated Survey Invitation (instead of merely deactivating it).
 
 ### Data quality tweaks
 
@@ -242,6 +249,11 @@ changes they have made when writing the reason.
 This option will default new projects to not treat toggling the 'lock this instrument' checkbox as
 a data change. It can still be enabled/disabled on individual projects as required.
 
+#### Display outstanding data queries banner on data entry forms
+If enabled, a banner will be shown at the top of data entry forms where there is at least one field
+that has an outstanding data query. Custom text can be entered for this banner, otherwise it will
+default to 'There are outstanding data queries for this form'.
+
 #### Provide enhanced 'Incorrect values for calculated fields' (Rule H) check
 If enabled, users running data quality rules will see a link next to Rule H providing the option to
 do an enhanced check. This provides extra options such as limiting the check to a specific arm, and
@@ -265,6 +277,12 @@ When real-time execution of data quality rules triggers the popup notification o
 the rule logic code will be hidden by default. The user will have to click a 'show/hide logic' link
 to toggle the visibility of logic code.
 
+### Reports tweaks
+
+#### Reports with no defined fields will show all fields
+If enabled, REDCap will allow reports with no fields to be created, and reports with no fields
+defined will show all fields from the project (subject to the user's data export rights).
+
 ### Project appearance tweaks
 
 #### Use alternate status icons
@@ -287,6 +305,9 @@ option to autofill the forms will be shown to all users.
 #### Add a 'show hidden fields' option in development status
 If the project is in development status, or the server is set as a development server, then an
 option to show hidden fields on the form will be shown to all users.
+
+#### Use smart apostrophe in DAG names
+Automatically replace apostrophe `'` with the smart quotes equivalent `’` when entering DAG names.
 
 ### Project navigation tweaks
 
@@ -330,6 +351,11 @@ any data on it and thus retaining its blank status.
 If a user selects the 'all status types' option on the record status dashboard, their selection will
 be remembered and auto-selected when they subsequently view the dashboard. This will apply per-user
 and across all projects.
+
+#### Force DAG confirmation
+When a user opens a project for which they have been assigned more than one DAG using the DAG
+switcher, the Switch DAG popup will be displayed and they will be required to choose which DAG to
+use (either their current DAG or a different DAG).
 
 ### System appearance tweaks
 

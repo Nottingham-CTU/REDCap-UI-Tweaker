@@ -323,42 +323,36 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 				}
 				$this->exitAfterHook();
 			}
-			elseif ( \REDCap::versionCompare( REDCAP_VERSION, '15.1.0', '<' ) &&
-			         isset( $_POST['action'] ) && $_POST['action'] == 'set_menu_name' &&
-			         ! isset( $_GET['internal_name'] ) &&
-			     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 24 ) == 'Design/set_form_name.php' )
+		}
+
+
+		// If preserve form labels enabled.
+
+		if ( $this->getSystemSetting( 'preserve-form-labels' ) )
+		{
+			if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 34 ) ==
+			     'Design/zip_instrument_download.php' )
 			{
-				$this->renameForm( $_POST['page'], $_POST['menu_description'] );
-				echo $this->escapeHTML( strip_tags( $_POST['page'] ) ), "\n",
-				     $this->escapeHTML( strip_tags( $_POST['menu_description'] ) );
-				$this->exitAfterHook();
-			}
-			if ( $this->getSystemSetting( 'preserve-form-labels' ) )
-			{
-				if ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 34 ) ==
-				     'Design/zip_instrument_download.php' )
+				foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
 				{
-					foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
-					{
-						$this->query( 'UPDATE ' . $metadataTable .
-						              ' SET misc = concat(\'##UITweaker-FormName:\',' .
-						              'form_menu_description,\'\n\',ifnull(misc,\'\')) ' .
-						              'WHERE project_id = ? AND form_name = ? ' .
-						              'AND form_menu_description IS NOT NULL',
-						              [ $project_id, $_GET['page'] ] );
-					}
+					$this->query( 'UPDATE ' . $metadataTable .
+					              ' SET misc = concat(\'##UITweaker-FormName:\',' .
+					              'form_menu_description,\'\n\',ifnull(misc,\'\')) ' .
+					              'WHERE project_id = ? AND form_name = ? ' .
+					              'AND form_menu_description IS NOT NULL',
+					              [ $project_id, $_GET['page'] ] );
 				}
-				elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 7 ) == 'Design/' )
+			}
+			elseif ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 7 ) == 'Design/' )
+			{
+				foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
 				{
-					foreach ( ['redcap_metadata', 'redcap_metadata_temp'] as $metadataTable )
-					{
-						$this->query( 'UPDATE ' . $metadataTable .
-						              ' SET form_menu_description = regexp_substr(substring(misc,' .
-						              '22),\'[^\n]+$\',1,1,\'m\'), misc = regexp_replace(misc,' .
-						              '\'^[^\n]+\n\',\'\') WHERE project_id = ? AND ' .
-						              'form_menu_description IS NOT NULL AND left(misc,21) = ' .
-						              '\'##UITweaker-FormName:\'', [ $project_id ] );
-					}
+					$this->query( 'UPDATE ' . $metadataTable .
+					              ' SET form_menu_description = regexp_substr(substring(misc,' .
+					              '22),\'[^\n]+$\',1,1,\'m\'), misc = regexp_replace(misc,' .
+					              '\'^[^\n]+\n\',\'\') WHERE project_id = ? AND ' .
+					              'form_menu_description IS NOT NULL AND left(misc,21) = ' .
+					              '\'##UITweaker-FormName:\'', [ $project_id ] );
 				}
 			}
 		}
@@ -400,7 +394,8 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			              [ $_SESSION['module_uitweak_remove_report_fields'] ] );
 			unset( $_SESSION['module_uitweak_remove_report_fields'] );
 		}
-		if ( ( ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
+		if ( $this->getSystemSetting( 'empty-reports-all-fields' ) &&
+		     ( ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 31 ) ==
 		         'DataExport/data_export_ajax.php' && isset( $_POST['report_id'] ) ) ||
 		       ( substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 26 ) ==
 		         'DataExport/report_ajax.php' && isset( $_POST['report_id'] ) ) ) &&
@@ -415,6 +410,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			              ' SELECT ?, field_name, field_order FROM redcap_metadata ' .
 			              'WHERE project_id = ? ORDER BY field_order',
 			              [ $_POST['report_id'], $project_id ] );
+		}
+
+
+		// Replace apostrophes in DAG names with smart quotes.
+		if ( $this->getSystemSetting( 'dag-replace-apos' ) &&
+		     $this->isRoute('DataAccessGroupsController:ajax') && isset( $_GET['action'] ) &&
+		     in_array( $_GET['action'], [ 'add', 'rename' ] ) )
+		{
+			$_POST['item'] = str_replace( "'", '’', $_POST['item'] );
 		}
 
 	}
@@ -604,6 +608,16 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		}
 
 
+		// All pages, if the force DAG confirmation option is enabled.
+		if ( $this->getSystemSetting( 'dag-confirm' ) &&
+		     ( ! isset( $_SESSION['module_uitweak_dag_confirm'] ) ||
+		       $_SESSION['module_uitweak_dag_confirm'] != $project_id ) )
+		{
+			$this->provideDAGConfirm();
+			$_SESSION['module_uitweak_dag_confirm'] = $project_id;
+		}
+
+
 		// All pages, if the option to show the role name is enabled.
 		if ( $this->getSystemSetting( 'show-role-name' ) )
 		{
@@ -647,6 +661,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if ( $this->getSystemSetting( 'hide-suggest-feature' ) )
 		{
 			$this->provideHideSuggestFeature();
+		}
+
+
+		// All pages, if the Project Dashboards navigation section is hidden.
+
+		if ( $this->getProjectSetting( 'hide-project-dashboards' ) )
+		{
+			echo '<script type="text/javascript">$(\'#dashboard_panel\').css(\'display\',\'none\')',
+			     '</script>';
 		}
 
 
@@ -963,6 +986,23 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 
 
 
+		// If the edit report page, and reports with no defined fields should show all fields, then
+		// ensure the report can be saved with no fields.
+
+		if ( $this->getSystemSetting( 'empty-reports-all-fields' ) &&
+		     substr( PAGE_FULL, strlen( APP_PATH_WEBROOT ), 20 ) == 'DataExport/index.php' &&
+		     isset( $_GET['report_id'] ) && isset( $_GET['addedit'] ) )
+		{
+			echo '<script type="text/javascript">',
+			     '$(function(){var vOldValidateCreateReport=validateCreateReport;',
+			     'validateCreateReport=function(){$(\'body\').append(\'<input type="hidden" ',
+			     'class="field-hidden" value="_temp">\');return vOldValidateCreateReport()}',
+			     '})',
+			     "</script>\n";
+		}
+
+
+
 		// If report namespacing is in effect.
 		if ( $this->reportNamespacing )
 		{
@@ -975,6 +1015,15 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 			     '_ajax.php?\',\'ExternalModules/?prefix=redcap_ui_tweaker&page=',
 			     'ajax_reports_ns&rcpage=report_filter_ajax&\')})',
 			     "</script>\n";
+		}
+
+
+
+		// If the Delete ASI option is enabled.
+
+		if ( $this->getSystemSetting( 'asi-delete' ) )
+		{
+			$this->provideDeleteASI();
 		}
 
 
@@ -1220,6 +1269,18 @@ class REDCapUITweaker extends \ExternalModules\AbstractExternalModule
 		if( $this->getSystemSetting( 'buttononly' ) )
 		{
 			$this->provideButtonOnly( $record, $event_id, $instrument, $repeat_instance );
+		}
+
+		// If the outstanding data queries banner is enabled then display it if applicable.
+		if ( $this->getSystemSetting( 'dq-form-banner' ) &&
+		     $this->query( 'SELECT 1 FROM redcap_data_quality_status WHERE project_id = ? AND ' .
+		                   'record = ? AND event_id = ? AND field_name IN( SELECT field_name ' .
+		                   'FROM redcap_metadata WHERE project_id = ? AND form_name = ? ) AND ' .
+		                   'instance = ? AND query_status = ? LIMIT 1',
+		                   [ $project_id, $record, $event_id, $project_id, $instrument,
+		                     $repeat_instance, 'OPEN' ] )->fetch_assoc() )
+		{
+			$this->provideDataQueriesBanner( $this->getSystemSetting( 'dq-form-banner-text' ) );
 		}
 
 
@@ -2125,6 +2186,63 @@ $(function()
 
 
 
+	// Output JavaScript to prompt the user to confirm their DAG.
+
+	function provideDAGConfirm()
+	{
+		if ( \UserRights::isImpersonatingUser() )
+		{
+			return;
+		}
+		$dagID = $GLOBALS['user_rights']['group_id'];
+		$dagID = ( $dagID == '' ) ? '0' : \REDCap::getGroupNames( true, $dagID );
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    if ( $('#dag-switcher-change-button').length > 0 )
+    {
+      $('#dag-switcher-change-select').prepend('<option value="<?php echo $dagID; ?>"></option>')
+                                      .val('<?php echo $dagID; ?>')
+      $('#dag-switcher-change-select option').first()
+        .text($('#dag-switcher-current-dag-block b').text())
+      $('#dag-switcher-change-button').trigger('click')
+      $('[aria-describedby="dag-switcher-change-dialog"]')
+        .find('.close-button, .ui-dialog-titlebar-close').css('display','none')
+    }
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to show the outstanding data queries banner.
+
+	function provideDataQueriesBanner( $bannerText )
+	{
+		if ( $bannerText == '' )
+		{
+			$bannerText = 'There are outstanding data queries for this form.';
+		}
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    $('#form-title').after($('<div class="yellow"></div>').html('<img src="<?php
+		echo APP_PATH_WEBROOT; ?>/Resources/images/exclamation_orange.png"> <?php
+		echo $this->escape( $bannerText ); ?>'))
+  })
+</script>
+<?php
+	}
+
+
+
+
+
 	// Output JavaScript to enable Data Resolution Workflow / provide default missing data codes.
 
 	function provideDefaultCustom( $dataResolutionWorkflow, $missingDataCodes, $reasonForChange )
@@ -2170,6 +2288,54 @@ $(function()
 ?>
       $('#customizeprojectform').submit()
     }, 1000 )
+  })
+</script>
+<?php
+	}
+
+
+
+
+
+	// Output JavaScript to provide a link to delete an existing Automated Survey Invitation.
+
+	function provideDeleteASI()
+	{
+?>
+<script type="text/javascript">
+  $(function()
+  {
+    var vOldSetUpConditionalInvites = setUpConditionalInvites
+    setUpConditionalInvites = function( survey_id, event_id, form )
+    {
+      var vAddDelLink = function()
+      {
+        if ( $('[aria-describedby="popupSetUpCondInvites"]').length == 0 )
+        {
+          setTimeout( vAddDelLink, 500 )
+        }
+        else if ( $('#condSurvPopupActiveBox.gray').length == 0 )
+        {
+          $('#condSurvPopupActiveBox .boldish')
+            .append($('<a href="#" style="color:#c00;float:right">Delete ASI</a>')
+                      .on('click', function(ev)
+                                   {
+                                     ev.preventDefault()
+                                     if ( confirm('Are you sure you want to delete this ASI?') )
+                                     {
+                                       showProgress(true)
+                                       $.post( '<?php echo $this->getUrl('ajax_asi_del.php'); ?>',
+                                               { 'survey_id' : survey_id, 'event_id' : event_id },
+                                               function() { window.location.reload() } )
+                                     }
+                                   }
+                         )
+                   )
+        }
+      }
+      setTimeout( vAddDelLink, 500 )
+      return vOldSetUpConditionalInvites( survey_id, event_id, form )
+    }
   })
 </script>
 <?php
@@ -3508,54 +3674,12 @@ $(function()
 
 	function provideStaticFormVarName()
 	{
+		$formVarFieldDesc = $this->escape( $GLOBALS['lang']['design_1370'] );
+		$formVarFieldPH = preg_replace( '/[,].*/', '...', $formVarFieldDesc );
 ?>
 <script type="text/javascript">
   $(function()
   {
-<?php
-		if ( \REDCap::versionCompare( REDCAP_VERSION, '15.1.0', '<' ) )
-		{
-?>
-    if ( status == '0' )
-    {
-      $('#table-forms_surveys tr').find('td:eq(1)').each(function()
-      {
-        var vFormLink = $(this).find('a.formLink')
-        var vFormName = vFormLink.find('span[id^="formlabel-"]').attr('id').substring(10)
-        vFormLink.after( ' <i>(' + vFormName + ')</i>' )
-        vFormLink.css('display', 'inline-block')
-        var vSaveBtn = $(this).find( '#form_menu_save_btn-' + vFormName )
-        var vChgName = $('<a href="#"><i class="fas fa-pencil-alt fs8"></i></a>')
-        vChgName.attr('title', 'Edit form variable name')
-        vChgName.click(function()
-        {
-          var vNewFormName = prompt( 'New form variable name for ' + vFormName, vFormName )
-          if ( vNewFormName !== null && vNewFormName !== '' )
-          {
-            $.post( app_path_webroot + 'Design/set_form_name.php?internal_name=1&pid=' + pid,
-                    { page: vFormName, action: 'set_menu_name', menu_description: vNewFormName },
-                    function ( vResult )
-                    {
-                      var vUpdatedFormName = vResult.replace( /\n.*$/s, '' )
-                      var vNewFormLabel = $( '#form_menu_description_input-' + vFormName ).val()
-                      $.post( app_path_webroot + 'Design/set_form_name.php?pid=' + pid,
-                              { page: vUpdatedFormName, action: 'set_menu_name',
-                                menu_description: vNewFormLabel },
-                              function ()
-                              {
-                                window.location.reload()
-                              })
-                    } )
-          }
-          return false
-        })
-        vSaveBtn.after( vChgName )
-        vSaveBtn.after( ' &nbsp;&nbsp;' )
-      })
-    }
-<?php
-		}
-?>
     var vAddNewFormReveal = addNewFormReveal
     var vAddNewForm = addNewForm
     var vClickedBtnName = ''
@@ -3564,9 +3688,11 @@ $(function()
       vAddNewFormReveal( vFormName )
       var vCreateBtn = $( '#new-' + vFormName + ' [type="button"]' )
       vCreateBtn.before( '<br><span style="margin:0 5px 0 25px;font-weight:bold">' +
-                         'Form variable name:</span>' )
+                         'Form name:</span>' )
       var vFormVarField = $( '<input type="text" class="x-form-text x-form-field" ' +
-                             'style="font-size:13px;" id="new_form_var-' + vFormName + '">' )
+                             'style="font-size:13px;" id="new_form_var-' + vFormName + '" ' +
+                             'title="<?php echo $formVarFieldDesc; ?>" ' +
+                             'placeholder="<?php echo $formVarFieldPH; ?>">' )
       vFormVarField.keyup( function()
       {
         var vVal = $(this).val()
